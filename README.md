@@ -1,3 +1,3 @@
 # CS425_MPs
 
-MP0 for CS
+MPs for CS425 Distributed Systems Fall 2020 Course
