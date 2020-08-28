@@ -4,10 +4,12 @@ import (
   "net"
   "os"
   "fmt"
+  "os/exec"
+  "io/ioutil"
 )
 
 func main() {
-  // get args
+  // Args: peerclient <hostname>
   if len(os.Args) != 2 {
     fmt.Fprintf(os.Stderr, "Bad arg", os.Args[0])
     os.Exit(1)
@@ -33,6 +35,18 @@ func main() {
   os.Exit(0)
 }
 
+
+/*
+  execGrep
+  Run grep and return output given log file name and string
+func execGrep() {
+
+}
+*/
+
+/*
+  Check errors
+*/
 func checkError(err error) {
   if err != nil {
     fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
