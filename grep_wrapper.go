@@ -2,6 +2,7 @@ package main
 
 import (
   "fmt"
+  "syscall"
   "os"
   "os/exec"
   "io/ioutil"
@@ -16,9 +17,16 @@ func main() {
 
   str := os.Args[1]
   filename := os.Args[2]
-  
+
+  fmt.Printf("Command spawn")
+  spawnGrep(str, filename)
+  fmt.Printf("Exec syscall spawn")
+  execGrep(str, filename)
+}
+
+func spawnGrep(str string, fname string) {
   // Exec grep with args
-  grepCmd := exec.Command("grep", str, filename)
+  grepCmd := exec.Command("grep", str, fname)
   grepOut, _ := grepCmd.StdoutPipe()
   grepCmd.Start()
   // Read bytes
@@ -26,4 +34,20 @@ func main() {
   fmt.Println(string(grepBytes))
 }
 
+func execGrep(str string, fname string) {
+  bin, lookErr := exec.LookPath("grep")
 
+  if lookErr != nil {
+    panic(lookErr)
+  }
+
+  args := []string{"grep", str, fname}
+
+  env := os.Environ()
+
+  execErr := syscall.Exec(bin, args, env)
+
+  if execErr != nil {
+    panic(execErr)
+  }
+}
