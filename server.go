@@ -32,6 +32,22 @@ func main() {
   }
 }
 
+func execGrep(str string, fname string) {
+  bin, lookErr := exec.LookPath("grep")
+
+  if lookErr != nil {
+    panic(lookErr)
+  }
+
+  args := []string{"grep", str, fname}
+  env := os.Environ()
+  execErr := syscall.Exec(bin, args, env)
+
+  if execErr != nil {
+    panic(execErr)
+  }
+}
+
 /*
   Check errors
 */
