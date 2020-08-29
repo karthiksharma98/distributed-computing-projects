@@ -18,9 +18,9 @@ func main() {
   str := os.Args[1]
   filename := os.Args[2]
 
-  fmt.Printf("Command spawn")
+  fmt.Printf("Command spawn\n")
   spawnGrep(str, filename)
-  fmt.Printf("Exec syscall spawn")
+  fmt.Printf("Exec syscall spawn\n")
   execGrep(str, filename)
 }
 
@@ -42,9 +42,7 @@ func execGrep(str string, fname string) {
   }
 
   args := []string{"grep", str, fname}
-
   env := os.Environ()
-
   execErr := syscall.Exec(bin, args, env)
 
   if execErr != nil {
