@@ -4,7 +4,6 @@ import (
   "net"
   "os"
   "fmt"
-  "os/exec"
   "io/ioutil"
 )
 
@@ -17,7 +16,7 @@ func main() {
   tcpAddr, err := net.ResolveTCPAddr("tcp4", os.Args[1])
   checkError(err)
 
-  conn, err = net.DialTCP("tcp", nil, tcpAddr)
+  conn, err := net.DialTCP("tcp", nil, tcpAddr)
   checkError(err)
 
   result, err := ioutil.ReadAll(conn)

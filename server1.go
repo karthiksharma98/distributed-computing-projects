@@ -2,10 +2,6 @@ package main
 
 import (
   "net"
-  "os"
-  "fmt"
-  "os/exec"
-  "io/ioutil"
 )
 
 func main() {
@@ -14,7 +10,7 @@ func main() {
     tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
     checkError(err)
 
-    listerner, err := net.ListenTCP("tcp", tcpAddr)
+    listener, err := net.ListenTCP("tcp", tcpAddr)
     checkError(err)
 
     for {
