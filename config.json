@@ -1,0 +1,12 @@
+{
+    "service": {
+        "failure_detector": "gossip",
+        "introducer_ip": "10.0.01",
+        "port": 9000
+    },
+    "settings": {
+        "interval": 1,
+        "fail_timeout": 5,
+        "cleanup_timeout": 24
+    }
+}
