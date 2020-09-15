@@ -8,17 +8,10 @@ import (
 type MessageType uint8
 
 const (
-        JoinMsg MessageType = iota; 
+        JoinMsg = iota; 
         HeartbeatMsg
         TextMsg
 )
-
-/*
-type Message struct {
-        message_type MessageType
-        buffer []byte
-}*/
-
 
 func SendMessage(address string, message string) {
         Send(address, TextMsg, []byte(message))
@@ -36,7 +29,11 @@ func Send(address string, message_type MessageType, message []byte) {
                 panic(err)
         }
 
-        buffer := append([]byte{message_type}, message)
+        // Encoded into a byte buffer of the structure:
+        // MessageType uint8
+        // Message byte[]
+        // [0] - MessageType, [1, ...] - message
+        buffer := append([]byte{byte(message_type)}, message...) // TODO: Converting to byte might not be neccessary
 
         _, err = conn.Write(buffer)
         if err != nil {
@@ -44,7 +41,7 @@ func Send(address string, message_type MessageType, message []byte) {
         }
 }
 
-func RecieveAll(port string) {
+func Listener(port string) {
         // UDP buffer 1024 bytes for now
         buffer := make([]byte, 1024)
         addr, err := net.ResolveUDPAddr("udp", ":" + port)
@@ -63,10 +60,14 @@ func RecieveAll(port string) {
                 if err != nil {
                         return
                 }
-                fmt.Println(string(buffer[0:n]))
 
-                // TODO: do stuff with data
+                // TODO: Do stuff with data
                 // TODO: Need scenario to accept new members if node is introducer
+                msg_type := buffer[0]
+                switch msg_type {
+                case TextMsg:
+                        fmt.Println(string(buffer[1:n]))
+                }
         }
 
 }
