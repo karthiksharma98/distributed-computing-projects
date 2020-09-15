@@ -5,7 +5,26 @@ import (
         "fmt"
 )
 
+type MessageType uint8
+
+const (
+        JoinMsg MessageType = iota; 
+        HeartbeatMsg
+        TextMsg
+)
+
+/*
+type Message struct {
+        message_type MessageType
+        buffer []byte
+}*/
+
+
 func SendMessage(address string, message string) {
+        Send(address, TextMsg, []byte(message))
+}
+
+func Send(address string, message_type MessageType, message []byte) {
         addr, err := net.ResolveUDPAddr("udp", address)
         if err != nil {
                 panic(err)
@@ -17,14 +36,15 @@ func SendMessage(address string, message string) {
                 panic(err)
         }
 
-        _, err = conn.Write([]byte(message))
+        buffer := append([]byte{message_type}, message)
+
+        _, err = conn.Write(buffer)
         if err != nil {
                 panic(err)
         }
-	return;
 }
 
-func RecieveAll (port string) {
+func RecieveAll(port string) {
         // UDP buffer 1024 bytes for now
         buffer := make([]byte, 1024)
         addr, err := net.ResolveUDPAddr("udp", ":" + port)
