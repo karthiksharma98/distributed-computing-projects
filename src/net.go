@@ -13,11 +13,11 @@ const (
 	TextMsg
 )
 
-func SendMessage(address string, message string) {
-	Send(address, TextMsg, []byte(message))
+func SendMessage(address string, msg string) {
+	Send(address, TextMsg, []byte(msg))
 }
 
-func Send(address string, message_type MessageType, message []byte) {
+func Send(address string, msgType MessageType, msg []byte) {
 	addr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {
 		panic(err)
@@ -33,7 +33,7 @@ func Send(address string, message_type MessageType, message []byte) {
 	// MessageType uint8
 	// Message byte[]
 	// [0] - MessageType, [1, ...] - message
-	buffer := append([]byte{byte(message_type)}, message...) // TODO: Converting to byte might not be neccessary
+	buffer := append([]byte{byte(msgType)}, msg...) // TODO: Converting to byte might not be neccessary
 
 	_, err = conn.Write(buffer)
 	if err != nil {
