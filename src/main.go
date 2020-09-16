@@ -57,8 +57,10 @@ func main() {
 			fmt.Println(GetAllMembers())
 
 			// Start listening
-			if str, ok := port.(string); ok {
-				Listener(str)
+			if str, ok := port.(float64); ok {
+				fmt.Printf("Listening on port ")
+				fmt.Println(fmt.Sprintf("%v", str))
+				go Listener(fmt.Sprintf("%v", str))
 			}
 			fmt.Println("Node has joined the group.")
 
@@ -86,6 +88,16 @@ func main() {
 		case "get logs":
 			// TODO
 			fmt.Println("[imagine some logs here].")
+		// FOR DEBUGGING PURPOSES
+		case "chat -a":
+			// DEBUG addresses
+			addresses := []string{"172.22.156.42:9000", "172.22.158.42:9000", "172.22.94.42:9000", "172.22.156.43:9000"}
+			fmt.Println("Joined chat")
+			for {
+				fmt.Print("> ")
+				input, _ := consoleReader.ReadString('\n')
+				SendBroadcast(addresses, 2, []byte(input))
+			}
 		}
 	}
 

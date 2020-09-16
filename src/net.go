@@ -17,6 +17,12 @@ func SendMessage(address string, msg string) {
 	Send(address, TextMsg, []byte(msg))
 }
 
+func SendBroadcast(addresses []string, msgType MessageType, msg []byte) {
+	for _, addr := range addresses {
+		Send(addr, msgType, msg)
+	}
+}
+
 func Send(address string, msgType MessageType, msg []byte) {
 	addr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {
@@ -66,7 +72,7 @@ func Listener(port string) {
 		msg_type := buffer[0]
 		switch msg_type {
 		case TextMsg:
-			fmt.Println(string(buffer[1:n]))
+			fmt.Println(string(buffer[1 : n-1]))
 		}
 	}
 
