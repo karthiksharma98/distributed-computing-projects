@@ -6,7 +6,6 @@ import (
 )
 
 type MessageType uint8
-
 const (
 	JoinMsg = iota
 	HeartbeatMsg
@@ -15,6 +14,12 @@ const (
 
 func SendMessage(address string, msg string) {
 	Send(address, TextMsg, []byte(msg))
+}
+
+func SendBroadcast(addresses []string, msgType MessageType, msg []byte) {
+        for _, addr := range addresses {
+                Send(addr, msgType, msg)
+        }
 }
 
 func Send(address string, msgType MessageType, msg []byte) {

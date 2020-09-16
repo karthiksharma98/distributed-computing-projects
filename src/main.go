@@ -86,6 +86,11 @@ func main() {
 		case "get logs":
 			// TODO
 			fmt.Println("[imagine some logs here].")
+                // FOR DEBUGGING PURPOSES
+                case "send -a":
+                        fmt.Print("send > ")
+                        input, _ := consoleReader.ReadString('\n')
+                        SendBroadcast(addresses, 2, []byte(input))
 		}
 	}
 
