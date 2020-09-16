@@ -88,6 +88,8 @@ func main() {
 			fmt.Println("[imagine some logs here].")
                 // FOR DEBUGGING PURPOSES
                 case "send -a":
+                        // DEBUG addresses
+                        addresses := []string{"172.22.156.42:9000", "172.22.158.42:9000", "172.22.94.42:9000", "172.22.156.43:9000"}
                         fmt.Print("send > ")
                         input, _ := consoleReader.ReadString('\n')
                         SendBroadcast(addresses, 2, []byte(input))
