@@ -1,4 +1,4 @@
-## Distributed Group Membership/Failure Detector
+# Distributed Group Membership/Failure Detector
 
 ### Overview
 
@@ -43,63 +43,125 @@ All-to-all:
 
 * Introducers/leaders cannot remove/fail nodes from list
 
-### Design
+## Design
 
-* Components:
-  * Gossip service
-  * All to all service
-  * Why not both??
-* Gossip protocol:
-  * Disseminate updates of members, if any, instead of entire list (bandwidth-efficient)
-    * Piggyback state updates on heartbeat messages [1]
-    * Low overhead packet (10B): member_id, counter, enumerated update type
-    * Merge on heartbeat counter comparison; choose max
-    * Update timestamp
-    * Reset health of member if needed
-  * Heartbeat counting
-    * Upon sending heartbeat (rate consistent interval)?
-  * Round-robin heartbeat scheduling
-    * Disseminate heartbeats at a rate of  (k neighbors)/(5s)
-    * Disseminate when (current time - time of last heartbeat) > 4-5s
-  * Distribute new updates to all scheduled heartbeat messages sitting in queue
-  * Peer selection: Who to infect? Random? Predetermined set?
-    * Traditional gossip: send to one random member uniformly[2]
-  * Suspicion mechanism similar to SWIM? [1]
-  * Failure
-    * Consider member failed
+### Components
+
+* Gossip service
+* All to all service
+* Why not both??
+
+### Gossip protocol
+
+* Disseminate updates of members, if any, instead of entire list (bandwidth-efficient)
+  * Piggyback state updates on heartbeat messages [1]
+  * ~~Low overhead packet (10B): member_id, counter, enumerated update type~~
+  * Merge on heartbeat counter comparison; choose max
+  * Update timestamp
+  * Reset health of member if needed
+* Heartbeat counting
+  * Upon sending heartbeat (rate consistent interval)?
+* ~~Round-robin heartbeat scheduling~~
+  * Disseminate heartbeats at a rate of  (k neighbors)/(5s)
+  * Disseminate when (current time - time of last heartbeat) > 4-5s
+* ~~Distribute new updates to all scheduled heartbeat messages sitting in queue~~
+* Peer selection: Who to infect? Random? Predetermined set?
+  * Traditional gossip: send to one random member uniformly[2]
+* Suspicion mechanism similar to SWIM? [1]
+* Failure
+  * Consider member failed
+  * Local clock - timestamp > Tfail
+
+### All to all protocol
+
+* Heartbeat counting
+  * Increment periodically
+* Failure
+  * Heartbeats not recieved after since
     * Local clock - timestamp > Tfail
-* All to all protocol:
-  * Heartbeat counting
-    * Increment periodically
-  * Failure
-    * Heartbeats not recieved after since
-      * Local clock - timestamp > Tfail
-      * N heartbeats later
-* Introducer mechanism
-  * Node sends message to introducer (preconfigured IP)  with desire to join
-    * Introducer provides new member with existing membership list
-  * Node sends message to introducer to voluntarily leave
-    * Introducer gossips randomly or multicasts removal of member to all?
-  * Introducer fails
-    * Nodes try to send join/remove messages but packets will drop
-  * Introducer rejoins
-    * Existing nodes will find the introducer eventually but how will the introducer receive the current list?
-    * Pull entire list at start up from node
-  * Node rejoins
-    * Different id
-    * Must make request to introducer for list
+    * N heartbeats later
+
+### Introducer mechanism
+
+* Node sends message to introducer (preconfigured IP)  with desire to join
+  * Introducer provides new member with existing membership list
+* Node sends message to introducer to voluntarily leave
+  * Introducer gossips randomly or multicasts removal of member to all?
+* Introducer fails
+  * Nodes try to send join/remove messages but packets will drop
+* Introducer rejoins
+  * Existing nodes will find the introducer eventually but how will the introducer receive the current list?
+  * Pull entire list at start up from node
+* Node rejoins
+  * Different id
+  * Must make request to introducer for list
+
+### Message Passing
+
+* Over UDP connection
+
+* Messaging protocol
+
+  * Buffer: [messageType(1B), payload(n B)]
+
+  * First byte in the buffer should be of type MessageType (just a uint8 enumerated)
+
+    * ```go
+      type MessageType uint8
+      
+      const (
+              JoinMsg = iota; 
+              HeartbeatMsg
+              TextMsg
+      )
+      ```
+
+    * More message types can be included if required
+
+    * Its needed so Listener can determine how the payload should be processed and handled correctly
+
+      * JoinMsg ->call AcceptMember to handle new IP
+      * HeartbeatMsg -> call HeartbeatHandler to handle heartbeat
+      * TextMsg -> do anything with string
+
+  * Bytes 1 to n in the buffer - Payload
+
+    * Serialization
+    * Need to serialize and deserialize messages before and after transmission
+    * Few options:
+      * Gob
+      * Protobuf
+      * Custom (might be useful later to further optimize bandwidth)
+        * Some ideas:
+          * https://piazza.com/class/kd4w68fkmvn1h1?cid=272
+          * https://ipfs.io/ipfs/QmfYeDhGH9bZzihBUDEQbCbTc5k5FZKURMUoUvfmc27BwL/dataserialisation/index.html
 
 ```go
-enum Health {
-    ALIVE,
-    FAIL,
-    LEAVE
-}
+// net.go
+
+// Send text messages
+func SendMessage(addr string, msg string)
+// Send messages given addr, messsage type, and payload data (byte array)
+func Send(addr string, msgType MessageType, msg []byte) // go routine
+func SendAll()
+// Opens UDP listener connection over user specified port
+func Listener(port string)
+```
+
+Structs
+
+```go
+// enum for health status
+const (
+    Alive = iota
+    Failed
+    Left
+)
 
 type Member struct {
-    member_id uint8
-    ip_addr IP // 'net' package
-    heartbeat_count uint64
+    memberID uint8
+    addr IP // 'net' package
+    heartbeatCount uint64
     timestamp uint64
     health uint8 // -> Health enum
 }
@@ -112,14 +174,10 @@ API
 
 ```go
 // basic membershiplist API (goroutines?)
-func GetMember(member_id uint8) -> (Member)
-func CreateOrUpdateMember(member_id uint8, member_data Member)
-func RemoveMember(member_id uint8) -> (Member)
+func GetMember(id uint8) -> (Member)
+func CreateOrUpdateMember(id uint8, data Member)
+func RemoveMember(id uint8) -> (Member)
 func GetAllMembers() -> ([]Member)
-
-// networking
-func SendMessage(member_id uint8, message GossipMessage) //goroutine
-func SendAll()
 
 // choose random node, check list for failures, send new list to random node
 func Gossip()
@@ -129,13 +187,13 @@ func Gossip()
 func HeartbeatHandler() 
 
 // health update mechanism
-func FailMember(member_id uint8)
+func FailMember(id uint8)
 func CleanupMembers()
 
 // introducer mechanism
 func Join() -> membership_list map[uint8]Member
 func Leave()
-func AcceptMember(IPv4)
+func AcceptMember(addr IPv4)
 
 func Log(message string)
 func GetStatus(message string)
@@ -165,13 +223,14 @@ Directory structure
 
 ```
 Root
+	config.json
 	Src
-		main.go
-		detector.go
-		Config.json
+		main.go			// main program
+		net.go			// networking library
+		util.go			// utilities (config, etc)
+		detector.go		// gossip/all-to-all handlers
 	Tests
 		tests.go
-
 ```
 
 
@@ -211,3 +270,4 @@ References
 [5] https://stackoverflow.com/questions/31121906/how-to-guarantee-that-all-nodes-get-infected-in-gossip-based-protocols
 
 [6] https://github.com/golang-standards/project-layout
+
