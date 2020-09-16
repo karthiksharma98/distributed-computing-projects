@@ -42,7 +42,21 @@ func main() {
 
 		switch input {
 		case "join introducer":
+			addr, _ := service["introducer_ip"].(string)
 			port := service["port"]
+
+			// Initialize new membership list
+			Initialize()
+			fmt.Println("Memberlist created.")
+
+			// Add self as member
+			member := NewMember(addr)
+			fmt.Printf("Added introducer: ")
+			fmt.Println(member)
+			fmt.Printf("Membership list: ")
+			fmt.Println(GetAllMembers())
+
+			// Start listening
 			if str, ok := port.(string); ok {
 				Listener(str)
 			}
