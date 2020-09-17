@@ -42,6 +42,7 @@ func Send(address string, msgType MessageType, msg []byte) {
 	}
 }
 
+// Listener function that listens to a port and prints incoming TextMsg
 func Listener(port string) {
 	// UDP buffer 1024 bytes for now
 	buffer := make([]byte, 1024)
@@ -54,7 +55,7 @@ func Listener(port string) {
 	if err != nil {
 		panic(err)
 	}
-	// TODO: goroutine for non-blocking listener
+
 	// listener loop
 	for {
 		n, _, err := listener.ReadFrom(buffer)
@@ -62,8 +63,6 @@ func Listener(port string) {
 			return
 		}
 
-		// TODO: Do stuff with data
-		// TODO: Need scenario to accept new members if node is introducer
 		msg_type := buffer[0]
 		switch msg_type {
 		case TextMsg:
