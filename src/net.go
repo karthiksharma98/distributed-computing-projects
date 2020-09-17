@@ -11,6 +11,7 @@ const (
 	JoinMsg = iota
 	HeartbeatMsg
 	TextMsg
+	AcceptMsg
 )
 
 func SendMessage(address string, msg string) {
