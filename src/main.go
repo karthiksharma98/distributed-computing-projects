@@ -89,6 +89,7 @@ func main() {
 			addresses := []string{"172.22.156.42:9000", "172.22.158.42:9000", "172.22.94.42:9000", "172.22.156.43:9000"}
 			fmt.Println("Joined chat")
 			for {
+		                consoleReader := bufio.NewReader(os.Stdin)
 				fmt.Print("> ")
 				input, _ := consoleReader.ReadString('\n')
 				SendBroadcast(addresses, 2, []byte(input))
