@@ -42,7 +42,5 @@ func ReadConfig() map[string]interface{} {
 	var result map[string]interface{}
 	json.Unmarshal([]byte(byteValue), &result)
 
-	fmt.Println(result["service"])
-
 	return result
 }
