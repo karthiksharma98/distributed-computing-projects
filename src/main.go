@@ -26,10 +26,7 @@ func main() {
 		}
 	}
 
-	configFile := ReadConfig()
-	serviceInfo := configFile["service"]
-	service := serviceInfo.(map[string]interface{})
-
+	config := ReadConfig()
 	// wait for input to query operations on node
 	fmt.Println("Listening for input.")
 	fmt.Println("Options: join introducer, join, leave, kill, status, get logs {-a}.")
@@ -42,8 +39,8 @@ func main() {
 
 		switch input {
 		case "join introducer":
-			addr, _ := service["introducer_ip"].(string)
-			port := service["port"]
+			addr := config.Service.introducerIP
+			port := config.Service.port
 
 			// Initialize new membership list
 			Initialize()
@@ -57,11 +54,9 @@ func main() {
 			fmt.Println(GetAllMembers())
 
 			// Start listening
-			if str, ok := port.(float64); ok {
-				fmt.Printf("Listening on port ")
-				fmt.Println(fmt.Sprintf("%v", str))
-				go Listener(fmt.Sprintf("%v", str))
-			}
+			fmt.Printf("Listening on port ")
+			fmt.Println(fmt.Sprintf("%v", port))
+			go Listener(fmt.Sprintf("%v", port))
 			fmt.Println("Node has joined the group.")
 
 		case "join":
@@ -94,6 +89,7 @@ func main() {
 			addresses := []string{"172.22.156.42:9000", "172.22.158.42:9000", "172.22.94.42:9000", "172.22.156.43:9000"}
 			fmt.Println("Joined chat")
 			for {
+				consoleReader := bufio.NewReader(os.Stdin)
 				fmt.Print("> ")
 				input, _ := consoleReader.ReadString('\n')
 				SendBroadcast(addresses, 2, []byte(input))
