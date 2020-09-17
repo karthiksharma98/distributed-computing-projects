@@ -76,7 +76,7 @@ func (mem Member) Listen(port string) {
 
 // request introducer to join
 func (mem Member) joinRequest() {
-	Send(ServiceInfo["introducer_ip"].(string)+":"+fmt.Sprint(ServiceInfo["port"]), JoinMsg, nil)
+	Send(Configuration.Service.introducerIP+":"+fmt.Sprint(Configuration.Service.port), JoinMsg, nil)
 }
 
 // receive membership list from introducer and setup
@@ -121,7 +121,7 @@ func (mem Member) acceptMember(address net.IP) {
 	}
 
 	// Send the memberID by appending it to start of buffer, and the membershiplist
-	Send(address.String()+":"+fmt.Sprint(ServiceInfo["port"]), AcceptMsg, append([]byte{newMemberID}, b.Bytes()...))
+	Send(address.String()+":"+fmt.Sprint(Configuration.Service.port), AcceptMsg, append([]byte{newMemberID}, b.Bytes()...))
 }
 
 // GetMaxKey to get the maximum of all memberIDs
