@@ -45,26 +45,26 @@ func main() {
 		switch input {
 		case "join introducer":
 			process := Member{
-                                0,
-                                true,
-                                make(map[uint8]membershipListEntry),
-                        }
+				0,
+				true,
+				make(map[uint8]membershipListEntry),
+			}
 
 			process.membershipList[0] = membershipListEntry{
-                                0,
-                                net.ParseIP(Configuration.Service.introducerIP),
-                                0,
-                                time.Now(),
-                                Alive,
-                        }
+				0,
+				net.ParseIP(Configuration.Service.introducerIP),
+				0,
+				time.Now(),
+				Alive,
+			}
 			go process.Listen(fmt.Sprint(Configuration.Service.port))
 		case "join":
 			// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
 			process := Member{
-                                0,
-                                false,
-                                make(map[uint8]membershipListEntry),
-                        }
+				0,
+				false,
+				make(map[uint8]membershipListEntry),
+			}
 			process.joinRequest()
 			go process.Listen(fmt.Sprint(Configuration.Service.port))
 			fmt.Println("Node has joined the group.")
