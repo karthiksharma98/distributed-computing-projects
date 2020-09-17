@@ -10,10 +10,7 @@ import (
 )
 
 // Configuration stores all info in config.json
-var Configuration map[string]interface{}
-
-// ServiceInfo stores info in config.json's "service" key
-var ServiceInfo map[string]interface{}
+var Configuration Config
 
 func main() {
 	// TODO: wait for input to query operations on node?
@@ -35,8 +32,6 @@ func main() {
 	}
 
 	Configuration = ReadConfig()
-	ServiceInfo = Configuration["service"].(map[string]interface{})
-
 	// wait for input to query operations on node
 	fmt.Println("Listening for input.")
 	fmt.Println("Options: join introducer, join, leave, kill, status, get logs {-a}.")
@@ -49,15 +44,29 @@ func main() {
 
 		switch input {
 		case "join introducer":
-			process := Member{0, true, make(map[uint8]membershipListEntry)}
-			process.membershipList[0] = membershipListEntry{0, net.ParseIP(ServiceInfo["introducer_ip"].(string)), 0, time.Now(), Alive}
-			process.Listen(fmt.Sprint(ServiceInfo["port"]))
+			process := Member{
+                                0,
+                                true,
+                                make(map[uint8]membershipListEntry),
+                        }
 
+			process.membershipList[0] = membershipListEntry{
+                                0,
+                                net.ParseIP(Configuration.Service.introducerIP),
+                                0,
+                                time.Now(),
+                                Alive,
+                        }
+			go process.Listen(fmt.Sprint(Configuration.Service.port))
 		case "join":
 			// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
-			process := Member{0, false, make(map[uint8]membershipListEntry)}
+			process := Member{
+                                0,
+                                false,
+                                make(map[uint8]membershipListEntry),
+                        }
 			process.joinRequest()
-			process.Listen(fmt.Sprint(ServiceInfo["port"]))
+			go process.Listen(fmt.Sprint(Configuration.Service.port))
 			fmt.Println("Node has joined the group.")
 
 		case "leave":
@@ -81,6 +90,17 @@ func main() {
 		case "get logs":
 			// TODO
 			fmt.Println("[imagine some logs here].")
+		// FOR DEBUGGING PURPOSES
+		case "chat -a":
+			// DEBUG addresses
+			addresses := []string{"172.22.156.42:9000", "172.22.158.42:9000", "172.22.94.42:9000", "172.22.156.43:9000"}
+			fmt.Println("Joined chat")
+			for {
+				consoleReader := bufio.NewReader(os.Stdin)
+				fmt.Print("> ")
+				input, _ := consoleReader.ReadString('\n')
+				SendBroadcast(addresses, 2, []byte(input))
+			}
 		}
 	}
 

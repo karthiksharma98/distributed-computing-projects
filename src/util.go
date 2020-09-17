@@ -15,20 +15,20 @@ type Config struct {
 
 // Service struct
 type Service struct {
-	detectorType string `json:"failure_detector"`
-	introducerIP string `json:"introducer_ip"`
-	port         int    `json:"port"`
+	detectorType string  `json:"failure_detector"`
+	introducerIP string  `json:"introducer_ip"`
+	port         float64 `json:"port"`
 }
 
 // Settings struct
 type Settings struct {
-	interval       int `json:"interval"`
-	failTimeout    int `json:"fail_timeout"`
-	cleanupTimeout int `json:"cleanup_timeout"`
+	interval       float64 `json:"interval"`
+	failTimeout    float64 `json:"fail_timeout"`
+	cleanupTimeout float64 `json:"cleanup_timeout"`
 }
 
 // ReadConfig function to read the configuration JSON
-func ReadConfig() map[string]interface{} {
+func ReadConfig() Config {
 	jsonFile, err := os.Open("../config.json")
 
 	if err != nil {
@@ -42,5 +42,36 @@ func ReadConfig() map[string]interface{} {
 	var result map[string]interface{}
 	json.Unmarshal([]byte(byteValue), &result)
 
-	return result
+	// Create service struct
+	serviceJSON := result["service"].(map[string]interface{})
+	detectType := serviceJSON["failure_detector"].(string)
+	addr := serviceJSON["introducer_ip"].(string)
+	port := serviceJSON["port"].(float64)
+
+	service := Service{
+		detectorType: detectType,
+		introducerIP: addr,
+		port:         port,
+	}
+
+	// Create settings struct
+	settingsJSON := result["settings"].(map[string]interface{})
+	interval := settingsJSON["interval"].(float64)
+	fTime := settingsJSON["fail_timeout"].(float64)
+	cTime := settingsJSON["cleanup_timeout"].(float64)
+
+	settings := Settings{
+		interval:       interval,
+		failTimeout:    fTime,
+		cleanupTimeout: cTime,
+	}
+
+	config := Config{
+		Service:  service,
+		Settings: settings,
+	}
+
+	fmt.Println(config)
+
+	return config
 }
