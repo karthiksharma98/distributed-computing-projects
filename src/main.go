@@ -3,18 +3,23 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"net"
 	"os"
 	"strings"
+	"time"
 )
 
+// Configuration stores all info in config.json
+var Configuration Config
+
 func main() {
-	// TODO: read config files
-	// TODO: join -> sendmessage to introducer to add to list, gets list in return
+	// TODO: wait for input to query operations on node?
 	// TODO: start listening after recieving membershiplist, announce to random member or smth
 
 	// Test send/recv UDP packet
 	// Start a listener somewhere with ./main listen <port>
 	// Send a text message: ./main send <ip>:<port> <message>
+
 	if len(os.Args) > 2 {
 		arg := os.Args[1]
 
@@ -26,7 +31,7 @@ func main() {
 		}
 	}
 
-	config := ReadConfig()
+	Configuration = ReadConfig()
 	// wait for input to query operations on node
 	fmt.Println("Listening for input.")
 	fmt.Println("Options: join introducer, join, leave, kill, status, get logs {-a}.")
@@ -39,32 +44,34 @@ func main() {
 
 		switch input {
 		case "join introducer":
-			addr := config.Service.introducerIP
-			port := config.Service.port
+			process := Member{
+                                0,
+                                true,
+                                make(map[uint8]membershipListEntry)
+                        }
 
-			// Initialize new membership list
-			Initialize()
-			fmt.Println("Memberlist created.")
-
-			// Add self as member
-			member := NewMember(addr)
-			fmt.Printf("Added introducer: ")
-			fmt.Println(member)
-			fmt.Printf("Membership list: ")
-			fmt.Println(GetAllMembers())
-
-			// Start listening
-			fmt.Printf("Listening on port ")
-			fmt.Println(fmt.Sprintf("%v", port))
-			go Listener(fmt.Sprintf("%v", port))
-			fmt.Println("Node has joined the group.")
-
+			process.membershipList[0] = membershipListEntry{
+                                0,
+                                net.ParseIP(Configuration.Service.introducerIP),
+                                0,
+                                time.Now(),
+                                Alive
+                        }
+			process.Listen(fmt.Sprint(Configuration.Service.port))
 		case "join":
-			// Join()
+			// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
+			process := Member{
+                                0,
+                                false,
+                                make(map[uint8]membershipListEntry)
+                        }
+			process.joinRequest()
+			process.Listen(fmt.Sprint(Configuration.Service.port))
 			fmt.Println("Node has joined the group.")
 
 		case "leave":
 			// 	Leave()
+			// TODO: Call Member.leave() here
 			fmt.Println("Node has left the group.")
 
 		case "kill":

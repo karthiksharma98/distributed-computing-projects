@@ -71,7 +71,7 @@ func ReadConfig() Config {
 		Settings: settings,
 	}
 
-	fmt.Println(result["service"])
+	fmt.Println(Config)
 
 	return config
 }

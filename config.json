@@ -1,8 +1,8 @@
 {
     "service": {
         "failure_detector": "gossip",
-        "introducer_ip": "10.0.0.1",
-        "port": 9000
+        "introducer_ip": "127.0.0.1",
+        "port": 9000 
     },
     "settings": {
         "interval": 1,

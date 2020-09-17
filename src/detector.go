@@ -1,56 +1,139 @@
 package main
 
 import (
+	"bytes"
+	"encoding/gob"
+	"fmt"
+	"net"
 	"time"
 )
 
-type Member struct {
-	memberID       uint8
-	addr           string // TODO: should probably store an IP struct instead of the string
-	heartbeatCount uint64
-	timestamp      int64
-	health         uint8
-}
-
-// Health status
+// Health enum
 const (
 	Alive = iota
 	Failed
 	Left
 )
 
-var (
-	memberList map[uint8]Member
-	IDcount    uint8
-)
-
-func Initialize() {
-	memberList = make(map[uint8]Member)
-	IDcount = 0
-	// TODO: temporary... mock for now
-	NewMember("10.0.0.1")
-	NewMember("10.0.0.2")
-	NewMember("10.0.0.3")
+// Member struct to hold member info
+type Member struct {
+	memberID       uint8
+	isIntroducer   bool
+	membershipList map[uint8]membershipListEntry // {uint8 (member_id): Member}
 }
 
-func NewMember(address string) Member {
-	// TODO: might merge this into a CreateOrUpdate func
-	IDcount += 1
-	memberList[IDcount] = Member{
-		memberID:       IDcount,
-		addr:           address,
-		heartbeatCount: 0,
-		timestamp:      time.Now().UnixNano(),
-		health:         Alive,
+// holds one entry of the membership list
+type membershipListEntry struct {
+	MemberID       uint8
+	IPaddr         net.IP
+	HeartbeatCount uint64
+	Timestamp      time.Time
+	Health         uint8 // -> Health enum
+}
+
+// Listen function to keep listening for messages
+func (mem Member) Listen(port string) {
+	// UDP buffer 1024 bytes for now
+	buffer := make([]byte, 1024)
+	addr, err := net.ResolveUDPAddr("udp", ":"+port)
+	if err != nil {
+		panic(err)
 	}
 
-	return memberList[IDcount]
+	listener, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: goroutine for non-blocking listener
+	// listener loop
+	for {
+		n, senderAddr, err := listener.ReadFromUDP(buffer)
+		if err != nil {
+			return
+		}
+
+		msgType := buffer[0]
+		switch msgType {
+		case TextMsg:
+			fmt.Println(string(buffer[1:n]))
+		case JoinMsg:
+			// only introducer can accept join messages
+			if mem.isIntroducer == true {
+				mem.acceptMember(senderAddr.IP)
+			}
+		case HeartbeatMsg: // handles receipt of heartbeat
+
+		case AcceptMsg: // handles receipt of membership list from introducer
+			mem.joinResponse(buffer[1:n])
+
+		default:
+			fmt.Println("Invalid message type")
+		}
+	}
+
 }
 
-func GetMember(id uint8) Member {
-	return memberList[id]
+// request introducer to join
+func (mem Member) joinRequest() {
+	Send(ServiceInfo["introducer_ip"].(string)+":"+fmt.Sprint(ServiceInfo["port"]), JoinMsg, nil)
 }
 
-func GetAllMembers() map[uint8]Member {
-	return memberList
+// receive membership list from introducer and setup
+func (mem Member) joinResponse(membershipListBytes []byte) {
+	// First byte received corresponds to assigned memberID
+	mem.memberID = uint8(membershipListBytes[0])
+
+	// Decode the rest of the buffer to the membership list
+	b := bytes.NewBuffer(membershipListBytes[1:])
+	d := gob.NewDecoder(b)
+	err := d.Decode(&mem.membershipList)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(mem.membershipList)
+}
+
+// modify membership list entry
+func (mem Member) leave() {
+	newEntry := mem.membershipList[mem.memberID]
+	newEntry.HeartbeatCount++
+	newEntry.Health = Left
+	newEntry.Timestamp = time.Now()
+	mem.membershipList[mem.memberID] = newEntry
+
+	// TODO: kill the leaving process after a certain time/# of heartbeats
+}
+
+// for introducer to accept a new member
+func (mem Member) acceptMember(address net.IP) {
+	// assign new ID
+	newMemberID := GetMaxKey(mem.membershipList) + 1
+	mem.membershipList[newMemberID] = membershipListEntry{newMemberID, address, 0, time.Now(), Alive}
+
+	// Encode the membership list to send it
+	b := new(bytes.Buffer)
+	e := gob.NewEncoder(b)
+	err := e.Encode(mem.membershipList)
+	if err != nil {
+		panic(err)
+	}
+
+	// Send the memberID by appending it to start of buffer, and the membershiplist
+	Send(address.String()+":"+fmt.Sprint(ServiceInfo["port"]), AcceptMsg, append([]byte{newMemberID}, b.Bytes()...))
+}
+
+// GetMaxKey to get the maximum of all memberIDs
+func GetMaxKey(list map[uint8]membershipListEntry) uint8 {
+	var result uint8
+	for result = range list {
+		break
+	}
+	for n := range list {
+		if n > result {
+			result = n
+		}
+	}
+	return result
 }
