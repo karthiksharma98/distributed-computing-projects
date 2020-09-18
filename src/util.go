@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
 	"os"
 )
 
@@ -25,6 +27,32 @@ type Settings struct {
 	interval       float64 `json:"interval"`
 	failTimeout    float64 `json:"fail_timeout"`
 	cleanupTimeout float64 `json:"cleanup_timeout"`
+}
+
+var (
+	Info *log.Logger
+	Warn *log.Logger
+	Err  *log.Logger
+)
+
+func Log(infoOut io.Writer, warnOut io.Writer, errOut io.Writer) {
+	Info = log.New(
+		infoOut,
+		"[INFO] ",
+		log.Ldate|log.Ltime,
+	)
+
+	Warn = log.New(
+		warnOut,
+		"[WARN] ",
+		log.Ldate|log.Ltime|log.Lshortfile,
+	)
+
+	Err = log.New(
+		errOut,
+		"[ERROR] ",
+		log.Ldate|log.Ltime|log.Lshortfile,
+	)
 }
 
 // ReadConfig function to read the configuration JSON
@@ -70,8 +98,13 @@ func ReadConfig() Config {
 		Service:  service,
 		Settings: settings,
 	}
-
-	fmt.Println(config)
-
 	return config
+}
+
+func (c *Config) Print() {
+	Info.Println("Detector: " + c.Service.detectorType)
+	Info.Println("Introducer: " + c.Service.introducerIP + " on port " + fmt.Sprint(c.Service.port))
+	Info.Println("Timer interval: " + fmt.Sprint(c.Settings.interval))
+	Info.Println("Failure timeout: " + fmt.Sprint(c.Settings.failTimeout))
+	Info.Println("Cleanup timeout: " + fmt.Sprint(c.Settings.cleanupTimeout))
 }

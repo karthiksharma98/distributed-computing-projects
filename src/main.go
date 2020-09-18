@@ -31,7 +31,10 @@ func main() {
 		}
 	}
 
+	// Set up loggers and configs
+	Log(os.Stdout, os.Stdout, os.Stderr)
 	Configuration = ReadConfig()
+	Configuration.Print()
 	// wait for input to query operations on node
 	fmt.Println("Listening for input.")
 	fmt.Println("Options: join introducer, join, leave, kill, status, get logs {-a}.")
@@ -57,6 +60,7 @@ func main() {
 				time.Now(),
 				Alive,
 			}
+			Info.Println("You are now the introducer.")
 			go process.Listen(fmt.Sprint(Configuration.Service.port))
 		case "join":
 			// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
@@ -67,34 +71,34 @@ func main() {
 			}
 			process.joinRequest()
 			go process.Listen(fmt.Sprint(Configuration.Service.port))
-			fmt.Println("Node has joined the group.")
+			Info.Println("Node has joined the group.")
 
 		case "leave":
 			// 	Leave()
 			// TODO: Call Member.leave() here
-			fmt.Println("Node has left the group.")
+			Info.Println("Node has left the group.")
 
 		case "kill":
 			// simulate a failure?
-			fmt.Println("Killing process. Bye bye.")
+			Warn.Println("Killing process. Bye bye.")
 			os.Exit(1)
 
 		case "status":
 			// TODO
-			fmt.Println("[imagine some status here].")
+			Info.Println("[imagine some status here].")
 
 		case "get logs -a":
 			// TODO
-			fmt.Println("[imagine some logs here].")
+			Info.Println("[imagine some logs here].")
 
 		case "get logs":
 			// TODO
-			fmt.Println("[imagine some logs here].")
+			Info.Println("[imagine some logs here].")
 		// FOR DEBUGGING PURPOSES
 		case "chat -a":
 			// DEBUG addresses
 			addresses := []string{"172.22.156.42:9000", "172.22.158.42:9000", "172.22.94.42:9000", "172.22.156.43:9000"}
-			fmt.Println("Joined chat")
+			Info.Println("Joined chat")
 			for {
 				consoleReader := bufio.NewReader(os.Stdin)
 				fmt.Print("> ")

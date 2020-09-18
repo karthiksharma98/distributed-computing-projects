@@ -60,15 +60,17 @@ func (mem Member) Listen(port string) {
 		case JoinMsg:
 			// only introducer can accept join messages
 			if mem.isIntroducer == true {
+				Info.Println(senderAddr.String() + "requests to join.")
 				mem.acceptMember(senderAddr.IP)
 			}
 		case HeartbeatMsg: // handles receipt of heartbeat
 
 		case AcceptMsg: // handles receipt of membership list from introducer
+			Info.Println("Introducer has accepted join request.")
 			mem.joinResponse(buffer[1:n])
 
 		default:
-			fmt.Println("Invalid message type")
+			Warn.Println("Invalid message type")
 		}
 	}
 
@@ -92,7 +94,7 @@ func (mem Member) joinResponse(membershipListBytes []byte) {
 		panic(err)
 	}
 
-	fmt.Println(mem.membershipList)
+	Info.Println(mem.membershipList)
 }
 
 // modify membership list entry
