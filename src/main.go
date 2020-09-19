@@ -6,7 +6,6 @@ import (
 	"net"
 	"os"
 	"strings"
-	"time"
 )
 
 // Configuration stores all info in config.json
@@ -47,32 +46,16 @@ func main() {
 
 		switch input {
 		case "join introducer":
-			process := Member{
-				0,
-				true,
-				make(map[uint8]membershipListEntry),
-			}
-
-			process.membershipList[0] = membershipListEntry{
-				0,
-				net.ParseIP(Configuration.Service.introducerIP),
-				0,
-				time.Now(),
-				Alive,
-			}
+			process := NewMember(true)
+			process.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
 			Info.Println("You are now the introducer.")
 			go process.Listen(fmt.Sprint(Configuration.Service.port))
 		case "join":
 			// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
-			process := Member{
-				0,
-				false,
-				make(map[uint8]membershipListEntry),
-			}
+			process := NewMember(false)
 			process.joinRequest()
 			go process.Listen(fmt.Sprint(Configuration.Service.port))
 			Info.Println("Node has joined the group.")
-
 		case "leave":
 			// 	Leave()
 			// TODO: Call Member.leave() here
