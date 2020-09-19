@@ -31,8 +31,51 @@ type membershipListEntry struct {
 	Health         uint8 // -> Health enum
 }
 
+// Member constructor
+func NewMember(introducer bool) *Member {
+	mem := &Member{
+		0,
+		introducer,
+		make(map[uint8]membershipListEntry),
+	}
+	return mem
+}
+
+// membershipListEntry constructor
+func NewMembershipListEntry(memberID uint8, address net.IP) membershipListEntry {
+	mlEntry := membershipListEntry{
+		memberID,
+		address,
+		0,
+		time.Now(),
+		Alive,
+	}
+	return mlEntry
+}
+
+// Getter for member entry
+func (mem *Member) GetMemberEntry(key uint8) membershipListEntry {
+	return mem.membershipList[key]
+}
+
+// Setter for member entry
+func (mem *Member) SetMemberEntry(key uint8, val membershipListEntry) {
+	mem.membershipList[key] = val
+	return
+}
+
+// Remove fn for member entry
+func (mem *Member) RemoveMemberEntry(key uint8) {
+	delete(mem.membershipList, key)
+}
+
+// Get all members in membership list
+func (mem *Member) GetAllMembers() map[uint8]membershipListEntry {
+	return mem.membershipList
+}
+
 // Listen function to keep listening for messages
-func (mem Member) Listen(port string) {
+func (mem *Member) Listen(port string) {
 	// UDP buffer 1024 bytes for now
 	buffer := make([]byte, 1024)
 	addr, err := net.ResolveUDPAddr("udp", ":"+port)
@@ -60,7 +103,7 @@ func (mem Member) Listen(port string) {
 		case JoinMsg:
 			// only introducer can accept join messages
 			if mem.isIntroducer == true {
-				Info.Println(senderAddr.String() + "requests to join.")
+				Info.Println(senderAddr.String() + " requests to join.")
 				mem.acceptMember(senderAddr.IP)
 			}
 		case HeartbeatMsg: // handles receipt of heartbeat
@@ -77,12 +120,12 @@ func (mem Member) Listen(port string) {
 }
 
 // request introducer to join
-func (mem Member) joinRequest() {
+func (mem *Member) joinRequest() {
 	Send(Configuration.Service.introducerIP+":"+fmt.Sprint(Configuration.Service.port), JoinMsg, nil)
 }
 
 // receive membership list from introducer and setup
-func (mem Member) joinResponse(membershipListBytes []byte) {
+func (mem *Member) joinResponse(membershipListBytes []byte) {
 	// First byte received corresponds to assigned memberID
 	mem.memberID = uint8(membershipListBytes[0])
 
@@ -98,7 +141,7 @@ func (mem Member) joinResponse(membershipListBytes []byte) {
 }
 
 // modify membership list entry
-func (mem Member) leave() {
+func (mem *Member) leave() {
 	newEntry := mem.membershipList[mem.memberID]
 	newEntry.HeartbeatCount++
 	newEntry.Health = Left
@@ -109,10 +152,10 @@ func (mem Member) leave() {
 }
 
 // for introducer to accept a new member
-func (mem Member) acceptMember(address net.IP) {
+func (mem *Member) acceptMember(address net.IP) {
 	// assign new ID
 	newMemberID := GetMaxKey(mem.membershipList) + 1
-	mem.membershipList[newMemberID] = membershipListEntry{newMemberID, address, 0, time.Now(), Alive}
+	mem.membershipList[newMemberID] = NewMembershipListEntry(newMemberID, address)
 
 	// Encode the membership list to send it
 	b := new(bytes.Buffer)
