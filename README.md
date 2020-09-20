@@ -51,6 +51,25 @@ All-to-all:
 * All to all service
 * Why not both??
 
+### Usage
+
+* Console interface
+* Membership commands
+  * join introducer 
+    * Initializes membership list for group, accept requests from other nodes to join
+  * join
+    * Asks introducer IP to join group
+  * leave
+    * Voluntarily leave
+  * kill
+    * Die
+* Heartbeating
+  * start
+    * Starts heartbeating to other members (needs to be in a group first)
+  * stop
+  * switch gossip
+  * switch alltoall
+
 ### Gossip protocol
 
 * Disseminate updates of members, if any, instead of entire list (bandwidth-efficient)
@@ -151,6 +170,21 @@ func Listener(port string)
 Structs
 
 ```go
+type Member struct {
+	memberID       uint8
+	isIntroducer   bool
+	membershipList map[uint8]membershipListEntry // {uint8 (member_id): Member}
+}
+// lock individual member or entire list? Or channels?
+
+type membershipListEntry struct {
+	MemberID       uint8
+	IPaddr         net.IP
+	HeartbeatCount uint64
+	Timestamp      time.Time
+	Health         uint8 // -> Health enum
+}
+
 // enum for health status
 const (
     Alive = iota
@@ -158,17 +192,13 @@ const (
     Left
 )
 
-type Member struct {
-    memberID uint8
-    addr IP // 'net' package
-    heartbeatCount uint64
-    timestamp uint64
-    health uint8 // -> Health enum
-}
-
-// hashtable holding record of all members
-var membership_list map[uint8]Member // {uint8 (member_id): Member}
-// lock individual member or entire list? Or channels?
+// Ticker variables
+var (
+	disableHeart = make(chan bool)
+	ticker       *time.Ticker
+	enabledHeart = false
+	isGossip     = true
+)
 ```
 API
 
@@ -181,6 +211,9 @@ func GetAllMembers() -> ([]Member)
 
 // choose random node, check list for failures, send new list to random node
 func Gossip()
+func Tick() // timer to sched interrupts periodically
+func SetHeartbeating(flag bool)
+func RandID() // picks random IP from list
 
 // heartbeat event handler invoked when connection is recieved
 // read inc. message, send ack, perform necessary updates
@@ -233,7 +266,9 @@ Root
 		tests.go
 ```
 
+### Logging
 
+* Use Info.Println("message"), Warn.Println("message"), or Err.Println("message")
 
 ### Testing
 
