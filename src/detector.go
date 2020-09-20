@@ -4,15 +4,9 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"math/rand"
 	"net"
 	"time"
-)
-
-// Health enum
-const (
-	Alive = iota
-	Failed
-	Left
 )
 
 // Member struct to hold member info
@@ -30,6 +24,21 @@ type membershipListEntry struct {
 	Timestamp      time.Time
 	Health         uint8 // -> Health enum
 }
+
+// Health enum
+const (
+	Alive = iota
+	Failed
+	Left
+)
+
+// Ticker variables
+var (
+	disableHeart = make(chan bool)
+	ticker       *time.Ticker
+	enabledHeart = false
+	isGossip     = true
+)
 
 // Member constructor
 func NewMember(introducer bool) *Member {
@@ -74,6 +83,64 @@ func (mem *Member) GetAllMembers() map[uint8]membershipListEntry {
 	return mem.membershipList
 }
 
+// Timer to schedule heartbeats
+func (mem *Member) Tick() {
+	if ticker == nil {
+		ticker = time.NewTicker(time.Duration(Configuration.Settings.gossipInterval) * 1000 * time.Millisecond)
+	}
+	if enabledHeart {
+		Warn.Println("Heartbeating has already started.")
+		return
+	}
+	enabledHeart = true
+	for {
+		select {
+		case <-disableHeart:
+			enabledHeart = false
+			Warn.Println("Stopped heartbeating.")
+			return
+		case t := <-ticker.C:
+			if isGossip {
+				mem.Gossip()
+			} else {
+				Info.Println("All-to-all ", t)
+				//mem.AllToAll()
+			}
+		}
+	}
+}
+
+// Switch heartbeating modes (All to All or Gossip)
+func SetHeartbeating(flag bool) {
+	isGossip = flag
+	interval := time.Millisecond
+	if isGossip {
+		Info.Println("Running Gossip at T =", Configuration.Settings.gossipInterval)
+		interval = time.Duration(Configuration.Settings.gossipInterval) * 1000 * interval
+	} else {
+		Info.Println("Running All-to-All at T =", Configuration.Settings.allInterval)
+		interval = time.Duration(Configuration.Settings.allInterval) * 1000 * interval
+	}
+	ticker.Reset(interval)
+}
+
+func (mem *Member) Gossip() {
+	// TODO: failure detection
+	// FailMember()
+	// CleanupMember()
+	// Select random member
+	addr := mem.RandIP()
+	Info.Println("Gossiping to " + addr.String())
+	// Encode the membership list to send it
+	b := new(bytes.Buffer)
+	e := gob.NewEncoder(b)
+	err := e.Encode(mem.membershipList)
+	if err != nil {
+		panic(err)
+	}
+	Send(addr.String()+":"+fmt.Sprint(Configuration.Service.port), HeartbeatMsg, b.Bytes())
+}
+
 // Listen function to keep listening for messages
 func (mem *Member) Listen(port string) {
 	// UDP buffer 1024 bytes for now
@@ -88,7 +155,6 @@ func (mem *Member) Listen(port string) {
 		panic(err)
 	}
 
-	// TODO: goroutine for non-blocking listener
 	// listener loop
 	for {
 		n, senderAddr, err := listener.ReadFromUDP(buffer)
@@ -100,23 +166,20 @@ func (mem *Member) Listen(port string) {
 		switch msgType {
 		case TextMsg:
 			fmt.Println(string(buffer[1:n]))
-		case JoinMsg:
-			// only introducer can accept join messages
+		case JoinMsg: // only introducer can accept join messages
 			if mem.isIntroducer == true {
 				Info.Println(senderAddr.String() + " requests to join.")
 				mem.acceptMember(senderAddr.IP)
 			}
 		case HeartbeatMsg: // handles receipt of heartbeat
-
+			Info.Println("Recieved heartbeat from ", senderAddr.String())
 		case AcceptMsg: // handles receipt of membership list from introducer
 			Info.Println("Introducer has accepted join request.")
 			mem.joinResponse(buffer[1:n])
-
 		default:
 			Warn.Println("Invalid message type")
 		}
 	}
-
 }
 
 // request introducer to join
@@ -181,4 +244,17 @@ func GetMaxKey(list map[uint8]membershipListEntry) uint8 {
 		}
 	}
 	return result
+}
+
+// Find random IP in membership list
+func (mem *Member) RandIP() net.IP {
+	i := 0
+	randVal := rand.Intn(len(mem.membershipList))
+	for _, v := range mem.membershipList {
+		if i == randVal {
+			return v.IPaddr
+		}
+		i += 1
+	}
+	return nil
 }

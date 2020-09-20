@@ -9,27 +9,14 @@ import (
 )
 
 // Configuration stores all info in config.json
-var Configuration Config
+var (
+	Configuration Config
+	process       *Member
+)
 
 func main() {
 	// TODO: wait for input to query operations on node?
 	// TODO: start listening after recieving membershiplist, announce to random member or smth
-
-	// Test send/recv UDP packet
-	// Start a listener somewhere with ./main listen <port>
-	// Send a text message: ./main send <ip>:<port> <message>
-
-	if len(os.Args) > 2 {
-		arg := os.Args[1]
-
-		switch arg {
-		case "send":
-			SendMessage(os.Args[2], os.Args[3])
-		case "listen":
-			Listener(os.Args[2])
-		}
-	}
-
 	// Set up loggers and configs
 	Log(os.Stdout, os.Stdout, os.Stderr)
 	Configuration = ReadConfig()
@@ -46,13 +33,13 @@ func main() {
 
 		switch input {
 		case "join introducer":
-			process := NewMember(true)
+			process = NewMember(true)
 			process.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
-			Info.Println("You are now the introducer.")
 			go process.Listen(fmt.Sprint(Configuration.Service.port))
+			Info.Println("You are now the introducer.")
 		case "join":
 			// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
-			process := NewMember(false)
+			process = NewMember(false)
 			process.joinRequest()
 			go process.Listen(fmt.Sprint(Configuration.Service.port))
 			Info.Println("Node has joined the group.")
@@ -60,7 +47,6 @@ func main() {
 			// 	Leave()
 			// TODO: Call Member.leave() here
 			Info.Println("Node has left the group.")
-
 		case "kill":
 			// simulate a failure?
 			Warn.Println("Killing process. Bye bye.")
@@ -88,6 +74,20 @@ func main() {
 				input, _ := consoleReader.ReadString('\n')
 				SendBroadcast(addresses, 2, []byte(input))
 			}
+		// Gossip/heartbeating
+		case "start":
+			if process == nil {
+				Warn.Println("You are not in a group.")
+			}
+			go process.Tick()
+		case "stop":
+			if enabledHeart == true {
+				disableHeart <- true
+			}
+		case "switch gossip":
+			SetHeartbeating(true)
+		case "switch alltoall":
+			SetHeartbeating(false)
 		}
 	}
 

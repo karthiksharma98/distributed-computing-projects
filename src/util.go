@@ -24,7 +24,8 @@ type Service struct {
 
 // Settings struct
 type Settings struct {
-	interval       float64 `json:"interval"`
+	gossipInterval float64 `json:"gossip_interval"`
+	allInterval    float64 `json:"all_interval"`
 	failTimeout    float64 `json:"fail_timeout"`
 	cleanupTimeout float64 `json:"cleanup_timeout"`
 }
@@ -84,12 +85,14 @@ func ReadConfig() Config {
 
 	// Create settings struct
 	settingsJSON := result["settings"].(map[string]interface{})
-	interval := settingsJSON["interval"].(float64)
+	gInterval := settingsJSON["gossip_interval"].(float64)
+	aInterval := settingsJSON["all_interval"].(float64)
 	fTime := settingsJSON["fail_timeout"].(float64)
 	cTime := settingsJSON["cleanup_timeout"].(float64)
 
 	settings := Settings{
-		interval:       interval,
+		gossipInterval: gInterval,
+		allInterval:    aInterval,
 		failTimeout:    fTime,
 		cleanupTimeout: cTime,
 	}
@@ -104,7 +107,8 @@ func ReadConfig() Config {
 func (c *Config) Print() {
 	Info.Println("Detector: " + c.Service.detectorType)
 	Info.Println("Introducer: " + c.Service.introducerIP + " on port " + fmt.Sprint(c.Service.port))
-	Info.Println("Timer interval: " + fmt.Sprint(c.Settings.interval))
+	Info.Println("Gossip interval: " + fmt.Sprint(c.Settings.gossipInterval))
+	Info.Println("All-to-All interval: " + fmt.Sprint(c.Settings.allInterval))
 	Info.Println("Failure timeout: " + fmt.Sprint(c.Settings.failTimeout))
 	Info.Println("Cleanup timeout: " + fmt.Sprint(c.Settings.cleanupTimeout))
 }
