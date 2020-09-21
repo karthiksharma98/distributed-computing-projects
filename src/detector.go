@@ -124,7 +124,7 @@ func (mem *Member) HealthCheckup(memberId uint8, prevHeartbeatCount uint64) {
 		time.Sleep(time.Duration(Configuration.Settings.failTimeout) * time.Second)
 		mem.FailMember(memberId, prevHeartbeatCount)
 	}()
-	
+
 	go func() {
 		time.Sleep(time.Duration(Configuration.Settings.cleanupTimeout) * time.Second)
 		mem.CleanupMember(memberId, prevHeartbeatCount)
@@ -147,7 +147,7 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 	// compare each member in the received list
 	for rcvdId, rcvdMlEntry := range rcvdMemList {
 		// check that you have the same id in your membership list
-        if currMlEntry, ok := mem.membershipList[rcvdId]; ok {
+		if currMlEntry, ok := mem.membershipList[rcvdId]; ok {
 			rcvdTimestamp := rcvdMlEntry.Timestamp
 			currTimestamp := currMlEntry.Timestamp
 			if rcvdTimestamp.After(currTimestamp) {
@@ -165,7 +165,7 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 		}
 
 		// TODO: should you add the rcvdId to your own membership list if you don't have it in yours? (in case smth went wrong)
-    }
+	}
 }
 
 func setTicker() {
@@ -329,7 +329,7 @@ func (mem *Member) acceptMember(address net.IP) {
 
 	// Send the memberID by appending it to start of buffer, and the membershiplist
 	Send(address.String()+":"+fmt.Sprint(Configuration.Service.port), AcceptMsg, append([]byte{newMemberID}, b.Bytes()...))
-	
+
 	// check in on the new member in case it fails before it sends its first heartbeat
 	mem.HealthCheckup(newMemberID, 0)
 }
