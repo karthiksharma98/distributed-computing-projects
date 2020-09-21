@@ -71,6 +71,11 @@ func main() {
 		case "leave":
 			// 	Leave()
 			// TODO: Call Member.leave() here
+			if process == nil {
+				Warn.Println("You need to join in order to leave!")
+				continue
+			}
+
 			Info.Println("Node has left the group.")
 			process = nil
 
@@ -81,6 +86,11 @@ func main() {
 
 		case "status":
 			// TODO
+			if process == nil {
+				Warn.Println("You need to join in order to get status!")
+				continue
+			}
+
 			process.PrintMembershipList(os.Stdout)
 			Info.Println("[imagine some status here].")
 
@@ -107,7 +117,7 @@ func main() {
 
 		case "start":
 			if process == nil {
-				Warn.Println("You are not in a group.")
+				Warn.Println("You need to join group before you start.")
 				continue
 			}
 
