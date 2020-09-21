@@ -14,34 +14,52 @@ var (
 	process       *Member
 )
 
+func printOptions() {
+	if process == nil {
+		fmt.Println("Welcome! Don't be a loner and join the group by saying \"join introducer\" or \"join\".")		
+	} else {
+		if !enabledHeart {
+			fmt.Println("Start heartbeating with \"start\".")
+		}
+
+		fmt.Print("Interact with the group using any of the following: leave, kill, ")
+		fmt.Println("status, get logs {-a}, stop, switch (gossip/alltoall), or chat")
+	}
+}
+
 func main() {
 	// Set up loggers and configs
 	Log(os.Stdout, os.Stdout, os.Stderr)
 	Configuration = ReadConfig()
 	Configuration.Print()
 
-	// wait for input to query operations on node
-	fmt.Println("Listening for input.")
-	fmt.Println("Options: join introducer, join, leave, kill, status, get logs {-a}.")
 	for {
+		printOptions()
+		// wait for input to query operations on node
 		consoleReader := bufio.NewReader(os.Stdin)
 		fmt.Print("> ")
 		input, _ := consoleReader.ReadString('\n')
 		input = strings.ToLower(strings.TrimSuffix(input, "\n"))
-		args := strings.Fields(input) // Split string into os.Args like array
+		inputFields := strings.Fields(input) // Split string into os.Args like array
 
-		if len(args) == 0 {
+		if len(inputFields) == 0 {
 			Info.Println("invalid command")
 			continue
 		}
 
-		switch args[0] {
+		switch inputFields[0] {
 		case "join":
-			if len(args) == 2 && args[1] == "introducer" {
+			if process != nil {
+				Warn.Println("You have already joined!")
+				continue
+			}
+
+			if len(inputFields) == 2 && inputFields[1] == "introducer" {
 				process = NewMember(true)
 				process.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
 				Info.Println("You are now the introducer.")
+
 			} else {
 				// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
 				process = NewMember(false)
@@ -49,26 +67,32 @@ func main() {
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
 				Info.Println("Node has joined the group.")
 			}
+
 		case "leave":
 			// 	Leave()
 			// TODO: Call Member.leave() here
 			Info.Println("Node has left the group.")
+			process = nil
+
 		case "kill":
 			// simulate a failure?
 			Warn.Println("Killing process. Bye bye.")
 			os.Exit(1)
+
 		case "status":
 			// TODO
 			process.PrintMembershipList(os.Stdout)
 			Info.Println("[imagine some status here].")
+
 		case "get":
-			if len(args) >= 2 && args[1] == "logs" {
-				if len(args) == 3 && args[2] == "-a" {
+			if len(inputFields) >= 2 && inputFields[1] == "logs" {
+				if len(inputFields) == 3 && inputFields[2] == "-a" {
 					Info.Println("[imagine some logs logs here].")
 				} else {
 					Info.Println("[imagine some logs here].")
 				}
 			}
+
 		case "chat":
 			// FOR DEBUGGING PURPOSES
 			// DEBUG addresses
@@ -80,21 +104,42 @@ func main() {
 				input, _ := consoleReader.ReadString('\n')
 				SendBroadcast(addresses, 2, []byte(input))
 			}
+
 		case "start":
 			if process == nil {
 				Warn.Println("You are not in a group.")
+				continue
 			}
+
 			go process.Tick()
+
 		case "stop":
-			if enabledHeart == true {
-				disableHeart <- true
+			if !enabledHeart {
+				Warn.Println("No process running to stop.")
+				continue
 			}
+
+			disableHeart <- true
+			
 		case "switch":
-			if args[1] == "gossip" {
+			if inputFields[1] == "gossip" {
+				if isGossip {
+					Warn.Println("You are already running Gossip")
+					continue
+				}
+
 				SetHeartbeating(true)
-			} else if args[1] == "alltoall" {
+
+			} else if inputFields[1] == "alltoall" {
+				if !isGossip {
+					Warn.Println("You are already running All to All")
+					continue
+				}
+
 				SetHeartbeating(false)
+
 			}
+
 		default:
 			Info.Println("invalid command")
 		}
