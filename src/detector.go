@@ -83,15 +83,21 @@ func (mem *Member) GetAllMembers() map[uint8]membershipListEntry {
 	return mem.membershipList
 }
 
+func setTicker() {
+	ticker = time.NewTicker(time.Duration(Configuration.Settings.gossipInterval) * 1000 * time.Millisecond)
+}
+
 // Timer to schedule heartbeats
 func (mem *Member) Tick() {
 	if ticker == nil {
-		ticker = time.NewTicker(time.Duration(Configuration.Settings.gossipInterval) * 1000 * time.Millisecond)
+		setTicker()
 	}
+
 	if enabledHeart {
 		Warn.Println("Heartbeating has already started.")
 		return
 	}
+
 	enabledHeart = true
 	for {
 		select {
@@ -112,6 +118,10 @@ func (mem *Member) Tick() {
 
 // Switch heartbeating modes (All to All or Gossip)
 func SetHeartbeating(flag bool) {
+	if ticker == nil {
+		setTicker()
+	}
+
 	isGossip = flag
 	interval := time.Millisecond
 	if isGossip {
@@ -121,6 +131,7 @@ func SetHeartbeating(flag bool) {
 		Info.Println("Running All-to-All at T =", Configuration.Settings.allInterval)
 		interval = time.Duration(Configuration.Settings.allInterval) * 1000 * interval
 	}
+
 	ticker.Reset(interval)
 }
 
@@ -131,6 +142,7 @@ func (mem *Member) Gossip() {
 	// Select random member
 	addr := mem.RandIP()
 	Info.Println("Gossiping to " + addr.String())
+
 	// Encode the membership list to send it
 	b := new(bytes.Buffer)
 	e := gob.NewEncoder(b)
@@ -138,6 +150,7 @@ func (mem *Member) Gossip() {
 	if err != nil {
 		panic(err)
 	}
+
 	Send(addr.String()+":"+fmt.Sprint(Configuration.Service.port), HeartbeatMsg, b.Bytes())
 }
 
