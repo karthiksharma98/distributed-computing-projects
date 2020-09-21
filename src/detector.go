@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"io"
 	"math/rand"
 	"net"
+	"text/tabwriter"
 	"time"
 )
 
@@ -82,6 +84,17 @@ func (mem *Member) RemoveMemberEntry(key uint8) {
 // Get all members in membership list
 func (mem *Member) GetAllMembers() map[uint8]membershipListEntry {
 	return mem.membershipList
+}
+
+// PrintMembershipList pretty-prints all values inside the membership list
+func (mem *Member) PrintMembershipList(output io.Writer) {
+	writer := tabwriter.NewWriter(output, 0, 8, 1, '\t', tabwriter.AlignRight)
+	fmt.Fprintln(writer, "MemberID\tIP\tHeartbeats\tTimestamp\tHealth")
+	fmt.Fprintln(writer, "-------\t----------\t----\t-----------\t------")
+	for _, v := range mem.membershipList {
+		fmt.Fprintf(writer, "%v\t%v\t%v\t%v\t%v\n", v.MemberID, v.IPaddr, v.HeartbeatCount, v.Timestamp.String(), v.Health)
+	}
+	writer.Flush()
 }
 
 // Return true if my heartbeat count matches the old heartbeat count
@@ -237,6 +250,20 @@ func (mem *Member) Gossip() {
 	}
 
 	Send(addr.String()+":"+fmt.Sprint(Configuration.Service.port), HeartbeatMsg, b.Bytes())
+}
+
+// AllToAll heartbeating - sends membership list to all other
+func (mem *Member) AllToAll() {
+	// Encode the membership list to send it
+	b := new(bytes.Buffer)
+	e := gob.NewEncoder(b)
+	err := e.Encode(mem.membershipList)
+	if err != nil {
+		panic(err)
+	}
+	for _, v := range mem.membershipList {
+		Send(v.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.port), HeartbeatMsg, b.Bytes())
+	}
 }
 
 // Listen function to keep listening for messages

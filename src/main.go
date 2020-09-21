@@ -58,6 +58,7 @@ func main() {
 
 		} else if strings.Contains(input, "status") {
 			// TODO
+			process.PrintMembershipList(os.Stdout)
 			Info.Println("[imagine some status here].")
 
 		} else if strings.Contains(input, "get logs -a") {
