@@ -97,51 +97,28 @@ func (mem *Member) PrintMembershipList(output io.Writer) {
 	writer.Flush()
 }
 
-// Return true if my heartbeat count matches the old heartbeat count
-// (Helper for FailMember/CleanupMember)
-func (mem *Member) SameHeartbeatCount(memberId uint8, prevHeartbeatCount uint64) bool {
-	return mem.membershipList[memberId].HeartbeatCount == prevHeartbeatCount
-}
-
-// Invoked after T_failed seconds. Mark node as failed if its heartbeat has not been updated.
-func (mem *Member) FailMember(memberId uint8, prevHeartbeatCount uint64) {
+// Called when a node hasn't been updated in T_Failed seconds.
+func (mem *Member) FailMember(memberId uint8) {
 	if currEntry, ok := mem.membershipList[memberId]; ok {
-		if mem.SameHeartbeatCount(memberId, prevHeartbeatCount) && currEntry.Health == Alive {
-			mem.membershipList[memberId] = membershipListEntry{
-				currEntry.MemberID,
-				currEntry.IPaddr,
-				currEntry.HeartbeatCount,
-				currEntry.Timestamp,
-				Failed,
-			}
-
-			Info.Println("Marked member failed: ", memberId)
+		mem.membershipList[memberId] = membershipListEntry{
+			currEntry.MemberID,
+			currEntry.IPaddr,
+			currEntry.HeartbeatCount,
+			currEntry.Timestamp,
+			Failed,
 		}
+
+		Info.Println("Marked member failed: ", memberId)
 	}
 
 }
 
-// Invoked after T_cleanup seconds. Delete entry if its heartbeat has not been updated.
-func (mem *Member) CleanupMember(memberId uint8, prevHeartbeatCount uint64) {
+// Called when a node hasn't been updated in T_Cleanup seconds.
+func (mem *Member) CleanupMember(memberId uint8) {
 	if _, ok := mem.membershipList[memberId]; ok {
-		if mem.SameHeartbeatCount(memberId, prevHeartbeatCount) {
-			delete(mem.membershipList, memberId)
-			Info.Println("Cleaned up member: ", memberId)
-		}
+		delete(mem.membershipList, memberId)
+		Info.Println("Cleaned up member: ", memberId)
 	}
-}
-
-// Calls go routines for FailMember() and CleanupMember()
-func (mem *Member) HealthCheckup(memberId uint8, prevHeartbeatCount uint64) {
-	go func() {
-		time.Sleep(time.Duration(Configuration.Settings.failTimeout) * time.Second)
-		mem.FailMember(memberId, prevHeartbeatCount)
-	}()
-
-	go func() {
-		time.Sleep(time.Duration(Configuration.Settings.cleanupTimeout) * time.Second)
-		mem.CleanupMember(memberId, prevHeartbeatCount)
-	}()
 }
 
 // Invoked when hearbeat is recieved
@@ -157,27 +134,31 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 		panic(err)
 	}
 
-	// compare each member in the received list
-	for rcvdId, rcvdMlEntry := range rcvdMemList {
-		// check that you have the same id in your membership list
-		if currMlEntry, ok := mem.membershipList[rcvdId]; ok {
-			rcvdTimestamp := rcvdMlEntry.Timestamp
-			currTimestamp := currMlEntry.Timestamp
-			if rcvdTimestamp.After(currTimestamp) {
-				// if their stored time is > your stored time, update
-				mem.membershipList[rcvdId] = membershipListEntry{
-					currMlEntry.MemberID,
-					currMlEntry.IPaddr,
-					rcvdMlEntry.HeartbeatCount,
+	for currId, currEntry := range mem.membershipList {
+		// check that they have the same id in their membership list
+		if rcvdEntry, ok := rcvdMemList[currId]; ok {
+			currHearbeatCt := currEntry.HeartbeatCount
+			rcvdHeartbeatCt := rcvdEntry.HeartbeatCount
+			if rcvdHeartbeatCt > currHearbeatCt {
+				// Update timestamp
+				mem.membershipList[currId] = membershipListEntry{
+					currEntry.MemberID,
+					currEntry.IPaddr,
+					rcvdEntry.HeartbeatCount,
 					time.Now(),
 					Alive,
 				}
-
-				mem.HealthCheckup(rcvdId, rcvdMlEntry.HeartbeatCount)
 			}
 		}
 
-		// TODO: should you add the rcvdId to your own membership list if you don't have it in yours? (in case smth went wrong)
+		difference := time.Now().Sub(currEntry.Timestamp).Seconds()
+		if difference >= Configuration.Settings.failTimeout {
+			if difference >= Configuration.Settings.cleanupTimeout {
+				mem.CleanupMember(currId)
+			} else {
+				mem.FailMember(currId)
+			}
+		}
 	}
 }
 
@@ -356,9 +337,6 @@ func (mem *Member) acceptMember(address net.IP) {
 
 	// Send the memberID by appending it to start of buffer, and the membershiplist
 	Send(address.String()+":"+fmt.Sprint(Configuration.Service.port), AcceptMsg, append([]byte{newMemberID}, b.Bytes()...))
-
-	// check in on the new member in case it fails before it sends its first heartbeat
-	mem.HealthCheckup(newMemberID, 0)
 }
 
 // GetMaxKey to get the maximum of all memberIDs
