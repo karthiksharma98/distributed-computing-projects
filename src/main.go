@@ -16,7 +16,7 @@ var (
 
 func printOptions() {
 	if process == nil {
-		fmt.Println("Welcome! Don't be a loner and join the group by saying \"join introducer\" or \"join\".")		
+		fmt.Println("Welcome! Don't be a loner and join the group by saying \"join introducer\" or \"join\".")
 	} else {
 		if !enabledHeart {
 			fmt.Println("Start heartbeating with \"start\".")
@@ -120,7 +120,7 @@ func main() {
 			}
 
 			disableHeart <- true
-			
+
 		case "switch":
 			if inputFields[1] == "gossip" {
 				if isGossip {
