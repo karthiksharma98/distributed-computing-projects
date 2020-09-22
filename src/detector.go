@@ -125,7 +125,7 @@ func (mem *Member) CleanupMember(memberId uint8) {
 func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 	// grab membership list in order to merge with your own
 	// decode the buffer to the membership list, similar to joinResponse()
-	b := bytes.NewBuffer(membershipListBytes[1:])
+        b := bytes.NewBuffer(membershipListBytes)
 	d := gob.NewDecoder(b)
 	rcvdMemList := make(map[uint8]membershipListEntry)
 
