@@ -125,7 +125,7 @@ func (mem *Member) CleanupMember(memberId uint8) {
 func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 	// grab membership list in order to merge with your own
 	// decode the buffer to the membership list, similar to joinResponse()
-        b := bytes.NewBuffer(membershipListBytes)
+	b := bytes.NewBuffer(membershipListBytes)
 	d := gob.NewDecoder(b)
 	rcvdMemList := make(map[uint8]membershipListEntry)
 
@@ -179,17 +179,22 @@ func (mem *Member) Tick() {
 
 	enabledHeart = true
 	for {
+		// Listen channel to disable heartbeating
 		select {
 		case <-disableHeart:
 			enabledHeart = false
 			Warn.Println("Stopped heartbeating.")
 			return
-		case t := <-ticker.C:
+		case _ = <-ticker.C:
+			// Increment heartbeat counter of self
+			entry := mem.membershipList[mem.memberID]
+			entry.HeartbeatCount += 1
+			mem.membershipList[mem.memberID] = entry
+			// Gossip or AllToAll
 			if isGossip {
 				mem.Gossip()
 			} else {
-				Info.Println("All-to-all ", t)
-				//mem.AllToAll()
+				mem.AllToAll()
 			}
 		}
 	}
@@ -215,9 +220,6 @@ func SetHeartbeating(flag bool) {
 }
 
 func (mem *Member) Gossip() {
-	// TODO: failure detection
-	// FailMember()
-	// CleanupMember()
 	// Select random member
 	addr := mem.RandIP()
 	Info.Println("Gossiping to " + addr.String())
@@ -242,6 +244,7 @@ func (mem *Member) AllToAll() {
 	if err != nil {
 		panic(err)
 	}
+	Info.Println("Sending All-to-All.")
 	for _, v := range mem.membershipList {
 		Send(v.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.port), HeartbeatMsg, b.Bytes())
 	}

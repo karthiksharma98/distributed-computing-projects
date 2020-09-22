@@ -132,7 +132,7 @@ func main() {
 			disableHeart <- true
 
 		case "switch":
-			if inputFields[1] == "gossip" {
+			if len(inputFields) >= 2 && inputFields[1] == "gossip" {
 				if isGossip {
 					Warn.Println("You are already running Gossip")
 					continue
@@ -140,7 +140,7 @@ func main() {
 
 				SetHeartbeating(true)
 
-			} else if inputFields[1] == "alltoall" {
+			} else if len(inputFields) >= 2 && inputFields[1] == "alltoall" {
 				if !isGossip {
 					Warn.Println("You are already running All to All")
 					continue
