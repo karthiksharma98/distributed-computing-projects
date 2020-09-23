@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 )
 
@@ -102,6 +103,12 @@ func ReadConfig() Config {
 		Settings: settings,
 	}
 	return config
+}
+
+func genRandPort() int {
+	min := 1025
+	max := 49151
+	return rand.Intn(max-min+1) + min
 }
 
 func (c *Config) Print() {
