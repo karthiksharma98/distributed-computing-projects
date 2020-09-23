@@ -222,6 +222,11 @@ func SetHeartbeating(flag bool) {
 func (mem *Member) Gossip() {
 	// Select random member
 	addr := mem.RandIP()
+	if addr == nil {
+		Info.Println("No other member to gossip to!")
+		return
+	}
+
 	Info.Println("Gossiping to " + addr.String())
 
 	// Encode the membership list to send it
@@ -358,13 +363,28 @@ func GetMaxKey(list map[uint8]membershipListEntry) uint8 {
 
 // Find random IP in membership list
 func (mem *Member) RandIP() net.IP {
-	i := 0
-	randVal := rand.Intn(len(mem.membershipList))
-	for _, v := range mem.membershipList {
-		if i == randVal {
-			return v.IPaddr
-		}
-		i += 1
+	if len(mem.membershipList) == 1 {
+		// you are the only process in the list
+		return nil
 	}
+
+	// loop until you find a member that isn't your own
+	for {
+		i := 0
+		randVal := rand.Intn(len(mem.membershipList))
+		var randEntry membershipListEntry
+		for _, v := range mem.membershipList {
+			if i == randVal {
+				randEntry = v
+			}
+
+			i += 1
+		}
+
+		if randEntry.MemberID != mem.memberID {
+			return randEntry.IPaddr
+		}
+	}
+
 	return nil
 }
