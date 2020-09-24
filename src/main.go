@@ -153,7 +153,7 @@ func main() {
 				}
 
 				SetHeartbeating(true)
-
+                                process.SendAll(SwitchMsg, []byte{1})
 			} else if len(inputFields) >= 2 && inputFields[1] == "alltoall" {
 				if !isGossip {
 					Warn.Println("You are already running All to All")
@@ -161,7 +161,7 @@ func main() {
 				}
 
 				SetHeartbeating(false)
-
+                                process.SendAll(SwitchMsg, []byte{0})
 			}
 
 		default:

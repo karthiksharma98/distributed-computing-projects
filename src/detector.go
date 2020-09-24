@@ -220,6 +220,7 @@ func SetHeartbeating(flag bool) {
 	ticker.Reset(interval)
 }
 
+// Send Gossip to random member in group
 func (mem *Member) Gossip() {
 	// Select random member
 	addr := mem.PickRandMemberIP()
@@ -251,8 +252,14 @@ func (mem *Member) AllToAll() {
 		panic(err)
 	}
 	Info.Println("Sending All-to-All.")
+	// Send heartbeatmsg and membership list to all members
+	mem.SendAll(HeartbeatMsg, b.Bytes())
+}
+
+// Broadcast a message to all members in membershiplist
+func (mem *Member) SendAll(msgType MessageType, msg []byte) {
 	for _, v := range mem.membershipList {
-		Send(v.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.port), HeartbeatMsg, b.Bytes())
+		Send(v.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.port), msgType, msg)
 	}
 }
 
@@ -297,6 +304,12 @@ func (mem *Member) Listen(port string) {
 			mem.HandleGrepRequest(ipAddr, buffer[1:n])
 		case GrepResp: // handles grep response when one is received
 			mem.HandleGrepResponse(buffer[1:n])
+		case SwitchMsg:
+			if buffer[1] == 1 {
+				SetHeartbeating(true)
+			} else {
+				SetHeartbeating(false)
+			}
 		default:
 			Warn.Println("Invalid message type")
 		}
