@@ -12,6 +12,8 @@ const (
 	HeartbeatMsg
 	TextMsg
 	AcceptMsg
+	GrepReq
+	GrepResp
 )
 
 func SendMessage(address string, msg string) {

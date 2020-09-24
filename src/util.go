@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
+	"strings"
 )
 
 // Config struct
@@ -30,27 +31,44 @@ type Settings struct {
 	cleanupTimeout float64 `json:"cleanup_timeout"`
 }
 
+// MatchRes is the structure containing all pertinent information found
+// while searching for a pattern in a log file.
+// From MP0 best solution.
+type MatchRes struct {
+	MemberID       uint8
+	LineNumber     int
+	FileName       string
+	MatchedContent string
+}
+
 var (
 	Info *log.Logger
 	Warn *log.Logger
 	Err  *log.Logger
 )
 
-func Log(infoOut io.Writer, warnOut io.Writer, errOut io.Writer) {
+func InitLog() {
+	file, err := os.OpenFile("machine.log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.SetOutput(file)
+
 	Info = log.New(
-		infoOut,
+		file,
 		"[INFO] ",
 		log.Ldate|log.Ltime,
 	)
 
 	Warn = log.New(
-		warnOut,
+		file,
 		"[WARN] ",
 		log.Ldate|log.Ltime|log.Lshortfile,
 	)
 
 	Err = log.New(
-		errOut,
+		file,
 		"[ERROR] ",
 		log.Ldate|log.Ltime|log.Lshortfile,
 	)
@@ -102,6 +120,36 @@ func ReadConfig() Config {
 		Settings: settings,
 	}
 	return config
+}
+
+// Finder is the function that searches file at fileLoc, for pattern, using Go's
+// Regex engine.
+// From MP0 best solution.
+func Finder(pattern string, fileLoc string, memberID uint8) []MatchRes {
+	retArr := make([]MatchRes, 0)
+	//Create Regex from pattern
+	regex, err := regexp.Compile(pattern)
+	if err != nil {
+		//Invalid Regex Pattern
+		return make([]MatchRes, 0)
+	}
+
+	file, err := ioutil.ReadFile(fileLoc)
+	if err != nil {
+		//Could not open file at fileLoc
+		return make([]MatchRes, 0)
+	}
+
+	fileString := string(file)
+
+	// Go through and find all lines that match pattern
+	for lineIndex, line := range strings.Split(fileString, "\n") {
+		if regex.MatchString(line) {
+			newMatch := MatchRes{memberID, lineIndex, fileLoc, line}
+			retArr = append(retArr, newMatch)
+		}
+	}
+	return retArr
 }
 
 func (c *Config) Print() {

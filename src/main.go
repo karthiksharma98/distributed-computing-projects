@@ -29,7 +29,7 @@ func printOptions() {
 
 func main() {
 	// Set up loggers and configs
-	Log(os.Stdout, os.Stdout, os.Stderr)
+	InitLog()
 	Configuration = ReadConfig()
 	Configuration.Print()
 
@@ -100,6 +100,20 @@ func main() {
 					Info.Println("[imagine some logs logs here].")
 				} else {
 					Info.Println("[imagine some logs here].")
+				}
+			}
+
+		case "grep":
+			if process == nil {
+				Warn.Println("You need to join in order to get status!")
+				continue
+			}
+
+			if len(inputFields) >= 2 {
+				if len(inputFields) >= 3 && inputFields[1] == "all" {
+					process.Grep(strings.Join(inputFields[2:], " "), false)
+				} else {
+					process.Grep(strings.Join(inputFields[1:], " "), true)
 				}
 			}
 

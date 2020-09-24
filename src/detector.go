@@ -291,6 +291,10 @@ func (mem *Member) Listen(port string) {
 		case AcceptMsg: // handles receipt of membership list from introducer
 			Info.Println("Introducer has accepted join request.")
 			mem.joinResponse(buffer[1:n])
+		case GrepReq: // handles grep request
+			mem.SendGrepResponse(senderAddr, buffer[1:n])
+		case GrepResp:
+			mem.HandleGrepResponse(buffer[1:n])
 		default:
 			Warn.Println("Invalid message type")
 		}
@@ -387,4 +391,85 @@ func (mem *Member) PickRandMemberIP() net.IP {
 	}
 
 	return nil
+}
+
+// Grep all files of every machine in mem's membership list
+func (mem *Member) Grep(query string, local bool) {
+	if local {
+		res := mem.GrepLocal(query)
+		printGrep(res)
+	}
+
+	for _, entry := range mem.membershipList {
+		mem.SendGrepRequest(entry.IPaddr, query)
+	}
+
+}
+
+func (mem *Member) SendGrepRequest(ip net.IP, query string) {
+	// Encode query to send it
+	b := new(bytes.Buffer)
+	e := gob.NewEncoder(b)
+	err := e.Encode(query)
+	if err != nil {
+		panic(err)
+	}
+
+	Send(ip.String()+":"+fmt.Sprint(Configuration.Service.port), GrepReq, b.Bytes())
+}
+
+func printGrep(resp []MatchRes) {
+	for _, match := range resp {
+		fmt.Printf("ID: %v | LineNo: %v | Text: %v", match.MemberID, match.LineNumber, match.MatchedContent)
+		fmt.Println()
+	}
+}
+
+func (mem *Member) HandleGrepResponse(queryBytes []byte) {
+	// decode query
+	b := bytes.NewBuffer(queryBytes)
+	d := gob.NewDecoder(b)
+	resp := make([]MatchRes, len(queryBytes))
+
+	err := d.Decode(&resp)
+	if err != nil {
+		panic(err)
+	}
+
+	printGrep(resp)
+}
+
+// called when another process is requesting grep results
+func (mem *Member) SendGrepResponse(ip *net.UDPAddr, queryBytes []byte) {
+	// decode desired query
+	b := bytes.NewBuffer(queryBytes)
+	d := gob.NewDecoder(b)
+	var query string
+
+	err := d.Decode(&query)
+	if err != nil {
+		panic(err)
+	}
+
+	// grep using the query on your local file
+	res := mem.GrepLocal(query)
+
+	// Encode result to send it back to the sender
+	b2 := new(bytes.Buffer)
+	e := gob.NewEncoder(b2)
+	err2 := e.Encode(res)
+	if err2 != nil {
+		panic(err2)
+	}
+
+	Send(ip.String()+":"+fmt.Sprint(Configuration.Service.port), GrepResp, b2.Bytes())
+}
+
+// call finder on the local file
+func (mem *Member) GrepLocal(query string) []MatchRes {
+	//Find local log file
+	fileName := "machine.log.txt"
+	matches := Finder(query, fileName, mem.memberID)
+
+	return matches
 }
