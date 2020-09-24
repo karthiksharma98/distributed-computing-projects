@@ -12,6 +12,7 @@ const (
 	HeartbeatMsg
 	TextMsg
 	AcceptMsg
+        SwitchMsg
 )
 
 func SendMessage(address string, msg string) {
