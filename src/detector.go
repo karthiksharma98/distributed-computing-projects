@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/rand"
 	"net"
+	"strings"
 	"text/tabwriter"
 	"time"
 )
@@ -292,7 +293,8 @@ func (mem *Member) Listen(port string) {
 			Info.Println("Introducer has accepted join request.")
 			mem.joinResponse(buffer[1:n])
 		case GrepReq: // handles grep request
-			mem.HandleGrepRequest(senderAddr, buffer[1:n])
+			ipAddr := senderAddr.String()[:strings.IndexByte(senderAddr.String(), ':')]
+			mem.HandleGrepRequest(ipAddr, buffer[1:n])
 		case GrepResp: // handles grep response when one is received
 			mem.HandleGrepResponse(buffer[1:n])
 		default:
@@ -439,7 +441,7 @@ func (mem *Member) HandleGrepResponse(queryBytes []byte) {
 }
 
 // called when another process is requesting grep results
-func (mem *Member) HandleGrepRequest(ip *net.UDPAddr, queryBytes []byte) {
+func (mem *Member) HandleGrepRequest(ip string, queryBytes []byte) {
 	// decode desired query
 	b := bytes.NewBuffer(queryBytes)
 	d := gob.NewDecoder(b)
@@ -453,15 +455,17 @@ func (mem *Member) HandleGrepRequest(ip *net.UDPAddr, queryBytes []byte) {
 	// grep using the query on your local file
 	res := mem.GrepLocal(query)
 
-	// Encode result to send it back to the sender
-	b2 := new(bytes.Buffer)
-	e := gob.NewEncoder(b2)
-	err2 := e.Encode(res)
-	if err2 != nil {
-		panic(err2)
-	}
+	for _, curr := range res {
+		// Encode result to send it back to the sender
+		var b2 bytes.Buffer
+		e := gob.NewEncoder(&b2)
+		err2 := e.Encode(MatchRes{curr.MemberID, curr.LineNumber, curr.FileName, curr.MatchedContent})
+		if err2 != nil {
+			panic(err2)
+		}
 
-	Send(ip.String()+":"+fmt.Sprint(Configuration.Service.port), GrepResp, b2.Bytes())
+		Send(ip+":"+fmt.Sprint(Configuration.Service.port), GrepResp, b2.Bytes())
+	}
 }
 
 // call finder on the local file
