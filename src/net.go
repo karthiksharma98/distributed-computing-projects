@@ -17,17 +17,31 @@ const (
 	SwitchMsg
 )
 
+// Debugging consts
+const (
+        dropMessage = false
+        dropRate = 20
+)
+
+// Send text message over UDP given address and string
 func SendMessage(address string, msg string) {
 	Send(address, TextMsg, []byte(msg))
 }
 
+// Broadcast message over UDP given addresses, messagetype, msg
 func SendBroadcast(addresses []string, msgType MessageType, msg []byte) {
 	for _, addr := range addresses {
 		Send(addr, msgType, msg)
 	}
 }
 
+// Sends message over UDP given address, messagetype, msg
 func Send(address string, msgType MessageType, msg []byte) {
+        // Debug purposes: simulate message drop
+        if dropMessage && rand.Intn(100) < dropRate {
+                return
+        }
+
 	addr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {
 		panic(err)
