@@ -1,14 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
-	"regexp"
-	"strings"
 )
 
 // Config struct
@@ -30,49 +26,6 @@ type Settings struct {
 	allInterval    float64 `json:"all_interval"`
 	failTimeout    float64 `json:"fail_timeout"`
 	cleanupTimeout float64 `json:"cleanup_timeout"`
-}
-
-// MatchRes is the structure containing all pertinent information found
-// while searching for a pattern in a log file.
-// From MP0 best solution.
-type MatchRes struct {
-	MemberID       uint8
-	LineNumber     int
-	FileName       string
-	MatchedContent string
-}
-
-var (
-	Info *log.Logger
-	Warn *log.Logger
-	Err  *log.Logger
-)
-
-func InitLog() {
-	file, err := os.OpenFile("machine.log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.SetOutput(file)
-
-	Info = log.New(
-		file,
-		"[INFO] ",
-		log.Ldate|log.Ltime,
-	)
-
-	Warn = log.New(
-		file,
-		"[WARN] ",
-		log.Ldate|log.Ltime|log.Lshortfile,
-	)
-
-	Err = log.New(
-		file,
-		"[ERROR] ",
-		log.Ldate|log.Ltime|log.Lshortfile,
-	)
 }
 
 // ReadConfig function to read the configuration JSON
@@ -123,36 +76,6 @@ func ReadConfig() Config {
 	return config
 }
 
-// Finder is the function that searches file at fileLoc, for pattern, using Go's
-// Regex engine.
-// From MP0 best solution.
-func Finder(pattern string, fileLoc string, memberID uint8) []MatchRes {
-	retArr := make([]MatchRes, 0)
-	//Create Regex from pattern
-	regex, err := regexp.Compile(pattern)
-	if err != nil {
-		//Invalid Regex Pattern
-		return make([]MatchRes, 0)
-	}
-
-	file, err := ioutil.ReadFile(fileLoc)
-	if err != nil {
-		//Could not open file at fileLoc
-		return make([]MatchRes, 0)
-	}
-
-	fileString := string(file)
-
-	// Go through and find all lines that match pattern
-	for lineIndex, line := range strings.Split(fileString, "\n") {
-		if regex.MatchString(line) {
-			newMatch := MatchRes{memberID, lineIndex, fileLoc, line}
-			retArr = append(retArr, newMatch)
-		}
-	}
-	return retArr
-}
-
 func (c *Config) Print() {
 	Info.Println("Detector: " + c.Service.detectorType)
 	Info.Println("Introducer: " + c.Service.introducerIP + " on port " + fmt.Sprint(c.Service.port))
@@ -160,30 +83,4 @@ func (c *Config) Print() {
 	Info.Println("All-to-All interval: " + fmt.Sprint(c.Settings.allInterval))
 	Info.Println("Failure timeout: " + fmt.Sprint(c.Settings.failTimeout))
 	Info.Println("Cleanup timeout: " + fmt.Sprint(c.Settings.cleanupTimeout))
-}
-
-func printLogs(num_lines int) {
-	file, err := os.Open("machine.log.txt")
-
-	if err != nil {
-		log.Fatalf("failed opening file: %s", err)
-	}
-
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-	var txtlines []string
-
-	for scanner.Scan() {
-		txtlines = append(txtlines, scanner.Text())
-	}
-
-	if num_lines == 0 {
-		num_lines = len(txtlines)
-	}
-
-	for i := len(txtlines) - num_lines; i < len(txtlines); i++ {
-		fmt.Println(txtlines[i])
-	}
-
-	file.Close()
 }
