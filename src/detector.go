@@ -397,7 +397,9 @@ func (mem *Member) PickRandMemberIP() net.IP {
 func (mem *Member) Grep(query string, local bool) {
 	if local {
 		res := mem.GrepLocal(query)
-		printGrep(res)
+		for _, curr := range res {
+			printGrep(curr)
+		}
 	} else {
 		for _, entry := range mem.membershipList {
 			mem.SendGrepRequest(entry.IPaddr, query)
@@ -417,18 +419,16 @@ func (mem *Member) SendGrepRequest(ip net.IP, query string) {
 	Send(ip.String()+":"+fmt.Sprint(Configuration.Service.port), GrepReq, b.Bytes())
 }
 
-func printGrep(resp []MatchRes) {
-	for _, match := range resp {
-		fmt.Printf("ID: %v | LineNo: %v | Text: %v", match.MemberID, match.LineNumber, match.MatchedContent)
-		fmt.Println()
-	}
+func printGrep(match MatchRes) {
+	fmt.Printf("ID: %v | LineNo: %v | Text: %v", match.MemberID, match.LineNumber, match.MatchedContent)
+	fmt.Println()
 }
 
 func (mem *Member) HandleGrepResponse(queryBytes []byte) {
 	// decode query
 	b := bytes.NewBuffer(queryBytes)
 	d := gob.NewDecoder(b)
-	resp := make([]MatchRes, len(queryBytes))
+	var resp MatchRes
 
 	err := d.Decode(&resp)
 	if err != nil {
