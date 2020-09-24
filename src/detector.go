@@ -292,8 +292,8 @@ func (mem *Member) Listen(port string) {
 			Info.Println("Introducer has accepted join request.")
 			mem.joinResponse(buffer[1:n])
 		case GrepReq: // handles grep request
-			mem.SendGrepResponse(senderAddr, buffer[1:n])
-		case GrepResp:
+			mem.HandleGrepRequest(senderAddr, buffer[1:n])
+		case GrepResp: // handles grep response when one is received
 			mem.HandleGrepResponse(buffer[1:n])
 		default:
 			Warn.Println("Invalid message type")
@@ -398,12 +398,11 @@ func (mem *Member) Grep(query string, local bool) {
 	if local {
 		res := mem.GrepLocal(query)
 		printGrep(res)
+	} else {
+		for _, entry := range mem.membershipList {
+			mem.SendGrepRequest(entry.IPaddr, query)
+		}
 	}
-
-	for _, entry := range mem.membershipList {
-		mem.SendGrepRequest(entry.IPaddr, query)
-	}
-
 }
 
 func (mem *Member) SendGrepRequest(ip net.IP, query string) {
@@ -440,7 +439,7 @@ func (mem *Member) HandleGrepResponse(queryBytes []byte) {
 }
 
 // called when another process is requesting grep results
-func (mem *Member) SendGrepResponse(ip *net.UDPAddr, queryBytes []byte) {
+func (mem *Member) HandleGrepRequest(ip *net.UDPAddr, queryBytes []byte) {
 	// decode desired query
 	b := bytes.NewBuffer(queryBytes)
 	d := gob.NewDecoder(b)
