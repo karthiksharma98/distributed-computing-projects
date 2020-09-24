@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"rand"
 )
 
 type MessageType uint8
@@ -19,8 +20,8 @@ const (
 
 // Debugging consts
 const (
-        dropMessage = false
-        dropRate = 20
+	dropMessage = false
+	dropRate    = 20
 )
 
 // Send text message over UDP given address and string
@@ -37,10 +38,10 @@ func SendBroadcast(addresses []string, msgType MessageType, msg []byte) {
 
 // Sends message over UDP given address, messagetype, msg
 func Send(address string, msgType MessageType, msg []byte) {
-        // Debug purposes: simulate message drop
-        if dropMessage && rand.Intn(100) < dropRate {
-                return
-        }
+	// Debug purposes: simulate message drop
+	if dropMessage && rand.Intn(100) < dropRate {
+		return
+	}
 
 	addr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {
