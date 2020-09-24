@@ -91,9 +91,6 @@ func (mem *Member) Grep(query string, local bool) {
 
 	if !local {
 		for _, entry := range mem.membershipList {
-			if mem.memberID == entry.MemberID {
-				continue
-			}
 			mem.SendGrepRequest(entry.IPaddr, query)
 		}
 	}
