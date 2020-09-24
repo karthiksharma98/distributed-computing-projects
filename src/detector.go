@@ -152,11 +152,14 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 			}
 		}
 
-		difference := time.Now().Sub(currEntry.Timestamp).Seconds()
+		// Cmp most recently updated entry timestamp
+		difference := time.Now().Sub(mem.membershipList[currId].Timestamp).Seconds()
+		// Skip failcheck if member has not started heartbeating
 		if difference >= Configuration.Settings.failTimeout {
+			// Skip failcheck if member already marked failed
 			if difference >= Configuration.Settings.cleanupTimeout {
 				mem.CleanupMember(currId)
-			} else {
+			} else if mem.membershipList[currId].Health != Failed {
 				mem.FailMember(currId)
 			}
 		}

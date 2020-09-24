@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"math/rand"
+	"net"
 )
 
 type MessageType uint8
