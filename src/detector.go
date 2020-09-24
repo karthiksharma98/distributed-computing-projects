@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/rand"
 	"net"
+	"strings"
 	"text/tabwriter"
 	"time"
 )
@@ -219,6 +220,7 @@ func SetHeartbeating(flag bool) {
 	ticker.Reset(interval)
 }
 
+// Send Gossip to random member in group
 func (mem *Member) Gossip() {
 	// Select random member
 	addr := mem.PickRandMemberIP()
@@ -250,8 +252,14 @@ func (mem *Member) AllToAll() {
 		panic(err)
 	}
 	Info.Println("Sending All-to-All.")
+	// Send heartbeatmsg and membership list to all members
+	mem.SendAll(HeartbeatMsg, b.Bytes())
+}
+
+// Broadcast a message to all members in membershiplist
+func (mem *Member) SendAll(msgType MessageType, msg []byte) {
 	for _, v := range mem.membershipList {
-		Send(v.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.port), HeartbeatMsg, b.Bytes())
+		Send(v.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.port), msgType, msg)
 	}
 }
 
@@ -292,9 +300,16 @@ func (mem *Member) Listen(port string) {
 			Info.Println("Introducer has accepted join request.")
 			mem.joinResponse(buffer[1:n])
 		case GrepReq: // handles grep request
-			mem.HandleGrepRequest(senderAddr, buffer[1:n])
+			ipAddr := senderAddr.String()[:strings.IndexByte(senderAddr.String(), ':')]
+			mem.HandleGrepRequest(ipAddr, buffer[1:n])
 		case GrepResp: // handles grep response when one is received
 			mem.HandleGrepResponse(buffer[1:n])
+		case SwitchMsg:
+			if buffer[1] == 1 {
+				SetHeartbeating(true)
+			} else {
+				SetHeartbeating(false)
+			}
 		default:
 			Warn.Println("Invalid message type")
 		}
@@ -397,7 +412,9 @@ func (mem *Member) PickRandMemberIP() net.IP {
 func (mem *Member) Grep(query string, local bool) {
 	if local {
 		res := mem.GrepLocal(query)
-		printGrep(res)
+		for _, curr := range res {
+			printGrep(curr)
+		}
 	} else {
 		for _, entry := range mem.membershipList {
 			mem.SendGrepRequest(entry.IPaddr, query)
@@ -417,18 +434,16 @@ func (mem *Member) SendGrepRequest(ip net.IP, query string) {
 	Send(ip.String()+":"+fmt.Sprint(Configuration.Service.port), GrepReq, b.Bytes())
 }
 
-func printGrep(resp []MatchRes) {
-	for _, match := range resp {
-		fmt.Printf("ID: %v | LineNo: %v | Text: %v", match.MemberID, match.LineNumber, match.MatchedContent)
-		fmt.Println()
-	}
+func printGrep(match MatchRes) {
+	fmt.Printf("ID: %v | LineNo: %v | Text: %v", match.MemberID, match.LineNumber, match.MatchedContent)
+	fmt.Println()
 }
 
 func (mem *Member) HandleGrepResponse(queryBytes []byte) {
 	// decode query
 	b := bytes.NewBuffer(queryBytes)
 	d := gob.NewDecoder(b)
-	resp := make([]MatchRes, len(queryBytes))
+	var resp MatchRes
 
 	err := d.Decode(&resp)
 	if err != nil {
@@ -439,7 +454,7 @@ func (mem *Member) HandleGrepResponse(queryBytes []byte) {
 }
 
 // called when another process is requesting grep results
-func (mem *Member) HandleGrepRequest(ip *net.UDPAddr, queryBytes []byte) {
+func (mem *Member) HandleGrepRequest(ip string, queryBytes []byte) {
 	// decode desired query
 	b := bytes.NewBuffer(queryBytes)
 	d := gob.NewDecoder(b)
@@ -453,15 +468,17 @@ func (mem *Member) HandleGrepRequest(ip *net.UDPAddr, queryBytes []byte) {
 	// grep using the query on your local file
 	res := mem.GrepLocal(query)
 
-	// Encode result to send it back to the sender
-	b2 := new(bytes.Buffer)
-	e := gob.NewEncoder(b2)
-	err2 := e.Encode(res)
-	if err2 != nil {
-		panic(err2)
-	}
+	for _, curr := range res {
+		// Encode result to send it back to the sender
+		var b2 bytes.Buffer
+		e := gob.NewEncoder(&b2)
+		err2 := e.Encode(MatchRes{curr.MemberID, curr.LineNumber, curr.FileName, curr.MatchedContent})
+		if err2 != nil {
+			panic(err2)
+		}
 
-	Send(ip.String()+":"+fmt.Sprint(Configuration.Service.port), GrepResp, b2.Bytes())
+		Send(ip+":"+fmt.Sprint(Configuration.Service.port), GrepResp, b2.Bytes())
+	}
 }
 
 // call finder on the local file

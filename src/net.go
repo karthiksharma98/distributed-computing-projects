@@ -14,6 +14,7 @@ const (
 	AcceptMsg
 	GrepReq
 	GrepResp
+	SwitchMsg
 )
 
 func SendMessage(address string, msg string) {
