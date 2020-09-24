@@ -98,27 +98,43 @@ func (mem *Member) PrintMembershipList(output io.Writer) {
 	writer.Flush()
 }
 
-// Called when a node hasn't been updated in T_Failed seconds.
-func (mem *Member) FailMember(memberId uint8) {
-	if currEntry, ok := mem.membershipList[memberId]; ok {
-		mem.membershipList[memberId] = membershipListEntry{
-			currEntry.MemberID,
-			currEntry.IPaddr,
-			currEntry.HeartbeatCount,
-			currEntry.Timestamp,
-			Failed,
-		}
+// Verifies whether a node has been updated in T_Failed seconds.
+func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
+	if memberId == mem.memberID {
+		return
+	}
 
-		Info.Println("Marked member failed: ", memberId)
+	if currEntry, ok := mem.membershipList[memberId]; ok {
+		difference := currEntry.Timestamp.Sub(oldTime)
+		threshold := time.Duration(Configuration.Settings.failTimeout) * time.Second
+		if difference <= threshold && currEntry.Health == Alive {
+			mem.membershipList[memberId] = membershipListEntry{
+				currEntry.MemberID,
+				currEntry.IPaddr,
+				currEntry.HeartbeatCount,
+				currEntry.Timestamp,
+				Failed,
+			}
+
+			Info.Println("Marked member failed: ", memberId)
+		}
 	}
 
 }
 
-// Called when a node hasn't been updated in T_Cleanup seconds.
-func (mem *Member) CleanupMember(memberId uint8) {
-	if _, ok := mem.membershipList[memberId]; ok {
-		delete(mem.membershipList, memberId)
-		Info.Println("Cleaned up member: ", memberId)
+// Verifies whether a node has been updated in T_Cleanup seconds.
+func (mem *Member) CleanupMember(memberId uint8, oldTime time.Time) {
+	if memberId == mem.memberID {
+		return
+	}
+
+	if currEntry, ok := mem.membershipList[memberId]; ok {
+		difference := currEntry.Timestamp.Sub(oldTime)
+		threshold := time.Duration(Configuration.Settings.cleanupTimeout) * time.Second
+		if difference <= threshold {
+			delete(mem.membershipList, memberId)
+			Info.Println("Cleaned up member: ", memberId)
+		}
 	}
 }
 
@@ -147,6 +163,7 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 			newHealth = Left
 		}
 
+		oldTime := rcvdMemList[id].Timestamp
 		newTime := time.Now()
 		newHeartbeatCt := rcvdEntry.HeartbeatCount
 
@@ -157,7 +174,12 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 				newHeartbeatCt = currEntry.HeartbeatCount
 				newTime = currEntry.Timestamp
 			}
+
+			if oldTime.Before(currEntry.Timestamp) {
+				oldTime = currEntry.Timestamp
+			}
 		}
+
 		mem.membershipList[id] = membershipListEntry{
 			rcvdEntry.MemberID,
 			rcvdEntry.IPaddr,
@@ -167,16 +189,17 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 		}
 
 		// Cmp most recently updated entry timestamp
-		difference := time.Now().Sub(mem.membershipList[id].Timestamp).Seconds()
-		// Skip failcheck if member has not started heartbeating
-		if difference >= Configuration.Settings.failTimeout {
-			// Skip failcheck if member already marked failed/left
-			if difference >= Configuration.Settings.cleanupTimeout {
-				mem.CleanupMember(id)
-			} else if mem.membershipList[id].Health == Alive {
-				mem.FailMember(id)
-			}
-		}
+		time.AfterFunc(
+			time.Duration(Configuration.Settings.failTimeout)*time.Second,
+			func() {
+				mem.FailMember(id, oldTime)
+			})
+
+		time.AfterFunc(
+			time.Duration(Configuration.Settings.cleanupTimeout)*time.Second,
+			func() {
+				mem.CleanupMember(id, oldTime)
+			})
 	}
 }
 
