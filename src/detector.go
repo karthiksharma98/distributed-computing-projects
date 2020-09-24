@@ -136,19 +136,34 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 	}
 
 	for currId, currEntry := range mem.membershipList {
+		// Dont let anybody else tell u ur a failure
+		if currId == mem.memberID {
+			continue
+		}
 		// check that they have the same id in their membership list
 		if rcvdEntry, ok := rcvdMemList[currId]; ok {
 			currHearbeatCt := currEntry.HeartbeatCount
 			rcvdHeartbeatCt := rcvdEntry.HeartbeatCount
+			newHealth := uint8(Alive)
+			// Update if member voluntarily left
+			if rcvdEntry.Health == Left {
+				newHealth = Left
+			}
+
+			newTime := currEntry.Timestamp
+			newHeartbeatCt := currEntry.HeartbeatCount
 			if rcvdHeartbeatCt > currHearbeatCt {
-				// Update timestamp
-				mem.membershipList[currId] = membershipListEntry{
-					currEntry.MemberID,
-					currEntry.IPaddr,
-					rcvdEntry.HeartbeatCount,
-					time.Now(),
-					Alive,
-				}
+				// Update timestamp and heartbeat count
+				newTime = time.Now()
+				newHeartbeatCt = rcvdEntry.HeartbeatCount
+			}
+
+			mem.membershipList[currId] = membershipListEntry{
+				currEntry.MemberID,
+				currEntry.IPaddr,
+				newHeartbeatCt,
+				newTime,
+				newHealth,
 			}
 		}
 
@@ -156,10 +171,10 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 		difference := time.Now().Sub(mem.membershipList[currId].Timestamp).Seconds()
 		// Skip failcheck if member has not started heartbeating
 		if difference >= Configuration.Settings.failTimeout {
-			// Skip failcheck if member already marked failed
+			// Skip failcheck if member already marked failed/left
 			if difference >= Configuration.Settings.cleanupTimeout {
 				mem.CleanupMember(currId)
-			} else if mem.membershipList[currId].Health != Failed {
+			} else if mem.membershipList[currId].Health == Alive {
 				mem.FailMember(currId)
 			}
 		}
@@ -202,6 +217,16 @@ func (mem *Member) Tick() {
 			}
 		}
 	}
+}
+
+// Stop ticking if enabled
+func (mem *Member) StopTick() {
+	if !enabledHeart {
+		Warn.Println("No process running to stop.")
+		return
+	}
+
+	disableHeart <- true
 }
 
 // Switch heartbeating modes (All to All or Gossip)
@@ -347,7 +372,9 @@ func (mem *Member) leave() {
 	newEntry.Health = Left
 	newEntry.Timestamp = time.Now()
 	mem.membershipList[mem.memberID] = newEntry
-
+	// Gossip leave status and stop
+	mem.Gossip()
+	mem.StopTick()
 	// TODO: kill the leaving process after a certain time/# of heartbeats
 }
 

@@ -76,7 +76,7 @@ func main() {
 				Warn.Println("You need to join in order to leave!")
 				continue
 			}
-
+			process.leave()
 			Info.Println("Node has left the group.")
 			process = nil
 
@@ -146,12 +146,7 @@ func main() {
 			go process.Tick()
 
 		case "stop":
-			if !enabledHeart {
-				Warn.Println("No process running to stop.")
-				continue
-			}
-
-			disableHeart <- true
+			process.StopTick()
 
 		case "switch":
 			if len(inputFields) >= 2 && inputFields[1] == "gossip" {
