@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -23,7 +24,7 @@ func printOptions() {
 		}
 
 		fmt.Print("Interact with the group using any of the following: leave, kill, ")
-		fmt.Println("status, get logs {-a}, stop, switch (gossip/alltoall), or chat")
+		fmt.Println("status, get logs {-n}, grep {all}, stop, switch (gossip/alltoall), or chat")
 	}
 }
 
@@ -96,10 +97,17 @@ func main() {
 
 		case "get":
 			if len(inputFields) >= 2 && inputFields[1] == "logs" {
-				if len(inputFields) == 3 && inputFields[2] == "-a" {
-					Info.Println("[imagine some logs logs here].")
+				if len(inputFields) == 4 && inputFields[2] == "-n" {
+					num, err := strconv.Atoi(inputFields[3])
+					if err != nil {
+						fmt.Println("Please provide a valid number of lines")
+						continue
+					}
+
+					printLogs(num)
+
 				} else {
-					Info.Println("[imagine some logs here].")
+					printLogs(0)
 				}
 			}
 

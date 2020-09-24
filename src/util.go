@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -159,4 +160,30 @@ func (c *Config) Print() {
 	Info.Println("All-to-All interval: " + fmt.Sprint(c.Settings.allInterval))
 	Info.Println("Failure timeout: " + fmt.Sprint(c.Settings.failTimeout))
 	Info.Println("Cleanup timeout: " + fmt.Sprint(c.Settings.cleanupTimeout))
+}
+
+func printLogs(num_lines int) {
+	file, err := os.Open("machine.log.txt")
+
+	if err != nil {
+		log.Fatalf("failed opening file: %s", err)
+	}
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	var txtlines []string
+
+	for scanner.Scan() {
+		txtlines = append(txtlines, scanner.Text())
+	}
+
+	if num_lines == 0 {
+		num_lines = len(txtlines)
+	}
+
+	for i := len(txtlines) - num_lines; i < len(txtlines); i++ {
+		fmt.Println(txtlines[i])
+	}
+
+	file.Close()
 }
