@@ -135,47 +135,46 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 		panic(err)
 	}
 
-	for currId, currEntry := range mem.membershipList {
+	for id, rcvdEntry := range rcvdMemList {
 		// Dont let anybody else tell u ur a failure
-		if currId == mem.memberID {
+		if id == mem.memberID {
 			continue
 		}
+
+		newHealth := uint8(Alive)
+		// Update if member voluntarily left
+		if rcvdEntry.Health == Left {
+			newHealth = Left
+		}
+
+		newTime := time.Now()
+		newHeartbeatCt := rcvdEntry.HeartbeatCount
+
 		// check that they have the same id in their membership list
-		if rcvdEntry, ok := rcvdMemList[currId]; ok {
-			currHearbeatCt := currEntry.HeartbeatCount
-			rcvdHeartbeatCt := rcvdEntry.HeartbeatCount
-			newHealth := uint8(Alive)
-			// Update if member voluntarily left
-			if rcvdEntry.Health == Left {
-				newHealth = Left
+		if currEntry, ok := mem.membershipList[id]; ok {
+			// No changes to timestamp/heartbeat count if count has not been updated
+			if rcvdEntry.HeartbeatCount <= currEntry.HeartbeatCount {
+				newHeartbeatCt = currEntry.HeartbeatCount
+				newTime = currEntry.Timestamp
 			}
-
-			newTime := currEntry.Timestamp
-			newHeartbeatCt := currEntry.HeartbeatCount
-			if rcvdHeartbeatCt > currHearbeatCt {
-				// Update timestamp and heartbeat count
-				newTime = time.Now()
-				newHeartbeatCt = rcvdEntry.HeartbeatCount
-			}
-
-			mem.membershipList[currId] = membershipListEntry{
-				currEntry.MemberID,
-				currEntry.IPaddr,
-				newHeartbeatCt,
-				newTime,
-				newHealth,
-			}
+		}
+		mem.membershipList[id] = membershipListEntry{
+			rcvdEntry.MemberID,
+			rcvdEntry.IPaddr,
+			newHeartbeatCt,
+			newTime,
+			newHealth,
 		}
 
 		// Cmp most recently updated entry timestamp
-		difference := time.Now().Sub(mem.membershipList[currId].Timestamp).Seconds()
+		difference := time.Now().Sub(mem.membershipList[id].Timestamp).Seconds()
 		// Skip failcheck if member has not started heartbeating
 		if difference >= Configuration.Settings.failTimeout {
 			// Skip failcheck if member already marked failed/left
 			if difference >= Configuration.Settings.cleanupTimeout {
-				mem.CleanupMember(currId)
-			} else if mem.membershipList[currId].Health == Alive {
-				mem.FailMember(currId)
+				mem.CleanupMember(id)
+			} else if mem.membershipList[id].Health == Alive {
+				mem.FailMember(id)
 			}
 		}
 	}
