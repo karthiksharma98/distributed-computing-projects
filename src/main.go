@@ -13,13 +13,14 @@ var (
 	// Configuration stores all info in config.json
 	Configuration Config
 	process       *Member
+	started       bool = false
 )
 
 func printOptions() {
 	if process == nil {
 		fmt.Println("Welcome! Don't be a loner and join the group by saying \"join introducer\" or \"join\".")
 	} else {
-		if !enabledHeart {
+		if !started {
 			fmt.Println("Start heartbeating with \"start\".")
 		}
 
@@ -143,6 +144,7 @@ func main() {
 				continue
 			}
 
+			started = true
 			go process.Tick()
 
 		case "stop":
@@ -168,7 +170,7 @@ func main() {
 			}
 
 		default:
-			Info.Println("invalid command")
+			fmt.Println("invalid command")
 		}
 	}
 
