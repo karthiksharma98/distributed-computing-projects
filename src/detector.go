@@ -122,7 +122,7 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
                         time.AfterFunc(
                                 time.Duration(Configuration.Settings.cleanupTimeout - Configuration.Settings.failTimeout)*time.Second,
                                 func() {
-                                        mem.CleanupMember(id, time.Now())
+                                        mem.CleanupMember(memberId, time.Now())
                                 })
 		}
 	}
