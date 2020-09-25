@@ -109,7 +109,7 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 	if currEntry, ok := mem.membershipList[memberId]; ok {
 		difference := currEntry.Timestamp.Sub(oldTime)
 		threshold := time.Duration(Configuration.Settings.failTimeout) * time.Second
-		if difference <= threshold && currEntry.Health == Alive {
+		if difference >= threshold && currEntry.Health == Alive {
 			mem.membershipList[memberId] = membershipListEntry{
 				currEntry.MemberID,
 				currEntry.IPaddr,
@@ -133,7 +133,7 @@ func (mem *Member) CleanupMember(memberId uint8, oldTime time.Time) {
 	if currEntry, ok := mem.membershipList[memberId]; ok {
 		difference := currEntry.Timestamp.Sub(oldTime)
 		threshold := time.Duration(Configuration.Settings.cleanupTimeout) * time.Second
-		if difference <= threshold {
+		if difference >= threshold {
 			delete(mem.membershipList, memberId)
 			Info.Println("Cleaned up member: ", memberId)
 		}
