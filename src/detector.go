@@ -118,8 +118,9 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 				currEntry.Timestamp,
 				Failed,
 			}
-
 			Info.Println("Marked member failed: ", memberId)
+                        Info.Println("Fail time: ", time.Now())
+                        Info.Println("Old time: ", oldTime)
                         oldTime := time.Now()
                         // Start cleanup period only after determined failure
                         time.AfterFunc(
@@ -138,6 +139,10 @@ func (mem *Member) CleanupMember(memberId uint8, oldTime time.Time) {
 		return
 	}
 
+        // DEBUG:
+        Info.Println("Checking cleanup.. ")
+        Info.Println("Cleanup time: ", time.Now())
+        Info.Println("Old time: ", time.Now())
 	if _, ok := mem.membershipList[memberId]; ok {
 		difference := time.Now().Sub(oldTime)
 		threshold := time.Duration(Configuration.Settings.cleanupTimeout) * time.Second
