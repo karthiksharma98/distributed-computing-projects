@@ -91,6 +91,7 @@ func (mem *Member) GetAllMembers() map[uint8]membershipListEntry {
 
 // PrintMembershipList pretty-prints all values inside the membership list
 func (mem *Member) PrintMembershipList(output io.Writer) {
+        fmt.Println("Current time: ", time.Now())
 	writer := tabwriter.NewWriter(output, 0, 8, 1, '\t', tabwriter.AlignRight)
 	fmt.Fprintln(writer, "MemberID\tIP\tHeartbeats\tTimestamp\tHealth")
 	fmt.Fprintln(writer, "-------\t----------\t----\t-----------\t------")
@@ -119,12 +120,12 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 			}
 
 			Info.Println("Marked member failed: ", memberId)
-
+                        oldTime := time.Now()
                         // Start cleanup period only after determined failure
                         time.AfterFunc(
                                 time.Duration(Configuration.Settings.cleanupTimeout - Configuration.Settings.failTimeout)*time.Second,
                                 func() {
-                                        mem.CleanupMember(memberId, time.Now())
+                                        mem.CleanupMember(memberId, oldTime)
                                 })
 		}
 	}
