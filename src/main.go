@@ -71,7 +71,6 @@ func main() {
                                 // Wait for response
                                 select {
                                 case _ = <-joinAck:
-                                        go process.Listen(fmt.Sprint(Configuration.Service.port))
                                         fmt.Println("Node has joined the group.")
                                 case <-time.After(3 * time.Second):
                                         fmt.Println("Failed to join group.")
