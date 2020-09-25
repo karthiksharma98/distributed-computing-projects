@@ -179,10 +179,6 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 			if rcvdEntry.HeartbeatCount <= currEntry.HeartbeatCount && rcvdEntry.Health != Left  {
                                 doUpdate = false
 			}
-
-			if oldTime.Before(currEntry.Timestamp) {
-				oldTime = currEntry.Timestamp
-			}
 		}
 
                 // Only set if update is neccessary whatsoever or if new entry to add
