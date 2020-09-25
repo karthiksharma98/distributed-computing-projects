@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+        "time"
 )
 
 var (
@@ -66,8 +67,14 @@ func main() {
 				// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
 				process = NewMember(false)
 				process.joinRequest()
-				go process.Listen(fmt.Sprint(Configuration.Service.port))
-				Info.Println("Node has joined the group.")
+                                // Wait for response
+                                select {
+                                case _ = <-joinAck:
+                                        go process.Listen(fmt.Sprint(Configuration.Service.port))
+                                        fmt.Println("Node has joined the group.")
+                                case <-time.After(3 * time.Second):
+                                        fmt.Println("Failed to join group.")
+                                }
 			}
 
 		case "leave":

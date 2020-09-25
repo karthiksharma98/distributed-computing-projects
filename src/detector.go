@@ -38,6 +38,7 @@ const (
 
 // Ticker variables
 var (
+        joinAck = make(chan bool)
 	disableHeart = make(chan bool)
 	ticker       *time.Ticker
 	enabledHeart = false
@@ -383,6 +384,7 @@ func (mem *Member) joinResponse(membershipListBytes []byte) {
 	if err != nil {
 		panic(err)
 	}
+        joinAck <- true
 
 	Info.Println(mem.membershipList)
 }
