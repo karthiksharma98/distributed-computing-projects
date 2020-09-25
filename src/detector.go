@@ -119,6 +119,11 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 			}
 
 			Info.Println("Marked member failed: ", memberId)
+                        time.AfterFunc(
+                                time.Duration(Configuration.Settings.cleanupTimeout - Configuration.Settings.failTimeout)*time.Second,
+                                func() {
+                                        mem.CleanupMember(id, time.Now())
+                                })
 		}
 	}
 
@@ -160,17 +165,12 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 		}
 
                 doUpdate := true
-		oldTime := rcvdMemList[id].Timestamp
 
 		// check that they have the same id in their membership list
 		if currEntry, ok := mem.membershipList[id]; ok {
 			// No changes to timestamp/heartbeat count if count has not been updated or entry left
 			if rcvdEntry.HeartbeatCount <= currEntry.HeartbeatCount && rcvdEntry.Health != Left  {
                                 doUpdate = false
-			}
-
-			if oldTime.Before(currEntry.Timestamp) {
-				oldTime = currEntry.Timestamp
 			}
 		}
 
@@ -189,13 +189,7 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 		time.AfterFunc(
 			time.Duration(Configuration.Settings.failTimeout)*time.Second,
 			func() {
-				mem.FailMember(id, oldTime)
-			})
-
-		time.AfterFunc(
-			time.Duration(Configuration.Settings.cleanupTimeout)*time.Second,
-			func() {
-				mem.CleanupMember(id, oldTime)
+				mem.FailMember(id, time.Now())
 			})
 	}
 }
