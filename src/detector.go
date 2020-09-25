@@ -108,7 +108,7 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 	}
 
 	if currEntry, ok := mem.membershipList[memberId]; ok {
-		difference := time.Now().Sub(oldTime)
+		difference := time.Now().Sub(currEntry.Timestamp)
 		threshold := time.Duration(Configuration.Settings.failTimeout) * time.Second
 		if difference >= threshold && currEntry.Health == Alive {
 			mem.membershipList[memberId] = membershipListEntry{
@@ -121,7 +121,6 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 			Info.Println("Marked member failed: ", memberId)
                         Info.Println("Fail time: ", time.Now())
                         Info.Println("Old time: ", oldTime)
-                        oldTime := time.Now()
                         // Start cleanup period only after determined failure
                         time.AfterFunc(
                                 time.Duration(Configuration.Settings.cleanupTimeout - Configuration.Settings.failTimeout)*time.Second,
@@ -142,9 +141,9 @@ func (mem *Member) CleanupMember(memberId uint8, oldTime time.Time) {
         // DEBUG:
         Info.Println("Checking cleanup.. ")
         Info.Println("Cleanup time: ", time.Now())
-        Info.Println("Old time: ", time.Now())
-	if _, ok := mem.membershipList[memberId]; ok {
-		difference := time.Now().Sub(oldTime)
+        Info.Println("Old time: ", oldTime)
+	if currEntry, ok := mem.membershipList[memberId]; ok {
+		difference := time.Now().Sub(currEntry.Timestamp)
 		threshold := time.Duration(Configuration.Settings.cleanupTimeout) * time.Second
 		if difference >= threshold {
 			delete(mem.membershipList, memberId)
