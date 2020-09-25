@@ -74,6 +74,7 @@ func main() {
                                         fmt.Println("Node has joined the group.")
                                 case <-time.After(3 * time.Second):
                                         fmt.Println("Failed to join group.")
+                                        listener.Close()
                                         process = nil
                                 }
 			}

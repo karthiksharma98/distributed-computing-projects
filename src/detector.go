@@ -43,6 +43,7 @@ var (
 	ticker       *time.Ticker
 	enabledHeart = false
 	isGossip     = true
+        listener *net.UDPConn
 )
 
 // Member constructor
@@ -323,7 +324,7 @@ func (mem *Member) Listen(port string) {
 		panic(err)
 	}
 
-	listener, err := net.ListenUDP("udp", addr)
+	listener, err = net.ListenUDP("udp", addr)
 	if err != nil {
 		panic(err)
 	}
