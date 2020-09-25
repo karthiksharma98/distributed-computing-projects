@@ -2,7 +2,7 @@
     "service": {
         "failure_detector": "gossip",
         "introducer_ip": "172.22.156.42",
-        "port": 9000 
+        "port": 9090
     },
     "settings": {
         "gossip_interval": 1,

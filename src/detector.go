@@ -38,12 +38,12 @@ const (
 
 // Ticker variables
 var (
-        joinAck = make(chan bool)
+	joinAck      = make(chan bool)
 	disableHeart = make(chan bool)
 	ticker       *time.Ticker
 	enabledHeart = false
 	isGossip     = true
-        listener *net.UDPConn
+	listener     *net.UDPConn
 )
 
 // Member constructor
@@ -91,6 +91,7 @@ func (mem *Member) GetAllMembers() map[uint8]membershipListEntry {
 
 // PrintMembershipList pretty-prints all values inside the membership list
 func (mem *Member) PrintMembershipList(output io.Writer) {
+        fmt.Println("Current time: ", time.Now())
 	writer := tabwriter.NewWriter(output, 0, 8, 1, '\t', tabwriter.AlignRight)
 	fmt.Fprintln(writer, "MemberID\tIP\tHeartbeats\tTimestamp\tHealth")
 	fmt.Fprintln(writer, "-------\t----------\t----\t-----------\t------")
@@ -107,7 +108,7 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 	}
 
 	if currEntry, ok := mem.membershipList[memberId]; ok {
-		difference := currEntry.Timestamp.Sub(oldTime)
+		difference := time.Now().Sub(currEntry.Timestamp)
 		threshold := time.Duration(Configuration.Settings.failTimeout) * time.Second
 		if difference >= threshold && currEntry.Health == Alive {
 			mem.membershipList[memberId] = membershipListEntry{
@@ -117,8 +118,15 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 				currEntry.Timestamp,
 				Failed,
 			}
-
 			Info.Println("Marked member failed: ", memberId)
+                        Info.Println("Fail time: ", time.Now())
+                        Info.Println("Old time: ", oldTime)
+                        // Start cleanup period only after determined failure
+                        time.AfterFunc(
+                                time.Duration(Configuration.Settings.cleanupTimeout - Configuration.Settings.failTimeout)*time.Second,
+                                func() {
+                                        mem.CleanupMember(memberId, oldTime)
+                                })
 		}
 	}
 
@@ -130,8 +138,12 @@ func (mem *Member) CleanupMember(memberId uint8, oldTime time.Time) {
 		return
 	}
 
+        // DEBUG:
+        Info.Println("Checking cleanup.. ")
+        Info.Println("Cleanup time: ", time.Now())
+        Info.Println("Old time: ", oldTime)
 	if currEntry, ok := mem.membershipList[memberId]; ok {
-		difference := currEntry.Timestamp.Sub(oldTime)
+		difference := time.Now().Sub(currEntry.Timestamp)
 		threshold := time.Duration(Configuration.Settings.cleanupTimeout) * time.Second
 		if difference >= threshold {
 			delete(mem.membershipList, memberId)
@@ -159,22 +171,13 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 			continue
 		}
 
-		newHealth := uint8(Alive)
-		// Update if member voluntarily left
-		if rcvdEntry.Health == Left {
-			newHealth = Left
-		}
-
-		oldTime := rcvdMemList[id].Timestamp
-		newTime := time.Now()
-		newHeartbeatCt := rcvdEntry.HeartbeatCount
+                doUpdate := true
 
 		// check that they have the same id in their membership list
 		if currEntry, ok := mem.membershipList[id]; ok {
-			// No changes to timestamp/heartbeat count if count has not been updated
-			if rcvdEntry.HeartbeatCount <= currEntry.HeartbeatCount {
-				newHeartbeatCt = currEntry.HeartbeatCount
-				newTime = currEntry.Timestamp
+			// No changes to timestamp/heartbeat count if count has not been updated or entry left
+			if rcvdEntry.HeartbeatCount <= currEntry.HeartbeatCount && rcvdEntry.Health != Left  {
+                                doUpdate = false
 			}
 
 			if oldTime.Before(currEntry.Timestamp) {
@@ -182,25 +185,23 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 			}
 		}
 
-		mem.membershipList[id] = membershipListEntry{
-			rcvdEntry.MemberID,
-			rcvdEntry.IPaddr,
-			newHeartbeatCt,
-			newTime,
-			newHealth,
-		}
+                // Only set if update is neccessary whatsoever or if new entry to add
+                if doUpdate {
+                        mem.membershipList[id] = membershipListEntry{
+                                rcvdEntry.MemberID,
+                                rcvdEntry.IPaddr,
+                                rcvdEntry.HeartbeatCount,
+                                time.Now(),
+                                rcvdEntry.Health,
+                        }
+                }
+                oldTime := time.Now()
 
 		// Cmp most recently updated entry timestamp
 		time.AfterFunc(
 			time.Duration(Configuration.Settings.failTimeout)*time.Second,
 			func() {
 				mem.FailMember(id, oldTime)
-			})
-
-		time.AfterFunc(
-			time.Duration(Configuration.Settings.cleanupTimeout)*time.Second,
-			func() {
-				mem.CleanupMember(id, oldTime)
 			})
 	}
 }
@@ -236,7 +237,7 @@ func (mem *Member) Tick() {
 			// Gossip or AllToAll
 			if isGossip {
 				mem.Gossip()
-                                mem.Gossip()
+				mem.Gossip()
 			} else {
 				mem.AllToAll()
 			}
@@ -386,7 +387,7 @@ func (mem *Member) joinResponse(membershipListBytes []byte) {
 	if err != nil {
 		panic(err)
 	}
-        joinAck <- true
+	joinAck <- true
 
 	Info.Println(mem.membershipList)
 }
