@@ -236,6 +236,7 @@ func (mem *Member) Tick() {
 			// Gossip or AllToAll
 			if isGossip {
 				mem.Gossip()
+                                mem.Gossip()
 			} else {
 				mem.AllToAll()
 			}
