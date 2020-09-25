@@ -38,12 +38,12 @@ const (
 
 // Ticker variables
 var (
-        joinAck = make(chan bool)
+	joinAck      = make(chan bool)
 	disableHeart = make(chan bool)
 	ticker       *time.Ticker
 	enabledHeart = false
 	isGossip     = true
-        listener *net.UDPConn
+	listener     *net.UDPConn
 )
 
 // Member constructor
@@ -236,7 +236,7 @@ func (mem *Member) Tick() {
 			// Gossip or AllToAll
 			if isGossip {
 				mem.Gossip()
-                                mem.Gossip()
+				mem.Gossip()
 			} else {
 				mem.AllToAll()
 			}
@@ -386,7 +386,7 @@ func (mem *Member) joinResponse(membershipListBytes []byte) {
 	if err != nil {
 		panic(err)
 	}
-        joinAck <- true
+	joinAck <- true
 
 	Info.Println(mem.membershipList)
 }
