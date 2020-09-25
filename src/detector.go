@@ -159,22 +159,14 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 			continue
 		}
 
-		newHealth := uint8(Alive)
-		// Update if member voluntarily left
-		if rcvdEntry.Health == Left {
-			newHealth = Left
-		}
-
+                doUpdate := true
 		oldTime := rcvdMemList[id].Timestamp
-		newTime := time.Now()
-		newHeartbeatCt := rcvdEntry.HeartbeatCount
 
 		// check that they have the same id in their membership list
 		if currEntry, ok := mem.membershipList[id]; ok {
-			// No changes to timestamp/heartbeat count if count has not been updated
-			if rcvdEntry.HeartbeatCount <= currEntry.HeartbeatCount {
-				newHeartbeatCt = currEntry.HeartbeatCount
-				newTime = currEntry.Timestamp
+			// No changes to timestamp/heartbeat count if count has not been updated or entry left
+			if rcvdEntry.HeartbeatCount <= currEntry.HeartbeatCount && rcvdEntry.Health != Left  {
+                                doUpdate = false
 			}
 
 			if oldTime.Before(currEntry.Timestamp) {
@@ -182,13 +174,16 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 			}
 		}
 
-		mem.membershipList[id] = membershipListEntry{
-			rcvdEntry.MemberID,
-			rcvdEntry.IPaddr,
-			newHeartbeatCt,
-			newTime,
-			newHealth,
-		}
+                // Only set if update is neccessary whatsoever or if new entry to add
+                if doUpdate {
+                        mem.membershipList[id] = membershipListEntry{
+                                rcvdEntry.MemberID,
+                                rcvdEntry.IPaddr,
+                                rcvdEntry.HeartbeatCount,
+                                time.Now(),
+                                rcvdEntry.Health,
+                        }
+                }
 
 		// Cmp most recently updated entry timestamp
 		time.AfterFunc(
