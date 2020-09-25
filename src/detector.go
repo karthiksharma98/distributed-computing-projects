@@ -137,7 +137,7 @@ func (mem *Member) CleanupMember(memberId uint8, oldTime time.Time) {
 		return
 	}
 
-	if currEntry, ok := mem.membershipList[memberId]; ok {
+	if _, ok := mem.membershipList[memberId]; ok {
 		difference := time.Now().Sub(oldTime)
 		threshold := time.Duration(Configuration.Settings.cleanupTimeout) * time.Second
 		if difference >= threshold {
