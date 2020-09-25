@@ -107,7 +107,7 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 	}
 
 	if currEntry, ok := mem.membershipList[memberId]; ok {
-		difference := currEntry.Timestamp.Sub(oldTime)
+		difference := time.Now().Sub(oldTime)
 		threshold := time.Duration(Configuration.Settings.failTimeout) * time.Second
 		if difference >= threshold && currEntry.Health == Alive {
 			mem.membershipList[memberId] = membershipListEntry{
@@ -119,6 +119,8 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 			}
 
 			Info.Println("Marked member failed: ", memberId)
+
+                        // Start cleanup period only after determined failure
                         time.AfterFunc(
                                 time.Duration(Configuration.Settings.cleanupTimeout - Configuration.Settings.failTimeout)*time.Second,
                                 func() {
@@ -136,7 +138,7 @@ func (mem *Member) CleanupMember(memberId uint8, oldTime time.Time) {
 	}
 
 	if currEntry, ok := mem.membershipList[memberId]; ok {
-		difference := currEntry.Timestamp.Sub(oldTime)
+		difference := time.Now().Sub(oldTime)
 		threshold := time.Duration(Configuration.Settings.cleanupTimeout) * time.Second
 		if difference >= threshold {
 			delete(mem.membershipList, memberId)
@@ -184,12 +186,13 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
                                 rcvdEntry.Health,
                         }
                 }
+                oldTime := time.Now()
 
 		// Cmp most recently updated entry timestamp
 		time.AfterFunc(
 			time.Duration(Configuration.Settings.failTimeout)*time.Second,
 			func() {
-				mem.FailMember(id, time.Now())
+				mem.FailMember(id, oldTime)
 			})
 	}
 }
