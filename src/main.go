@@ -85,6 +85,7 @@ func main() {
 				continue
 			}
 			process.leave()
+			listener.Close()
 			Info.Println("Node has left the group.")
 			process = nil
 
