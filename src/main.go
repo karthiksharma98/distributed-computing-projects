@@ -128,6 +128,8 @@ func main() {
 			if len(inputFields) >= 2 {
 				if len(inputFields) >= 3 && inputFields[1] == "all" {
 					process.Grep(strings.Join(inputFields[2:], " "), false)
+					// sleep for a tiny bit of time so that you get all results before restarting loop
+					time.Sleep(250 * time.Millisecond)
 				} else {
 					process.Grep(strings.Join(inputFields[1:], " "), true)
 				}
