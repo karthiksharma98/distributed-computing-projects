@@ -67,6 +67,7 @@ func main() {
 				// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
 				process = NewMember(false)
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
+				time.Sleep(100 * time.Millisecond) // Sleep a tiny bit so listener can start
 				process.joinRequest()
 				// Wait for response
 				select {
