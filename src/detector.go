@@ -91,7 +91,7 @@ func (mem *Member) GetAllMembers() map[uint8]membershipListEntry {
 
 // PrintMembershipList pretty-prints all values inside the membership list
 func (mem *Member) PrintMembershipList(output io.Writer) {
-        fmt.Println("Current time: ", time.Now())
+	fmt.Println("Current time: ", time.Now())
 	writer := tabwriter.NewWriter(output, 0, 8, 1, '\t', tabwriter.AlignRight)
 	fmt.Fprintln(writer, "MemberID\tIP\tHeartbeats\tTimestamp\tHealth")
 	fmt.Fprintln(writer, "-------\t----------\t----\t-----------\t------")
@@ -107,28 +107,26 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 		return
 	}
 
+	time.Sleep(time.Duration(Configuration.Settings.failTimeout) * time.Second)
+
 	if currEntry, ok := mem.membershipList[memberId]; ok {
 		difference := time.Now().Sub(currEntry.Timestamp)
 		threshold := time.Duration(Configuration.Settings.failTimeout) * time.Second
 		if difference >= threshold {
-                        if currEntry.Health == Alive {
-                                mem.membershipList[memberId] = membershipListEntry{
-                                        currEntry.MemberID,
-                                        currEntry.IPaddr,
-                                        currEntry.HeartbeatCount,
-                                        currEntry.Timestamp,
-                                        Failed,
-                                }
-                                Info.Println("Marked member failed: ", memberId,
-                                             "\nFail time: ", time.Now(),
-                                             "\nOld time: ", oldTime)
-                        }
-                        // Start cleanup period only after determined failure
-                        time.AfterFunc(
-                                time.Duration(Configuration.Settings.cleanupTimeout - Configuration.Settings.failTimeout)*time.Second,
-                                func() {
-                                        mem.CleanupMember(memberId, oldTime)
-                                })
+			if currEntry.Health == Alive {
+				mem.membershipList[memberId] = membershipListEntry{
+					currEntry.MemberID,
+					currEntry.IPaddr,
+					currEntry.HeartbeatCount,
+					currEntry.Timestamp,
+					Failed,
+				}
+				Info.Println("Marked member failed: ", memberId,
+					"\nFail time: ", time.Now(),
+					"\nOld time: ", oldTime)
+			}
+
+			go mem.CleanupMember(memberId, oldTime)
 		}
 	}
 
@@ -139,6 +137,8 @@ func (mem *Member) CleanupMember(memberId uint8, oldTime time.Time) {
 	if memberId == mem.memberID {
 		return
 	}
+
+	time.Sleep(time.Duration(Configuration.Settings.cleanupTimeout) * time.Second)
 
 	if currEntry, ok := mem.membershipList[memberId]; ok {
 		difference := time.Now().Sub(currEntry.Timestamp)
@@ -169,34 +169,30 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 			continue
 		}
 
-                doUpdate := true
+		doUpdate := true
 
 		// check that they have the same id in their membership list
 		if currEntry, ok := mem.membershipList[id]; ok {
 			// No changes to timestamp/heartbeat count if count has not been updated or entry left
-			if rcvdEntry.HeartbeatCount <= currEntry.HeartbeatCount && rcvdEntry.Health != Left  {
-                                doUpdate = false
+			if rcvdEntry.HeartbeatCount <= currEntry.HeartbeatCount && rcvdEntry.Health != Left {
+				doUpdate = false
 			}
 		}
 
-                // Only set if update is neccessary whatsoever or if new entry to add
-                if doUpdate && rcvdEntry.Health != Failed {
-                        mem.membershipList[id] = membershipListEntry{
-                                rcvdEntry.MemberID,
-                                rcvdEntry.IPaddr,
-                                rcvdEntry.HeartbeatCount,
-                                time.Now(),
-                                rcvdEntry.Health,
-                        }
-                }
-                oldTime := time.Now()
+		// Only set if update is neccessary whatsoever or if new entry to add
+		if doUpdate && rcvdEntry.Health != Failed {
+			mem.membershipList[id] = membershipListEntry{
+				rcvdEntry.MemberID,
+				rcvdEntry.IPaddr,
+				rcvdEntry.HeartbeatCount,
+				time.Now(),
+				rcvdEntry.Health,
+			}
+		}
+		oldTime := time.Now()
 
 		// Cmp most recently updated entry timestamp
-		time.AfterFunc(
-			time.Duration(Configuration.Settings.failTimeout)*time.Second,
-			func() {
-				mem.FailMember(id, oldTime)
-			})
+		go mem.FailMember(id, oldTime)
 	}
 }
 
