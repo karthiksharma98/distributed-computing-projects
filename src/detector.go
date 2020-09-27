@@ -44,6 +44,7 @@ var (
 	enabledHeart = false
 	isGossip     = true
 	listener     *net.UDPConn
+	maxID        uint8 = 0
 )
 
 // Member constructor
@@ -398,7 +399,7 @@ func (mem *Member) leave() {
 // for introducer to accept a new member
 func (mem *Member) acceptMember(address net.IP) {
 	// assign new ID
-	newMemberID := GetMaxKey(mem.membershipList) + 1
+	newMemberID := getMaxID()
 	mem.membershipList[newMemberID] = NewMembershipListEntry(newMemberID, address)
 
 	// Encode the membership list to send it
@@ -413,18 +414,10 @@ func (mem *Member) acceptMember(address net.IP) {
 	Send(address.String()+":"+fmt.Sprint(Configuration.Service.port), AcceptMsg, append([]byte{newMemberID}, b.Bytes()...))
 }
 
-// GetMaxKey to get the maximum of all memberIDs
-func GetMaxKey(list map[uint8]membershipListEntry) uint8 {
-	var result uint8
-	for result = range list {
-		break
-	}
-	for n := range list {
-		if n > result {
-			result = n
-		}
-	}
-	return result
+// getMaxID to get the maximum of all memberIDs
+func getMaxID() uint8 {
+	maxID++
+	return maxID
 }
 
 // Find random IP in membership list
