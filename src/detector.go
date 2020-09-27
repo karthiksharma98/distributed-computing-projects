@@ -97,7 +97,7 @@ func (mem *Member) PrintMembershipList(output io.Writer) {
 	fmt.Fprintln(writer, "MemberID\tIP\tHeartbeats\tTimestamp\tHealth")
 	fmt.Fprintln(writer, "-------\t----------\t----\t-----------\t------")
 	for _, v := range mem.membershipList {
-		fmt.Fprintf(writer, "%v\t%v\t%v\t%v\t%v\n", v.MemberID, v.IPaddr, v.HeartbeatCount, v.Timestamp.String(), v.Health)
+		fmt.Fprintf(writer, "%v\t%v\t%v\t%v\t%v\n", v.MemberID, v.IPaddr, v.HeartbeatCount, v.Timestamp.Format("15:04:05.000"), healthEnumToString(v.Health))
 	}
 	writer.Flush()
 }
@@ -224,11 +224,13 @@ func (mem *Member) Tick() {
 			// Increment heartbeat counter of self
 			entry := mem.membershipList[mem.memberID]
 			entry.HeartbeatCount += 1
+			entry.Timestamp = time.Now()
 			mem.membershipList[mem.memberID] = entry
 			// Gossip or AllToAll
 			if isGossip {
-				mem.Gossip()
-				mem.Gossip()
+				for i := 0.0; i < Configuration.Settings.numProcessesToGossip; i++ {
+					mem.Gossip()
+				}
 			} else {
 				mem.AllToAll()
 			}

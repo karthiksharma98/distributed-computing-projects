@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"net"
 )
@@ -64,34 +63,4 @@ func Send(address string, msgType MessageType, msg []byte) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-// Listener function that listens to a port and prints incoming TextMsg
-func Listener(port string) {
-	// UDP buffer 1024 bytes for now
-	buffer := make([]byte, 1024)
-	addr, err := net.ResolveUDPAddr("udp", ":"+port)
-	if err != nil {
-		panic(err)
-	}
-
-	listener, err := net.ListenUDP("udp", addr)
-	if err != nil {
-		panic(err)
-	}
-
-	// listener loop
-	for {
-		n, _, err := listener.ReadFrom(buffer)
-		if err != nil {
-			return
-		}
-
-		msg_type := buffer[0]
-		switch msg_type {
-		case TextMsg:
-			fmt.Println(string(buffer[1 : n-1]))
-		}
-	}
-
 }
