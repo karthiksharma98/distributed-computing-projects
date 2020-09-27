@@ -397,7 +397,7 @@ func (mem *Member) leave() {
 	// Gossip leave status and stop
 	mem.Gossip()
 	mem.StopTick()
-	// TODO: kill the leaving process after a certain time/# of heartbeats
+	Info.Println("Leaving group: ", mem.memberID)
 }
 
 // for introducer to accept a new member
