@@ -14,17 +14,12 @@ var (
 	// Configuration stores all info in config.json
 	Configuration Config
 	process       *Member
-	started       bool = false
 )
 
 func printOptions() {
 	if process == nil {
 		fmt.Println("Welcome! Don't be a loner and join the group by saying \"join introducer\" or \"join\".")
 	} else {
-		if !started {
-			fmt.Println("Start heartbeating with \"start\".")
-		}
-
 		fmt.Print("Interact with the group using any of the following: leave, kill, ")
 		fmt.Println("status, get logs {-n}, grep {all}, stop, switch (gossip/alltoall), or chat")
 	}
@@ -80,6 +75,18 @@ func main() {
 					process = nil
 				}
 			}
+
+			// start gossip
+			if process == nil {
+				Warn.Println("You need to join group before you start.")
+				continue
+			}
+
+			if len(inputFields) >= 2 && inputFields[1] == "failtest" {
+				memMetrics.PerfTest()
+			}
+
+			go process.Tick()
 
 		case "leave":
 			if process == nil {
@@ -148,19 +155,6 @@ func main() {
 				input, _ := consoleReader.ReadString('\n')
 				SendBroadcast(addresses, 2, []byte(input))
 			}
-
-		case "start":
-			if process == nil {
-				Warn.Println("You need to join group before you start.")
-				continue
-			}
-
-			started = true
-			if len(inputFields) >= 2 && inputFields[1] == "failtest" {
-				memMetrics.PerfTest()
-			}
-
-			go process.Tick()
 
 		case "stop":
 			process.StopTick()
