@@ -42,7 +42,7 @@ func main() {
 		inputFields := strings.Fields(input) // Split string into os.Args like array
 
 		if len(inputFields) == 0 {
-			Info.Println("invalid command")
+			fmt.Println("invalid command")
 			continue
 		}
 
@@ -110,7 +110,6 @@ func main() {
 			}
 
 			process.PrintMembershipList(os.Stdout)
-			Info.Println("[imagine some status here].")
 
 		case "get":
 			if len(inputFields) >= 2 && inputFields[1] == "logs" {
