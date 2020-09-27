@@ -1,6 +1,6 @@
 {
     "service": {
-        "failure_detector": "gossip",
+        "failure_detector": "alltoall",
         "introducer_ip": "172.22.156.42",
         "port": 9090
     },

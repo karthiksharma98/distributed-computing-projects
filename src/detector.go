@@ -334,6 +334,8 @@ func (mem *Member) Listen(port string) {
 		}
 
 		msgType := buffer[0]
+		memMetrics.Increment(bytesReceived, int64(n))
+
 		switch msgType {
 		case TextMsg:
 			fmt.Println(string(buffer[1:n]))
