@@ -183,6 +183,15 @@ func main() {
 				InitMonitor()
 			}
 			memMetrics.PrintMonitor()
+
+		case "whoami":
+			if process == nil {
+				Warn.Println("You need to join group before you are assigned an ID.")
+				continue
+			}
+
+			fmt.Println("You are member " + fmt.Sprint(process.memberID))
+
 		default:
 			fmt.Println("invalid command")
 		}
