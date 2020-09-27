@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"net"
 )
@@ -19,9 +18,9 @@ const (
 )
 
 // Debugging consts
-const (
+var (
 	dropMessage = false
-	dropRate    = 20
+	dropRate    = 1
 )
 
 // Send text message over UDP given address and string
@@ -40,8 +39,10 @@ func SendBroadcast(addresses []string, msgType MessageType, msg []byte) {
 func Send(address string, msgType MessageType, msg []byte) {
 	// Debug purposes: simulate message drop
 	if dropMessage && rand.Intn(100) < dropRate {
+		memMetrics.Increment(messageDrop, 1)
 		return
 	}
+	memMetrics.Increment(messageSent, 1)
 
 	addr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {
@@ -64,34 +65,4 @@ func Send(address string, msgType MessageType, msg []byte) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-// Listener function that listens to a port and prints incoming TextMsg
-func Listener(port string) {
-	// UDP buffer 1024 bytes for now
-	buffer := make([]byte, 1024)
-	addr, err := net.ResolveUDPAddr("udp", ":"+port)
-	if err != nil {
-		panic(err)
-	}
-
-	listener, err := net.ListenUDP("udp", addr)
-	if err != nil {
-		panic(err)
-	}
-
-	// listener loop
-	for {
-		n, _, err := listener.ReadFrom(buffer)
-		if err != nil {
-			return
-		}
-
-		msg_type := buffer[0]
-		switch msg_type {
-		case TextMsg:
-			fmt.Println(string(buffer[1 : n-1]))
-		}
-	}
-
 }

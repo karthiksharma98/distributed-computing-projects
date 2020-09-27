@@ -71,7 +71,9 @@ func printLogs(num_lines int) {
 		txtlines = append(txtlines, scanner.Text())
 	}
 
-	if num_lines == 0 {
+	// check if "get logs" with no -n was passed in,
+	//    or num_lines is higher than the number of lines in the file
+	if num_lines <= 0 || num_lines > len(txtlines) {
 		num_lines = len(txtlines)
 	}
 

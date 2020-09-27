@@ -22,10 +22,11 @@ type Service struct {
 
 // Settings struct
 type Settings struct {
-	gossipInterval float64 `json:"gossip_interval"`
-	allInterval    float64 `json:"all_interval"`
-	failTimeout    float64 `json:"fail_timeout"`
-	cleanupTimeout float64 `json:"cleanup_timeout"`
+	gossipInterval       float64 `json:"gossip_interval"`
+	allInterval          float64 `json:"all_interval"`
+	failTimeout          float64 `json:"fail_timeout"`
+	cleanupTimeout       float64 `json:"cleanup_timeout"`
+	numProcessesToGossip float64 `json:"num_processes_to_gossip"`
 }
 
 // ReadConfig function to read the configuration JSON
@@ -61,12 +62,14 @@ func ReadConfig() Config {
 	aInterval := settingsJSON["all_interval"].(float64)
 	fTime := settingsJSON["fail_timeout"].(float64)
 	cTime := settingsJSON["cleanup_timeout"].(float64)
+	numProcessesToGossip := settingsJSON["num_processes_to_gossip"].(float64)
 
 	settings := Settings{
-		gossipInterval: gInterval,
-		allInterval:    aInterval,
-		failTimeout:    fTime,
-		cleanupTimeout: cTime,
+		gossipInterval:       gInterval,
+		allInterval:          aInterval,
+		failTimeout:          fTime,
+		cleanupTimeout:       cTime,
+		numProcessesToGossip: numProcessesToGossip,
 	}
 
 	config := Config{
@@ -83,4 +86,16 @@ func (c *Config) Print() {
 	Info.Println("All-to-All interval: " + fmt.Sprint(c.Settings.allInterval))
 	Info.Println("Failure timeout: " + fmt.Sprint(c.Settings.failTimeout))
 	Info.Println("Cleanup timeout: " + fmt.Sprint(c.Settings.cleanupTimeout))
+}
+
+func healthEnumToString(healthEnum uint8) string {
+	switch healthEnum {
+	case 0:
+		return "Alive"
+	case 1:
+		return "Failed"
+	case 2:
+		return "Left"
+	}
+	return "Invalid"
 }
