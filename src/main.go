@@ -90,10 +90,6 @@ func main() {
 				continue
 			}
 
-			if len(inputFields) >= 2 && inputFields[1] == "failtest" {
-				memMetrics.PerfTest()
-			}
-
 			go process.Tick()
 
 		case "leave":
@@ -198,6 +194,11 @@ func main() {
 			}
 
 			fmt.Println("You are member " + fmt.Sprint(process.memberID))
+
+		case "sim":
+			if len(inputFields) >= 2 && inputFields[1] == "failtest" {
+				process.SendAll(TestMsg, []byte{})
+			}
 
 		default:
 			fmt.Println("invalid command")

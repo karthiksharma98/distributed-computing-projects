@@ -15,6 +15,7 @@ const (
 	GrepReq
 	GrepResp
 	SwitchMsg
+	TestMsg
 )
 
 // Debugging consts
@@ -43,6 +44,7 @@ func Send(address string, msgType MessageType, msg []byte) {
 		return
 	}
 	memMetrics.Increment(messageSent, 1)
+	memMetrics.Increment(bytesSent, int64(len(msg)))
 
 	addr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {

@@ -361,6 +361,8 @@ func (mem *Member) Listen(port string) {
 			} else {
 				SetHeartbeating(false)
 			}
+		case TestMsg:
+			memMetrics.PerfTest()
 		default:
 			Warn.Println("Invalid message type")
 		}

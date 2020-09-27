@@ -15,6 +15,7 @@ const (
 	messageSent
 	numFailures
 	bytesReceived
+	bytesSent
 )
 
 var (
@@ -48,6 +49,7 @@ func (met *MemberMetrics) StartMonitor() {
 	met.metrics[messageSent] = 0
 	met.metrics[numFailures] = 0
 	met.metrics[bytesReceived] = 0
+	met.metrics[bytesSent] = 0
 }
 
 // Print monitor values
@@ -61,6 +63,7 @@ func (met *MemberMetrics) PrintMonitor() {
 	messageLoss := float64(met.metrics[messageDrop]) / float64(met.metrics[messageSent])
 	failRate := float64(met.metrics[numFailures]) / float64(int64(timeElapsed/time.Second))
 	bandwidth := float64(met.metrics[bytesReceived]) / float64(int64(timeElapsed/time.Second))
+	bandwidthOut := float64(met.metrics[bytesSent]) / float64(int64(timeElapsed/time.Second))
 
 	fmt.Println("Elapsed time (s): ", timeElapsed, "s")
 	fmt.Println("Failures detected: ", met.metrics[numFailures])
@@ -69,6 +72,7 @@ func (met *MemberMetrics) PrintMonitor() {
 	fmt.Println("Message loss rate: ", messageLoss)
 	fmt.Println("Failure rate (f/s): ", failRate)
 	fmt.Println("Bandwidth usage (bytes/s received): ", bandwidth)
+	fmt.Println("Bandwidth usage (bytes/s sent): ", bandwidthOut)
 }
 
 func (met *MemberMetrics) PerfTest() {
