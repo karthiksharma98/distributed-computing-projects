@@ -33,6 +33,7 @@ func printOptions() {
 func main() {
 	// Set up loggers and configs
 	InitLog()
+	InitMonitor()
 	Configuration = ReadConfig()
 	Configuration.Print()
 
@@ -155,6 +156,10 @@ func main() {
 			}
 
 			started = true
+			if len(inputFields) >= 2 && inputFields[1] == "failtest" {
+				memMetrics.PerfTest()
+			}
+
 			go process.Tick()
 
 		case "stop":
@@ -179,6 +184,12 @@ func main() {
 				process.SendAll(SwitchMsg, []byte{0})
 			}
 
+		// Monitoring
+		case "metrics":
+			if memMetrics == nil {
+				InitMonitor()
+			}
+			memMetrics.PrintMonitor()
 		default:
 			fmt.Println("invalid command")
 		}

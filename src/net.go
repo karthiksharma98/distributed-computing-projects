@@ -18,9 +18,9 @@ const (
 )
 
 // Debugging consts
-const (
+var (
 	dropMessage = false
-	dropRate    = 20
+	dropRate    = 1
 )
 
 // Send text message over UDP given address and string
@@ -39,8 +39,10 @@ func SendBroadcast(addresses []string, msgType MessageType, msg []byte) {
 func Send(address string, msgType MessageType, msg []byte) {
 	// Debug purposes: simulate message drop
 	if dropMessage && rand.Intn(100) < dropRate {
+		memMetrics.Increment(messageDrop, 1)
 		return
 	}
+	memMetrics.Increment(messageSent, 1)
 
 	addr, err := net.ResolveUDPAddr("udp", address)
 	if err != nil {

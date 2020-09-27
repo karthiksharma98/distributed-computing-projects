@@ -115,6 +115,7 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 		threshold := time.Duration(Configuration.Settings.failTimeout) * time.Second
 		if difference >= threshold {
 			if currEntry.Health == Alive {
+				memMetrics.Increment(numFailures, 1)
 				mem.membershipList[memberId] = membershipListEntry{
 					currEntry.MemberID,
 					currEntry.IPaddr,
@@ -212,6 +213,7 @@ func (mem *Member) Tick() {
 		return
 	}
 
+	memMetrics.StartMonitor()
 	enabledHeart = true
 	for {
 		// Listen channel to disable heartbeating
