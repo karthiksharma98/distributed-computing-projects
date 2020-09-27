@@ -55,6 +55,10 @@ func main() {
 
 			if len(inputFields) == 2 && inputFields[1] == "introducer" {
 				process = NewMember(true)
+				if Configuration.Service.detectorType == "alltoall" {
+					isGossip = false
+				}
+
 				process.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
 				Info.Println("You are now the introducer.")
@@ -62,6 +66,10 @@ func main() {
 			} else {
 				// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
 				process = NewMember(false)
+				if Configuration.Service.detectorType == "alltoall" {
+					isGossip = false
+				}
+
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
 				time.Sleep(100 * time.Millisecond) // Sleep a tiny bit so listener can start
 				process.joinRequest()
@@ -99,7 +107,6 @@ func main() {
 			process = nil
 
 		case "kill":
-			// simulate a failure?
 			Warn.Println("Killing process. Bye bye.")
 			os.Exit(1)
 
