@@ -224,6 +224,7 @@ func (mem *Member) Tick() {
 			// Increment heartbeat counter of self
 			entry := mem.membershipList[mem.memberID]
 			entry.HeartbeatCount += 1
+			entry.Timestamp = time.Now()
 			mem.membershipList[mem.memberID] = entry
 			// Gossip or AllToAll
 			if isGossip {
