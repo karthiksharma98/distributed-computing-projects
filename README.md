@@ -2,46 +2,69 @@
 
 ### Overview
 
-Gossip:
-
-* Infection-style dissemination
-* Propagates list information to k random nodes in member list
-
-All-to-all:
-
-* Every member periodically sends heartbeat to all other members
-* Declare M_i failed by non-faulty M_j if:
-  * M_j does not receive heartbeats from M_i for n consecutive heartbeats
-
-### Membership list update scenarios
-
-1. Machine joins group.
-2. Machine voluntarily leaves group.
-3. Machine involuntarily leaves group (failure by crash). - check if heartbeat is received by node < 5s
-
-### Requirements
+We implement two classical protocols for distributed group membership and failure detection written in Go. Gossip is an infection-style dissemination protocol and propagates list information to k random nodes. All-to-all failure detection periodically sends heartbeat to all other members and declares faulty nodes if a number of consecutive heartbeats are missed.
 
 **Features**
 
 * Gossip-style heartbeating
-  * <= 3 machines can fail simultaneously
-    * What to do if <= 3 machines fail?
 * All-to-all heartbeating
-  * Any number of machine can fail simultaneously
+* Introducer mechanism
+  * Memberes can join, voluntarily leave, or crash out of a group
+* Command line interface
 
-**Performance**
+**Performance requirements**
 
-* Failure must be reflected in one membership list **< 5 s**
-  * Heartbeat from A to B timeouts < 5s, do update list
-* Update(failure/join/leave) must be reflected in all membership lists **< 6 s**
-  * If failure is detected at ~5s, how to ensure failure is in all membership lists ~6s? Broadcast updated state immediately to all nodes?
+* Failures are reflected in one membership list within **< 5 s**
+* Update(failure/join/leave) must be reflected in all membership lists within **< 6 s**
 * Back-to-back failures < 20s
-  * What is meant by a "set of failures"? If one failure happens, is that considered a set of failures and no more failures should occur after 20s?
 * Bandwidth-efficient
 
-**Other**
+### Usage
 
-* Introducers/leaders cannot remove/fail nodes from list
+To compile and run:
+
+```
+go build -o main
+./main
+```
+
+Configure introducer, port, and intervals in config.json
+
+```json
+{
+    "service": {
+        "failure_detector": "alltoall",
+        "introducer_ip": "172.22.156.42",
+        "port": 9090
+    },
+    "settings": {
+        "gossip_interval": 1,
+        "all_interval": 3,
+        "fail_timeout": 5,
+        "cleanup_timeout": 24,
+        "num_processes_to_gossip": 2
+    }
+}
+```
+
+CLI
+
+```
+join					- join the group and start heartbeating
+join introducer			- create a group as the introducer
+leave					- leave the group and stop heartbeating
+status					- get live status of group
+whoami					- get self id
+get logs				- pull the current local log
+grep 					- grep for logs from other group members
+stop					- manually stop heartbeating
+kill					- exit gracefully
+switch <protocol>		- switch system protocol between options of: gossip, alltoall
+metrics					- get current failure/bandwidth stats
+sim <test>				- debug only; simulation between options of: failtest
+```
+
+
 
 ## Design
 
@@ -49,26 +72,8 @@ All-to-all:
 
 * Gossip service
 * All to all service
-* Why not both??
-
-### Usage
-
-* Console interface
-* Membership commands
-  * join introducer 
-    * Initializes membership list for group, accept requests from other nodes to join
-  * join
-    * Asks introducer IP to join group
-  * leave
-    * Voluntarily leave
-  * kill
-    * Die
-* Heartbeating
-  * start
-    * Starts heartbeating to other members (needs to be in a group first)
-  * stop
-  * switch gossip
-  * switch alltoall
+* Monitor service
+* Main process
 
 ### Gossip protocol
 
@@ -150,10 +155,6 @@ All-to-all:
     * Few options:
       * Gob
       * Protobuf
-      * Custom (might be useful later to further optimize bandwidth)
-        * Some ideas:
-          * https://piazza.com/class/kd4w68fkmvn1h1?cid=272
-          * https://ipfs.io/ipfs/QmfYeDhGH9bZzihBUDEQbCbTc5k5FZKURMUoUvfmc27BwL/dataserialisation/index.html
 
 ```go
 // net.go
@@ -240,14 +241,16 @@ Configuration (json or yaml?)
 ```json
 {
     "service": {
-		"failure_detector": "gossip",
-    	"introducer_ip": "10.0.0.1",
-    	"port": 1001
+        "failure_detector": "alltoall",
+        "introducer_ip": "172.22.156.42",
+        "port": 9090
     },
     "settings": {
-        "gossip_interval": 0.5,
+        "gossip_interval": 1,
+        "all_interval": 3,
         "fail_timeout": 5,
-        "cleanup_timeout": 24
+        "cleanup_timeout": 24,
+        "num_processes_to_gossip": 2
     }
 }
 ```
@@ -262,8 +265,8 @@ Root
 		net.go			// networking library
 		util.go			// utilities (config, etc)
 		detector.go		// gossip/all-to-all handlers
-	Tests
-		tests.go
+		monitor.go
+		logs.go
 ```
 
 ### Logging
@@ -279,8 +282,6 @@ Ctrl+C or kill lol
 2. Kill introducer/leader node
 3. Kill 3 >= machines
 4. Packet drops
-
-
 
 Report:
 
