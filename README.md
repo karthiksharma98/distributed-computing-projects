@@ -2,7 +2,7 @@
 
 ### Overview
 
-We implement two classical protocols for distributed group membership and failure detection written in Go. Gossip is an infection-style dissemination protocol and propagates list information to k random nodes. All-to-all failure detection periodically sends heartbeat to all other members and declares faulty nodes if a number of consecutive heartbeats are missed.
+We implement two classical protocols for distributed group membership and failure detection in Go. Gossip is an infection-style dissemination protocol that propagates list information to k random nodes at a constant rate. All-to-all failure detection periodically sends heartbeat to all other members and declares faulty nodes if a number of consecutive heartbeats are missed.
 
 **Features**
 
@@ -75,102 +75,55 @@ sim <test>				- debug only; simulation between options of: failtest
 * Monitor service
 * Main process
 
-### Gossip protocol
+Directory structure
 
-* Disseminate updates of members, if any, instead of entire list (bandwidth-efficient)
-  * Piggyback state updates on heartbeat messages [1]
-  * ~~Low overhead packet (10B): member_id, counter, enumerated update type~~
-  * Merge on heartbeat counter comparison; choose max
-  * Update timestamp
-  * Reset health of member if needed
-* Heartbeat counting
-  * Upon sending heartbeat (rate consistent interval)?
-* ~~Round-robin heartbeat scheduling~~
-  * Disseminate heartbeats at a rate of  (k neighbors)/(5s)
-  * Disseminate when (current time - time of last heartbeat) > 4-5s
-* ~~Distribute new updates to all scheduled heartbeat messages sitting in queue~~
-* Peer selection: Who to infect? Random? Predetermined set?
-  * Traditional gossip: send to one random member uniformly[2]
-* Suspicion mechanism similar to SWIM? [1]
-* Failure
-  * Consider member failed
-  * Local clock - timestamp > Tfail
-
-### All to all protocol
-
-* Heartbeat counting
-  * Increment periodically
-* Failure
-  * Heartbeats not recieved after since
-    * Local clock - timestamp > Tfail
-    * N heartbeats later
-
-### Introducer mechanism
-
-* Node sends message to introducer (preconfigured IP)  with desire to join
-  * Introducer provides new member with existing membership list
-* Node sends message to introducer to voluntarily leave
-  * Introducer gossips randomly or multicasts removal of member to all?
-* Introducer fails
-  * Nodes try to send join/remove messages but packets will drop
-* Introducer rejoins
-  * Existing nodes will find the introducer eventually but how will the introducer receive the current list?
-  * Pull entire list at start up from node
-* Node rejoins
-  * Different id
-  * Must make request to introducer for list
-
-### Message Passing
-
-* Over UDP connection
-
-* Messaging protocol
-
-  * Buffer: [messageType(1B), payload(n B)]
-
-  * First byte in the buffer should be of type MessageType (just a uint8 enumerated)
-
-    * ```go
-      type MessageType uint8
-      
-      const (
-              JoinMsg = iota; 
-              HeartbeatMsg
-              TextMsg
-      )
-      ```
-
-    * More message types can be included if required
-
-    * Its needed so Listener can determine how the payload should be processed and handled correctly
-
-      * JoinMsg ->call AcceptMember to handle new IP
-      * HeartbeatMsg -> call HeartbeatHandler to handle heartbeat
-      * TextMsg -> do anything with string
-
-  * Bytes 1 to n in the buffer - Payload
-
-    * Serialization
-    * Need to serialize and deserialize messages before and after transmission
-    * Few options:
-      * Gob
-      * Protobuf
-
-```go
-// net.go
-
-// Send text messages
-func SendMessage(addr string, msg string)
-// Send messages given addr, messsage type, and payload data (byte array)
-func Send(addr string, msgType MessageType, msg []byte) // go routine
-func SendAll()
-// Opens UDP listener connection over user specified port
-func Listener(port string)
+```
+root
+	config.json
+	src
+		main.go			// main program
+		net.go			// networking library
+		util.go			// utilities (config, etc)
+		detector.go		// gossip/all-to-all handlers
+		monitor.go
+		logs.go
 ```
 
-Structs
+### Gossip/All To All protocol
 
-```go
+Gossip disseminates by piggybacking his entire list on heartbeat messages. Heartbeats are disseminated at a rate of k peers/Tgossip seconds. Peers are selected at random at each round. Upon delivery of the heartbeat message, the receiving node will take the following steps:
+
+1. Decode the payload of the incoming packet into a readable list.
+2. Read each entry in the list individually.
+3. Determine if the entry should be merged into the consumer's list by comparing heartbeat counters.
+4. If the heartbeat counter of the entry from the received list is greater than the entry the consumer current holds, update the entry's timestamp and heartbeat counter.
+5. Invoke a goroutine to sleep for a Tfail period. The routine will be parked until the sleeping period ends, in which it will check if the time the last heartbeat was received surpasses a Tfail threshold.
+
+All to all follows the same membership list handling approach. However, it will disseminate a heartbeat message to the entire group at every round.
+
+```
+func (mem *Member) FailMember(memberId uint8, oldTime time.Time)
+func (mem *Member) CleanupMember(memberId uint8, oldTime time.Time)
+func (mem *Member) HeartbeatHandler(membershipListBytes []byte)
+
+func (mem *Member) Tick()
+func (mem *Member) StopTick()
+func SetHeartbeating(flag bool)
+
+func (mem *Member) Gossip()
+func (mem *Member) AllToAll()
+func (mem *Member) SendAll(msgType MessageType, msg []byte)
+```
+
+### Membership
+
+```
+const (
+    Alive = iota
+    Failed
+    Left
+)
+
 type Member struct {
 	memberID       uint8
 	isIntroducer   bool
@@ -186,87 +139,61 @@ type membershipListEntry struct {
 	Health         uint8 // -> Health enum
 }
 
-// enum for health status
-const (
-    Alive = iota
-    Failed
-    Left
-)
-
-// Ticker variables
-var (
-	disableHeart = make(chan bool)
-	ticker       *time.Ticker
-	enabledHeart = false
-	isGossip     = true
-)
+func NewMember(introducer bool) *Member
+func NewMembershipListEntry(memberID uint8, address net.IP) membershipListEntry
+func (mem *Member) PrintMembershipList(output io.Writer)
+func (mem *Member) Listen(port string)
 ```
-API
+
+### Introducer mechanism
+
+A node can send message to introducer (preconfigured IP)  with desire to join. Introducer responds by providing the new member with an existing membership list. Nodes can also voluntarily leave by setting his health to "Left" and sending one final gossip to a random node to announce his departure.
+
+If introducer suffers from a failure or crash, nodes will not be able to join the group. Nodes can attempt to send join/remove messages but their packets will drop. If a node voluntarily left or crashed, he may rejoin as a user occupying a new id. The node will rejoin as if he was joining the group for the first time - by making the proper request to the introducer. 
+
+Introducers may rejoin. Existing nodes will find the introducer eventually but will somehow need to retain his list entry.
+
+```
+func (mem *Member) joinRequest()
+func (mem *Member) joinResponse(membershipListBytes []byte)
+func (mem *Member) leave()
+func (mem *Member) acceptMember(address net.IP)
+```
+
+### Wire protocol
+
+We use a simple messaging protocol to facilitate a communication standard between nodes. Every UDP packet is sent and received in the following format:
+
+```
+[MessageType byte, payload []byte]
+```
+
+The MessageType is an enumerated value declared with the name of the message. Before sending any outgoing packet, the sender will prepend a message type to the payload. At the receiving endpoint, the node will strip the first byte of an incoming packet to determine how the message should be handled.
+
+Currently, we use Gob to encode and decode structs and lists into byte arrays during the marshalling/unmarshalling process. They go into bytes 1 to n in the buffer.
 
 ```go
-// basic membershiplist API (goroutines?)
-func GetMember(id uint8) -> (Member)
-func CreateOrUpdateMember(id uint8, data Member)
-func RemoveMember(id uint8) -> (Member)
-func GetAllMembers() -> ([]Member)
-
-// choose random node, check list for failures, send new list to random node
-func Gossip()
-func Tick() // timer to sched interrupts periodically
-func SetHeartbeating(flag bool)
-func RandID() // picks random IP from list
-
-// heartbeat event handler invoked when connection is recieved
-// read inc. message, send ack, perform necessary updates
-func HeartbeatHandler() 
-
-// health update mechanism
-func FailMember(id uint8)
-func CleanupMembers()
-
-// introducer mechanism
-func Join() -> membership_list map[uint8]Member
-func Leave()
-func AcceptMember(addr IPv4)
-
-func Log(message string)
-func GetStatus(message string)
-
-// read args commands etc
-func main()
+type MessageType uint8
+const (
+	JoinMsg = iota
+	HeartbeatMsg
+	TextMsg
+	AcceptMsg
+	GrepReq
+	GrepResp
+	SwitchMsg
+	TestMsg
+)
 ```
 
-Configuration (json or yaml?)
-
-```json
-{
-    "service": {
-        "failure_detector": "alltoall",
-        "introducer_ip": "172.22.156.42",
-        "port": 9090
-    },
-    "settings": {
-        "gossip_interval": 1,
-        "all_interval": 3,
-        "fail_timeout": 5,
-        "cleanup_timeout": 24,
-        "num_processes_to_gossip": 2
-    }
-}
-```
-
-Directory structure
-
-```
-Root
-	config.json
-	Src
-		main.go			// main program
-		net.go			// networking library
-		util.go			// utilities (config, etc)
-		detector.go		// gossip/all-to-all handlers
-		monitor.go
-		logs.go
+```go
+// Send text messages
+func SendMessage(addr string, msg string)
+// Send messages given addr, messsage type, and payload data (byte array)
+func Send(addr string, msgType MessageType, msg []byte) // go routine
+func SendAll()
+// Opens UDP listener connection over user specified port
+func Listener(port string)
 ```
 
 ### Logging
@@ -282,28 +209,4 @@ Ctrl+C or kill lol
 2. Kill introducer/leader node
 3. Kill 3 >= machines
 4. Packet drops
-
-Report:
-
-* Experimental comparison (gossip vs all-to-all)
-* Completeness: crash-failure of any group member can be detected by all non-faulty members
-* Speed of failure detection: the time interval between a member failure and its detection by some non-fault group member
-* Bandwidth: B/sec diseminated packets
-* Accuracy: rate of false-positive failures (no report for failures for )
-
-
-
-References
-
-[1] SWIM paper
-
-[2] https://dl.acm.org/doi/pdf/10.5555/1659232.1659238
-
-[3] https://www.cs.cornell.edu/home/rvr/papers/GossipFD.pdf
-
-[4] https://research.cs.cornell.edu/projects/Quicksilver/public_pdfs/2007PromiseAndLimitations.pdf
-
-[5] https://stackoverflow.com/questions/31121906/how-to-guarantee-that-all-nodes-get-infected-in-gossip-based-protocols
-
-[6] https://github.com/golang-standards/project-layout
 
