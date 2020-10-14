@@ -1,0 +1,14 @@
+{
+    "service": {
+        "failure_detector": "alltoall",
+        "introducer_ip": "172.22.156.42",
+        "port": 9090
+    },
+    "settings": {
+        "gossip_interval": 1,
+        "all_interval": 3,
+        "fail_timeout": 5,
+        "cleanup_timeout": 24,
+        "num_processes_to_gossip": 2
+    }
+}

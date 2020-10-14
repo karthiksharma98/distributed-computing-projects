@@ -1,0 +1,6 @@
+[INFO] 2020/09/26 20:07:55 Detector: gossip
+[INFO] 2020/09/26 20:07:55 Introducer: 172.22.156.42 on port 9090
+[INFO] 2020/09/26 20:07:55 Gossip interval: 1
+[INFO] 2020/09/26 20:07:55 All-to-All interval: 3
+[INFO] 2020/09/26 20:07:55 Failure timeout: 5
+[INFO] 2020/09/26 20:07:55 Cleanup timeout: 24
