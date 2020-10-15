@@ -18,7 +18,7 @@ type PutResponse struct {
 func (mem *Member) HandlePutRequest(putReq PutRequest, reply *PutResponse) error {
 
 	var response PutResponse
-	var ipList []net.IP
+	// var ipList []net.IP
 
 	var testIP net.IP
 	// go through membership list and return 4 IPs
