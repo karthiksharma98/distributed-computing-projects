@@ -243,11 +243,19 @@ func main() {
 				err := client.Call("Member.HandlePutRequest", req, &res)
 
 				if err != nil {
-					fmt.Println(err)
+					fmt.Println("putfile failed", err)
 				} else {
-					fmt.Println(res.IPList)
-				}
+					// TODO: copy local file to store as well
 
+					// TODO: Initiate upload to each alive node
+					for _, val := range res.IPList {
+						fmt.Println(val)
+						// call upload
+
+						// TODO: post each successful upload to an IP, call Member.AddIPToFileMap so master can add IP to list of IPs containing file
+						// client.Call("Member.AddIPToFileMap", UploadAck{RemoteFName: <file_name>, IPAddr: <process_ip>}, <pointer to res>)
+					}
+				}
 			}
 
 		case "getfile":
@@ -260,9 +268,26 @@ func main() {
 				if err != nil {
 					fmt.Println(err)
 				} else {
-					fmt.Println(res.IPList)
+					// TODO: Choose one of the received IPs and initiate download
+
+					// TODO: after successful download, call Member.AddIPToFileMap so master can add to list of IPs containing file
+					// client.Call("Member.AddIPToFileMap", UploadAck{RemoteFName: <file_name>, IPAddr: <process_ip>}, <pointer to res>)
 				}
 
+			}
+
+		case "deletefile":
+			if len(inputFields) >= 2 {
+				req := SdfsRequest{LocalFName: "", RemoteFName: inputFields[1], Type: DelReq}
+				var res SdfsResponse
+
+				err := client.Call("Member.HandleDeleteRequest", req, &res)
+
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println("Deleted successfully:", req.RemoteFName)
+				}
 			}
 
 		default:
