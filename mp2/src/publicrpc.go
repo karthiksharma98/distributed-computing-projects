@@ -96,7 +96,7 @@ func (mem *Member) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error 
 
 	var response SdfsResponse
 
-	if val, ok := fileMap[req.RemoteFName]; ok && len(val) != 0 {
+	if val, ok := fileMap[req.RemoteFName]; ok {
 		response.IPList = val
 		*reply = response
 		return nil
