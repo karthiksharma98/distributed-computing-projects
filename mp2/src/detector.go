@@ -7,7 +7,6 @@ import (
 	"io"
 	"math/rand"
 	"net"
-	"strings"
 	"text/tabwriter"
 	"time"
 )
@@ -312,63 +311,6 @@ func (mem *Member) SendAll(msgType MessageType, msg []byte) {
 	}
 }
 
-// Listen function to keep listening for messages
-func (mem *Member) Listen(port string) {
-	// UDP buffer 1024 bytes for now
-	buffer := make([]byte, 1024)
-	addr, err := net.ResolveUDPAddr("udp", ":"+port)
-	if err != nil {
-		panic(err)
-	}
-
-	listener, err = net.ListenUDP("udp", addr)
-	if err != nil {
-		panic(err)
-	}
-
-	// listener loop
-	for {
-		n, senderAddr, err := listener.ReadFromUDP(buffer)
-		if err != nil {
-			return
-		}
-
-		msgType := buffer[0]
-		memMetrics.Increment(bytesReceived, int64(n))
-
-		switch msgType {
-		case TextMsg:
-			fmt.Println(string(buffer[1:n]))
-		case JoinMsg: // only introducer can accept join messages
-			if mem.isIntroducer == true {
-				Info.Println(senderAddr.String() + " requests to join.")
-				mem.acceptMember(senderAddr.IP)
-			}
-		case HeartbeatMsg: // handles receipt of heartbeat
-			mem.HeartbeatHandler(buffer[1:n])
-			Info.Println("Recieved heartbeat from ", senderAddr.String())
-		case AcceptMsg: // handles receipt of membership list from introducer
-			Info.Println("Introducer has accepted join request.")
-			mem.joinResponse(buffer[1:n])
-		case GrepReq: // handles grep request
-			ipAddr := senderAddr.String()[:strings.IndexByte(senderAddr.String(), ':')]
-			mem.HandleGrepRequest(ipAddr, buffer[1:n])
-		case GrepResp: // handles grep response when one is received
-			mem.HandleGrepResponse(buffer[1:n])
-		case SwitchMsg:
-			if buffer[1] == 1 {
-				SetHeartbeating(true)
-			} else {
-				SetHeartbeating(false)
-			}
-		case TestMsg:
-			memMetrics.PerfTest()
-		default:
-			Warn.Println("Invalid message type")
-		}
-	}
-}
-
 // request introducer to join
 func (mem *Member) joinRequest() {
 	Send(Configuration.Service.introducerIP+":"+fmt.Sprint(Configuration.Service.port), JoinMsg, nil)
@@ -445,7 +387,7 @@ func (mem *Member) PickRandMemberIP() net.IP {
 				randEntry = v
 			}
 
-			i += 1
+			i++
 		}
 
 		if randEntry.MemberID != mem.memberID {

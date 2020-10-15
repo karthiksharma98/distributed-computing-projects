@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"net/http"
+	"net/rpc"
 	"os"
 	"strconv"
 	"strings"
@@ -32,6 +34,8 @@ func main() {
 	Configuration = ReadConfig()
 	Configuration.Print()
 
+	rpcInitialized := false
+
 	for {
 		printOptions()
 		// wait for input to query operations on node
@@ -55,6 +59,7 @@ func main() {
 
 			if len(inputFields) == 2 && inputFields[1] == "introducer" {
 				process = NewMember(true)
+
 				if Configuration.Service.detectorType == "alltoall" {
 					isGossip = false
 				}
@@ -62,6 +67,25 @@ func main() {
 				process.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
 				Info.Println("You are now the introducer.")
+
+				// register RPC server
+				if process != nil {
+					if rpcInitialized == false {
+						err := rpc.Register(process)
+						if err != nil {
+							fmt.Println("Format isn't correct. ", err)
+						}
+						rpc.HandleHTTP()
+						rpcListener, _ := net.Listen("tcp", ":1234")
+						fmt.Printf("Serving RPC server on port %d\n", 1234)
+						// Start accepting incoming HTTP connections
+						err = http.Serve(rpcListener, nil)
+						if err != nil {
+							fmt.Println("Error serving: ", err)
+						}
+						rpcInitialized = true
+					}
+				}
 
 			} else {
 				// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
@@ -81,6 +105,25 @@ func main() {
 					fmt.Println("Timeout join. Please retry again.")
 					listener.Close()
 					process = nil
+				}
+
+				if rpcInitialized == false {
+					client, err := rpc.DialHTTP("tcp", "172.22.156.42:1234")
+					if err != nil {
+						fmt.Println("Connection error: ", err)
+					}
+					rpcInitialized = true
+
+					//test call
+					var req PutRequest
+					var res PutResponse
+
+					req.localFName = "local"
+					req.remoteFName = "remote"
+
+					client.Call("Member.PutRequest", req, &res)
+					fmt.Println(res.ipList)
+
 				}
 			}
 

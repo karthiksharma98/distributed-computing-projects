@@ -4,3 +4,15 @@
 [INFO] 2020/09/26 20:07:55 All-to-All interval: 3
 [INFO] 2020/09/26 20:07:55 Failure timeout: 5
 [INFO] 2020/09/26 20:07:55 Cleanup timeout: 24
+[INFO] 2020/10/14 20:13:54 Detector: gossip
+[INFO] 2020/10/14 20:13:54 Introducer: 172.22.156.42 on port 9090
+[INFO] 2020/10/14 20:13:54 Gossip interval: 1
+[INFO] 2020/10/14 20:13:54 All-to-All interval: 3
+[INFO] 2020/10/14 20:13:54 Failure timeout: 5
+[INFO] 2020/10/14 20:13:54 Cleanup timeout: 24
+[INFO] 2020/10/14 20:13:57 Detector: gossip
+[INFO] 2020/10/14 20:13:57 Introducer: 172.22.156.42 on port 9090
+[INFO] 2020/10/14 20:13:57 Gossip interval: 1
+[INFO] 2020/10/14 20:13:57 All-to-All interval: 3
+[INFO] 2020/10/14 20:13:57 Failure timeout: 5
+[INFO] 2020/10/14 20:13:57 Cleanup timeout: 24
