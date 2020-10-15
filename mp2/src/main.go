@@ -76,7 +76,7 @@ func main() {
 							fmt.Println("Format isn't correct. ", err)
 						}
 						rpc.HandleHTTP()
-						rpcListener, e := net.Listen("tcp", ":1234")
+						rpcListener, e := net.Listen("tcp", "localhost:1235")
 						if e != nil {
 							fmt.Println("error in starting listener")
 						}
