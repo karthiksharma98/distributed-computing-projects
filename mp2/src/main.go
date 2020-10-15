@@ -125,7 +125,7 @@ func main() {
 					req.remoteFName = "remote"
 
 					client.Call("Member.HandlePutRequest", req, &res)
-					fmt.Println(res.ipList)
+					fmt.Println(res.ip)
 				}
 			}
 

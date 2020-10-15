@@ -12,13 +12,15 @@ type PutRequest struct {
 }
 
 type PutResponse struct {
-	ipList []net.IP
+	ip net.IP
 }
 
 func (mem *Member) HandlePutRequest(putReq PutRequest, reply *PutResponse) error {
 
 	var response PutResponse
 	var ipList []net.IP
+
+	var testIP net.IP
 	// go through membership list and return 4 IPs
 
 	counter := 0
@@ -28,18 +30,18 @@ func (mem *Member) HandlePutRequest(putReq PutRequest, reply *PutResponse) error
 	// TODO: make randomly chosen
 	for _, v := range mem.membershipList {
 		if v.Health == Alive {
-			ipList = append(ipList, v.IPaddr)
+			testIP = v.IPaddr
 			counter++
 		}
-		if counter == 4 {
+		if counter == 1 {
 			break
 		}
 	}
 
-	fmt.Println(ipList)
+	fmt.Println(testIP)
 
-	if counter == 4 {
-		response.ipList = ipList
+	if counter == 1 {
+		response.ip = testIP
 		*reply = response
 		return nil
 	}
