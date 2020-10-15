@@ -84,7 +84,6 @@ func main() {
 						fmt.Printf("Serving RPC server on port %d\n", 9092)
 						// Start accepting incoming HTTP connections
 						go http.Serve(rpcListener, nil)
-						fmt.Println("Serving")
 						rpcInitialized = true
 					}
 				}
@@ -110,7 +109,6 @@ func main() {
 				}
 
 				if rpcInitialized == false {
-					fmt.Println("Sending putReq")
 					client, err := rpc.DialHTTP("tcp", "172.22.156.42:9092")
 					if err != nil {
 						fmt.Println("Connection error: ", err)
@@ -128,9 +126,8 @@ func main() {
 					if err != nil {
 						fmt.Println(err)
 					} else {
-						fmt.Println(res.IpAddr)
+						fmt.Println(res.IPList)
 					}
-					fmt.Println(res.IpAddr)
 				}
 			}
 

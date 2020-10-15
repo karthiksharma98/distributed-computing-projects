@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net"
 )
 
@@ -12,36 +11,31 @@ type PutRequest struct {
 }
 
 type PutResponse struct {
-	IpAddr net.IP
+	IPList []net.IP
 }
 
 func (mem *Member) HandlePutRequest(putReq PutRequest, reply *PutResponse) error {
 
 	var response PutResponse
-	// var ipList []net.IP
+	var ipList []net.IP
 
-	var testIP net.IP
 	// go through membership list and return 4 IPs
 
 	counter := 0
 
-	fmt.Println("entered put request")
-
 	// TODO: make randomly chosen
 	for _, v := range mem.membershipList {
 		if v.Health == Alive {
-			testIP = v.IPaddr
+			ipList = append(ipList, v.IPaddr)
 			counter++
 		}
-		if counter == 1 {
+		if counter == 4 {
 			break
 		}
 	}
 
-	fmt.Println(testIP)
-
-	if counter == 1 {
-		response.IpAddr = testIP
+	if counter == 4 {
+		response.IPList = ipList
 		*reply = response
 		return nil
 	}

@@ -10,5 +10,5 @@ type PutRequest struct {
 }
 
 type PutResponse struct {
-	IpAddr net.IP
+	IPList []net.IP
 }
