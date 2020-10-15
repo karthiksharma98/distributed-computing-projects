@@ -16,6 +16,7 @@ var (
 	// Configuration stores all info in config.json
 	Configuration Config
 	process       *Member
+	client        *rpc.Client
 )
 
 func printOptions() {
@@ -109,25 +110,12 @@ func main() {
 				}
 
 				if rpcInitialized == false {
-					client, err := rpc.DialHTTP("tcp", "172.22.156.42:9092")
+					var err error
+					client, err = rpc.DialHTTP("tcp", "172.22.156.42:9092")
 					if err != nil {
 						fmt.Println("Connection error: ", err)
 					}
 					rpcInitialized = true
-
-					//test call
-					var req PutRequest
-					var res PutResponse
-
-					req.LocalFName = "local"
-					req.RemoteFName = "remote"
-
-					err = client.Call("Member.HandlePutRequest", req, &res)
-					if err != nil {
-						fmt.Println(err)
-					} else {
-						fmt.Println(res.IPList)
-					}
 				}
 			}
 
@@ -245,6 +233,36 @@ func main() {
 		case "sim":
 			if len(inputFields) >= 2 && inputFields[1] == "failtest" {
 				process.SendAll(TestMsg, []byte{})
+			}
+
+		case "putFile":
+			if len(inputFields) >= 3 {
+				req := SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], Type: PutReq}
+				var res SdfsResponse
+
+				err := client.Call("Member.HandlePutRequest", req, &res)
+
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println(res.IPList)
+				}
+
+			}
+
+		case "getFile":
+			if len(inputFields) >= 3 {
+				req := SdfsRequest{LocalFName: inputFields[2], RemoteFName: inputFields[1], Type: GetReq}
+				var res SdfsResponse
+
+				err := client.Call("Member.HandleGetRequest", req, &res)
+
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println(res.IPList)
+				}
+
 			}
 
 		default:
