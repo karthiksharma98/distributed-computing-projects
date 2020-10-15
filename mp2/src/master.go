@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net"
 )
 
@@ -69,6 +70,7 @@ func (mem *Member) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error 
 	var response SdfsResponse
 
 	if val, ok := fileMap[req.RemoteFName]; ok {
+		fmt.Println("located", val)
 		response.IPList = val
 		*reply = response
 		return nil
