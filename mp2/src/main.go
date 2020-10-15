@@ -66,6 +66,7 @@ func main() {
 
 				process.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
+				go process.InitializeServer(fmt.Sprint(Configuration.Service.port))
 				Info.Println("You are now the introducer.")
 
 				// start RPC server
@@ -281,6 +282,21 @@ func main() {
 				} else {
 					fmt.Println("Deleted successfully:", req.RemoteFName)
 				}
+			}
+		case "upload":
+			if process != nil && len(inputFields) == 3 {
+				process.Upload(fmt.Sprint(Configuration.Service.introducerIP),
+					fmt.Sprint(Configuration.Service.port),
+					inputFields[1],
+					inputFields[2])
+			}
+
+		case "download":
+			if process != nil && len(inputFields) == 3 {
+				process.Download(fmt.Sprint(Configuration.Service.introducerIP),
+					fmt.Sprint(Configuration.Service.port),
+					inputFields[1],
+					inputFields[2])
 			}
 
 		default:
