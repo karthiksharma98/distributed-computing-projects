@@ -87,6 +87,7 @@ func main() {
 						if err != nil {
 							fmt.Println("Error serving: ", err)
 						}
+						fmt.Println("Serving")
 						rpcInitialized = true
 					}
 				}
