@@ -124,7 +124,12 @@ func main() {
 					req.localFName = "local"
 					req.remoteFName = "remote"
 
-					client.Call("Member.HandlePutRequest", req, &res)
+					err = client.Call("Member.HandlePutRequest", req, &res)
+					if err != nil {
+						fmt.Println(err)
+					} else {
+						fmt.Println(res.ip)
+					}
 					fmt.Println(res.ip)
 				}
 			}
