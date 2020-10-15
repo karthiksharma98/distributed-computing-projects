@@ -235,7 +235,7 @@ func main() {
 				process.SendAll(TestMsg, []byte{})
 			}
 
-		case "putFile":
+		case "putfile":
 			if len(inputFields) >= 3 {
 				req := SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], Type: PutReq}
 				var res SdfsResponse
@@ -250,7 +250,7 @@ func main() {
 
 			}
 
-		case "getFile":
+		case "getfile":
 			if len(inputFields) >= 3 {
 				req := SdfsRequest{LocalFName: inputFields[2], RemoteFName: inputFields[1], Type: GetReq}
 				var res SdfsResponse
