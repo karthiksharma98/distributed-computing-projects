@@ -15,7 +15,7 @@ type PutResponse struct {
 	ipList []net.IP
 }
 
-func (mem *Member) PutRequest(putReq PutRequest, reply *PutResponse) error {
+func (mem *Member) HandlePutRequest(putReq PutRequest, reply *PutResponse) error {
 
 	var response PutResponse
 	var ipList []net.IP

@@ -83,10 +83,7 @@ func main() {
 
 						fmt.Printf("Serving RPC server on port %d\n", 9092)
 						// Start accepting incoming HTTP connections
-						err = http.Serve(rpcListener, nil)
-						if err != nil {
-							fmt.Println("Error serving: ", err)
-						}
+						go http.Serve(rpcListener, nil)
 						fmt.Println("Serving")
 						rpcInitialized = true
 					}
@@ -127,7 +124,7 @@ func main() {
 					req.localFName = "local"
 					req.remoteFName = "remote"
 
-					client.Call("Member.PutRequest", req, &res)
+					client.Call("Member.HandlePutRequest", req, &res)
 					fmt.Println(res.ipList)
 				}
 			}
