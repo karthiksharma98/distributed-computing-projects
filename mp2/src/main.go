@@ -76,7 +76,11 @@ func main() {
 							fmt.Println("Format isn't correct. ", err)
 						}
 						rpc.HandleHTTP()
-						rpcListener, _ := net.Listen("tcp", ":1234")
+						rpcListener, e := net.Listen("tcp", ":1234")
+						if e != nil {
+							fmt.Println("error in starting listener")
+						}
+
 						fmt.Printf("Serving RPC server on port %d\n", 1235)
 						// Start accepting incoming HTTP connections
 						err = http.Serve(rpcListener, nil)
