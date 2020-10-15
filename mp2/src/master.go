@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net"
 )
 
@@ -22,6 +23,8 @@ func (mem *Member) PutRequest(putReq PutRequest, reply *PutResponse) error {
 
 	counter := 0
 
+	fmt.Println("entered put request")
+
 	// TODO: make randomly chosen
 	for _, v := range mem.membershipList {
 		if v.Health == Alive {
@@ -32,6 +35,8 @@ func (mem *Member) PutRequest(putReq PutRequest, reply *PutResponse) error {
 			break
 		}
 	}
+
+	fmt.Println(ipList)
 
 	if counter == 4 {
 		response.ipList = ipList

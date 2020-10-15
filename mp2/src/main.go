@@ -108,6 +108,7 @@ func main() {
 				}
 
 				if rpcInitialized == false {
+					fmt.Println("Sending putReq")
 					client, err := rpc.DialHTTP("tcp", "172.22.156.42:1234")
 					if err != nil {
 						fmt.Println("Connection error: ", err)
@@ -123,7 +124,6 @@ func main() {
 
 					client.Call("Member.PutRequest", req, &res)
 					fmt.Println(res.ipList)
-
 				}
 			}
 
