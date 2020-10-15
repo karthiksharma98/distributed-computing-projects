@@ -77,7 +77,7 @@ func main() {
 						}
 						rpc.HandleHTTP()
 						rpcListener, _ := net.Listen("tcp", ":1234")
-						fmt.Printf("Serving RPC server on port %d\n", 1234)
+						fmt.Printf("Serving RPC server on port %d\n", 1235)
 						// Start accepting incoming HTTP connections
 						err = http.Serve(rpcListener, nil)
 						if err != nil {
@@ -109,7 +109,7 @@ func main() {
 
 				if rpcInitialized == false {
 					fmt.Println("Sending putReq")
-					client, err := rpc.DialHTTP("tcp", "172.22.156.42:1234")
+					client, err := rpc.DialHTTP("tcp", "172.22.156.42:1235")
 					if err != nil {
 						fmt.Println("Connection error: ", err)
 					}
