@@ -268,6 +268,7 @@ func main() {
 				if err != nil {
 					fmt.Println(err)
 				} else {
+					fmt.Println(res.IPList)
 					// TODO: Choose one of the received IPs and initiate download
 
 					// TODO: after successful download, call Member.AddIPToFileMap so master can add to list of IPs containing file
