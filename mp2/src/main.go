@@ -121,16 +121,16 @@ func main() {
 					var req PutRequest
 					var res PutResponse
 
-					req.localFName = "local"
-					req.remoteFName = "remote"
+					req.LocalFName = "local"
+					req.RemoteFName = "remote"
 
 					err = client.Call("Member.HandlePutRequest", req, &res)
 					if err != nil {
 						fmt.Println(err)
 					} else {
-						fmt.Println(res.ip)
+						fmt.Println(res.IpAddr)
 					}
-					fmt.Println(res.ip)
+					fmt.Println(res.IpAddr)
 				}
 			}
 

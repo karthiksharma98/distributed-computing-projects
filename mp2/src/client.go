@@ -5,10 +5,10 @@ import (
 )
 
 type PutRequest struct {
-	localFName  string
-	remoteFName string
+	LocalFName  string
+	RemoteFName string
 }
 
 type PutResponse struct {
-	ip net.IP
+	IpAddr net.IP
 }

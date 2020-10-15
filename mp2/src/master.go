@@ -7,12 +7,12 @@ import (
 )
 
 type PutRequest struct {
-	localFName  string
-	remoteFName string
+	LocalFName  string
+	RemoteFName string
 }
 
 type PutResponse struct {
-	ip net.IP
+	IpAddr net.IP
 }
 
 func (mem *Member) HandlePutRequest(putReq PutRequest, reply *PutResponse) error {
@@ -41,7 +41,7 @@ func (mem *Member) HandlePutRequest(putReq PutRequest, reply *PutResponse) error
 	fmt.Println(testIP)
 
 	if counter == 1 {
-		response.ip = testIP
+		response.IpAddr = testIP
 		*reply = response
 		return nil
 	}
