@@ -13,7 +13,7 @@ service FileTransfer {
 }
 
 message UploadRequest {
-	string fileContents = 1;
+	bytes fileContents = 1;
 	string sdfsFileName = 2;
 }
 
@@ -27,5 +27,5 @@ message DownloadRequest {
 
 message DownloadReply {
 	bool doesFileExist = 1;
-	string fileContents = 2;
+	bytes fileContents = 2;
 }

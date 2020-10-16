@@ -11,7 +11,10 @@ import (
 )
 
 var (
-	dialOpts = [2]grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock()}
+	// 1346378950 is the size of wiki corpus + some more for fun lol
+	dialSize       = 1346378950 + 2048
+	clientDialOpts = [3]grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock(), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(dialSize))}
+	serverDialOpts = [1]grpc.ServerOption{grpc.MaxRecvMsgSize(dialSize)}
 )
 
 // Server methods
@@ -24,7 +27,7 @@ func (mem *Member) InitializeServer(port string) {
 		panic(err)
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(serverDialOpts[0:1]...)
 	service.RegisterFileTransferServer(grpcServer, &FileTransferServer{})
 	reflection.Register(grpcServer)
 
@@ -40,7 +43,7 @@ func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.Uplo
 	}
 	defer file.Close()
 
-	file.Write([]byte(uploadReq.FileContents))
+	file.Write(uploadReq.FileContents)
 
 	return &service.UploadReply{Status: true}, nil
 }
@@ -49,35 +52,35 @@ func (s *FileTransferServer) Download(ctx context.Context, downloadReq *service.
 	file, err := os.Open(downloadReq.GetSdfsFileName())
 	defer file.Close()
 	if err != nil {
-		return &service.DownloadReply{DoesFileExist: false, FileContents: err.Error()}, nil
+		return &service.DownloadReply{DoesFileExist: false, FileContents: []byte(err.Error())}, nil
 	}
 
 	buf := make([]byte, 1024)
 	size, err := file.Read(buf)
 	if err != nil {
-		return &service.DownloadReply{DoesFileExist: false, FileContents: err.Error()}, nil
+		return &service.DownloadReply{DoesFileExist: false, FileContents: []byte(err.Error())}, nil
 	}
 
-	fileStr := string(buf[:size])
-	return &service.DownloadReply{DoesFileExist: true, FileContents: fileStr}, nil
+	fileContents := buf[:size]
+	return &service.DownloadReply{DoesFileExist: true, FileContents: fileContents}, nil
 }
 
 // Client Methods
 
-func GetFileContents(localFileName string) string {
+func GetFileContents(localFileName string) []byte {
 	content, err := ioutil.ReadFile(localFileName)
 	if err != nil {
 		Warn.Println("Unable to read file.")
-		return ""
+		return []byte{}
 	}
 
 	// Convert []byte to string
-	return string(content)
+	return content
 }
 
 func (mem *Member) Upload(ipAddr string, port string, localFileName string, sdfsFileName string) {
 	dest := ipAddr + ":" + port
-	conn, err := grpc.Dial(dest, dialOpts[0:2]...)
+	conn, err := grpc.Dial(dest, clientDialOpts[0:3]...)
 	if err != nil {
 		panic(err)
 	}
@@ -101,7 +104,7 @@ func (mem *Member) Upload(ipAddr string, port string, localFileName string, sdfs
 
 func (mem *Member) Download(ipAddr string, port string, sdfsFileName string, localFileName string) {
 	dest := ipAddr + ":" + port
-	conn, err := grpc.Dial(dest, dialOpts[0:2]...)
+	conn, err := grpc.Dial(dest, clientDialOpts[0:3]...)
 	if err != nil {
 		panic(err)
 	}
@@ -124,6 +127,6 @@ func (mem *Member) Download(ipAddr string, port string, sdfsFileName string, loc
 	}
 	defer file.Close()
 
-	file.Write([]byte(downloadReply.FileContents))
+	file.Write(downloadReply.FileContents)
 	Info.Println("Successfully downloaded file: [", sdfsFileName, "]")
 }
