@@ -132,18 +132,35 @@ func (mem *Member) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) err
 	}
 
 	if val, ok := fileMap[req.RemoteFName]; ok && len(val) != 0 {
+		failedIndices := make([]int, 0)
+
 		for index, ip := range val {
 			err := sendDeleteCommand(ip, req.RemoteFName)
-			if err == nil {
-				//remove file from map on successful delete
-				fileMap[req.RemoteFName] = append(fileMap[req.RemoteFName][:index], fileMap[req.RemoteFName][index+1:]...)
+			if err != nil {
+				failedIndices = append(failedIndices, index)
 			}
 		}
 
-		if len(fileMap[req.RemoteFName]) == 0 {
+		if len(failedIndices) == 0 {
 			delete(fileMap, req.RemoteFName)
+			return nil
+
+		} else {
+			// make list of failed IPs
+			failedIps := make([]net.IP, 0)
+			for _, i := range failedIndices {
+				failedIps = append(failedIps, fileMap[req.RemoteFName][i])
+			}
+
+			// replace old list with this one
+			fileMap[req.RemoteFName] = failedIps
+
+			// send list of failed deletes back to process, exit with error
+			var res SdfsResponse
+			res.IPList = failedIps
+			*reply = res
+			return errors.New("Failed deleting files")
 		}
-		// *reply = res
 	}
 	return nil
 }
