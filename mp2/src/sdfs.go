@@ -13,8 +13,8 @@ import (
 var (
 	// 1346378950 is the size of wiki corpus + some more for fun lol
 	dialSize       = 1346378950 + 2048
-	clientDialOpts = [3]grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock(), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(dialSize))}
-	serverDialOpts = [1]grpc.ServerOption{grpc.MaxRecvMsgSize(dialSize)}
+	clientDialOpts = [4]grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock(), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(dialSize)), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(dialSize))}
+	serverDialOpts = [2]grpc.ServerOption{grpc.MaxRecvMsgSize(dialSize), grpc.MaxSendMsgSize(dialSize)}
 )
 
 // Server methods
@@ -27,7 +27,7 @@ func (mem *Member) InitializeServer(port string) {
 		panic(err)
 	}
 
-	grpcServer := grpc.NewServer(serverDialOpts[0:1]...)
+	grpcServer := grpc.NewServer(serverDialOpts[0:2]...)
 	service.RegisterFileTransferServer(grpcServer, &FileTransferServer{})
 	reflection.Register(grpcServer)
 
@@ -55,14 +55,14 @@ func (s *FileTransferServer) Download(ctx context.Context, downloadReq *service.
 		return &service.DownloadReply{DoesFileExist: false, FileContents: []byte(err.Error())}, nil
 	}
 
-	buf := make([]byte, 1024)
-	size, err := file.Read(buf)
-	if err != nil {
-		return &service.DownloadReply{DoesFileExist: false, FileContents: []byte(err.Error())}, nil
+	fileStat, err2 := file.Stat()
+	if err2 != nil {
+		return &service.DownloadReply{DoesFileExist: false, FileContents: []byte(err2.Error())}, nil
 	}
 
-	fileContents := buf[:size]
-	return &service.DownloadReply{DoesFileExist: true, FileContents: fileContents}, nil
+	buf := make([]byte, fileStat.Size())
+	file.Read(buf)
+	return &service.DownloadReply{DoesFileExist: true, FileContents: buf}, nil
 }
 
 // Client Methods
@@ -80,7 +80,7 @@ func GetFileContents(localFileName string) []byte {
 
 func (mem *Member) Upload(ipAddr string, port string, localFileName string, sdfsFileName string) {
 	dest := ipAddr + ":" + port
-	conn, err := grpc.Dial(dest, clientDialOpts[0:3]...)
+	conn, err := grpc.Dial(dest, clientDialOpts[0:4]...)
 	if err != nil {
 		panic(err)
 	}
@@ -104,7 +104,7 @@ func (mem *Member) Upload(ipAddr string, port string, localFileName string, sdfs
 
 func (mem *Member) Download(ipAddr string, port string, sdfsFileName string, localFileName string) {
 	dest := ipAddr + ":" + port
-	conn, err := grpc.Dial(dest, clientDialOpts[0:3]...)
+	conn, err := grpc.Dial(dest, clientDialOpts[0:4]...)
 	if err != nil {
 		panic(err)
 	}
