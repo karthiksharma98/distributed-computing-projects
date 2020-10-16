@@ -38,7 +38,7 @@ var (
 
 func (mem *Member) pickRandomNodes(minReplicas int) []net.IP {
 
-	// TODO: should master store files? return minReplicas based on that
+	// TODO: should master store files? return minReplicas based on that (rn we return 3 replicas)
 
 	i := 0
 	iplist := make([]net.IP, 0)
@@ -111,7 +111,7 @@ func (mem *Member) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
 }
 
 func sendDeleteCommand(ip net.IP, RemoteFName string) error {
-	client, err := rpc.DialHTTP("tcp", ip.String()+":9092")
+	client, err := rpc.DialHTTP("tcp", ip.String()+":"+fmt.Sprint(Configuration.Service.rpcReqPort))
 	if err != nil {
 		fmt.Println("Delete connection error: ", err)
 	}
@@ -126,7 +126,6 @@ func sendDeleteCommand(ip net.IP, RemoteFName string) error {
 }
 
 func (mem *Member) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) error {
-
 	if req.Type != DelReq {
 		return errors.New("Error: Invalid request type for Delete Request")
 	}

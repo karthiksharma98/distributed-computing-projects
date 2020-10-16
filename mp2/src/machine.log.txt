@@ -34,3 +34,33 @@
 [INFO] 2020/10/15 14:23:05 All-to-All interval: 3
 [INFO] 2020/10/15 14:23:05 Failure timeout: 5
 [INFO] 2020/10/15 14:23:05 Cleanup timeout: 24
+[INFO] 2020/10/15 19:37:43 Detector: gossip
+[INFO] 2020/10/15 19:37:43 Introducer: 172.22.156.42 on port 9091
+[INFO] 2020/10/15 19:37:43 Gossip interval: 1
+[INFO] 2020/10/15 19:37:43 All-to-All interval: 3
+[INFO] 2020/10/15 19:37:43 Failure timeout: 5
+[INFO] 2020/10/15 19:37:43 Cleanup timeout: 24
+[INFO] 2020/10/15 19:37:46 You are now the introducer.
+2020/10/15 19:37:46 rpc.Register: method "AllToAll" has 1 input parameters; needs exactly three
+2020/10/15 19:37:46 rpc.Register: reply type of method "CleanupMember" is not a pointer: "time.Time"
+2020/10/15 19:37:46 rpc.Register: reply type of method "FailMember" is not a pointer: "time.Time"
+2020/10/15 19:37:46 rpc.Register: method "GetAllMembers" has 1 input parameters; needs exactly three
+2020/10/15 19:37:46 rpc.Register: method "GetMemberEntry" has 2 input parameters; needs exactly three
+2020/10/15 19:37:46 rpc.Register: method "Gossip" has 1 input parameters; needs exactly three
+2020/10/15 19:37:46 rpc.Register: reply type of method "Grep" is not a pointer: "bool"
+2020/10/15 19:37:46 rpc.Register: reply type of method "HandleGrepRequest" is not a pointer: "[]uint8"
+2020/10/15 19:37:46 rpc.Register: method "HandleGrepResponse" has 2 input parameters; needs exactly three
+2020/10/15 19:37:46 rpc.Register: method "HeartbeatHandler" has 2 input parameters; needs exactly three
+2020/10/15 19:37:46 rpc.Register: method "Listen" has 2 input parameters; needs exactly three
+2020/10/15 19:37:46 rpc.Register: method "PickRandMemberIP" has 1 input parameters; needs exactly three
+2020/10/15 19:37:46 rpc.Register: method "PrintMembershipList" has 2 input parameters; needs exactly three
+2020/10/15 19:37:46 rpc.Register: method "RemoveMemberEntry" has 2 input parameters; needs exactly three
+2020/10/15 19:37:46 rpc.Register: reply type of method "SendAll" is not a pointer: "[]uint8"
+2020/10/15 19:37:46 rpc.Register: reply type of method "SendGrepRequest" is not a pointer: "string"
+2020/10/15 19:37:46 rpc.Register: reply type of method "SetMemberEntry" is not a pointer: "main.membershipListEntry"
+2020/10/15 19:37:46 rpc.Register: method "StopTick" has 1 input parameters; needs exactly three
+2020/10/15 19:37:46 rpc.Register: method "Tick" has 1 input parameters; needs exactly three
+[INFO] 2020/10/15 19:37:47 No other member to gossip to!
+[INFO] 2020/10/15 19:37:47 No other member to gossip to!
+[INFO] 2020/10/15 19:37:48 No other member to gossip to!
+[INFO] 2020/10/15 19:37:48 No other member to gossip to!

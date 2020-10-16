@@ -103,7 +103,7 @@ func main() {
 					startRPCServer(process)
 
 					// establish connection to master
-					client, err = rpc.DialHTTP("tcp", "172.22.156.42:9092")
+					client, err = rpc.DialHTTP("tcp", Configuration.Service.masterIP+":"+fmt.Sprint(Configuration.Service.rpcReqPort))
 					if err != nil {
 						fmt.Println("Connection error: ", err)
 					}
