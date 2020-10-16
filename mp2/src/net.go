@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"net/http"
+	"net/rpc"
 	"strings"
 )
 
@@ -126,4 +128,20 @@ func (mem *Member) Listen(port string) {
 			Warn.Println("Invalid message type")
 		}
 	}
+}
+
+func startRPCServer(process *Member) {
+	err := rpc.Register(process)
+	if err != nil {
+		fmt.Println("Format isn't correct. ", err)
+	}
+	rpc.HandleHTTP()
+	rpcListener, e := net.Listen("tcp", ":9092")
+	if e != nil {
+		fmt.Println("error in starting listener")
+	}
+
+	fmt.Printf("Serving RPC server on port %d\n", 9092)
+	// Start accepting incoming HTTP connections
+	go http.Serve(rpcListener, nil)
 }

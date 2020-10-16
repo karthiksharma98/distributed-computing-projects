@@ -139,6 +139,10 @@ func (mem *Member) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) err
 				fileMap[req.RemoteFName] = append(fileMap[req.RemoteFName][:index], fileMap[req.RemoteFName][index+1:]...)
 			}
 		}
+
+		if len(fileMap[req.RemoteFName]) == 0 {
+			delete(fileMap, req.RemoteFName)
+		}
 		// *reply = res
 	}
 	return nil

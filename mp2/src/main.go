@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"net"
-	"net/http"
 	"net/rpc"
 	"os"
 	"strconv"
@@ -69,22 +68,10 @@ func main() {
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
 				Info.Println("You are now the introducer.")
 
-				// register RPC server
+				// start RPC server
 				if process != nil {
 					if rpcInitialized == false {
-						err := rpc.Register(process)
-						if err != nil {
-							fmt.Println("Format isn't correct. ", err)
-						}
-						rpc.HandleHTTP()
-						rpcListener, e := net.Listen("tcp", ":9092")
-						if e != nil {
-							fmt.Println("error in starting listener")
-						}
-
-						fmt.Printf("Serving RPC server on port %d\n", 9092)
-						// Start accepting incoming HTTP connections
-						go http.Serve(rpcListener, nil)
+						startRPCServer(process)
 						rpcInitialized = true
 					}
 				}
@@ -111,6 +98,11 @@ func main() {
 
 				if rpcInitialized == false {
 					var err error
+
+					// start own RpcServer
+					startRPCServer(process)
+
+					// establish connection to master
 					client, err = rpc.DialHTTP("tcp", "172.22.156.42:9092")
 					if err != nil {
 						fmt.Println("Connection error: ", err)
