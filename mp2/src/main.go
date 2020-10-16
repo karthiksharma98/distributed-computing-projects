@@ -72,7 +72,10 @@ func main() {
 				// start RPC server
 				if process != nil {
 					if rpcInitialized == false {
-						startRPCServer(process)
+                                                // Initialize SDFS node
+                                                sdfs := NewSdfsNode(process)
+                                                sdfsMaster := NewSdfsMaster(sdfs, true)
+						sdfsMaster.startRPCServer()
 						rpcInitialized = true
 					}
 				}
@@ -97,11 +100,15 @@ func main() {
 					process = nil
 				}
 
+
 				if rpcInitialized == false {
+                                        // Initialize SDFS node
+                                        sdfs := NewSdfsNode(process)
+                                        sdfsMaster := NewSdfsMaster(sdfs, false)
 					var err error
 
 					// start RPC Server
-					startRPCServer(process)
+					sdfsMaster.startRPCServer()
 
 					// establish connection to master
 					client, err = rpc.DialHTTP("tcp", Configuration.Service.masterIP+":"+fmt.Sprint(Configuration.Service.rpcReqPort))
@@ -233,7 +240,7 @@ func main() {
 				req := SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], Type: PutReq}
 				var res SdfsResponse
 
-				err := client.Call("Member.HandlePutRequest", req, &res)
+				err := client.Call("SdfsMaster.HandlePutRequest", req, &res)
 
 				if err != nil {
 					fmt.Println("putfile failed", err)
@@ -256,7 +263,7 @@ func main() {
 				req := SdfsRequest{LocalFName: inputFields[2], RemoteFName: inputFields[1], Type: GetReq}
 				var res SdfsResponse
 
-				err := client.Call("Member.HandleGetRequest", req, &res)
+				err := client.Call("SdfsMaster.HandleGetRequest", req, &res)
 
 				if err != nil {
 					fmt.Println(err)
@@ -275,7 +282,7 @@ func main() {
 				req := SdfsRequest{LocalFName: "", RemoteFName: inputFields[1], Type: DelReq}
 				var res SdfsResponse
 
-				err := client.Call("Member.HandleDeleteRequest", req, &res)
+				err := client.Call("SdfsMaster.HandleDeleteRequest", req, &res)
 
 				if err != nil {
 					fmt.Println(err)

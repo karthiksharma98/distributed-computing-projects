@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"net"
 	"net/rpc"
 )
@@ -31,64 +30,31 @@ const (
 	DelReq
 )
 
-// stores file metadata
-var (
-	fileMap map[string][]net.IP
-)
-
-func (mem *Member) pickRandomNodes(minReplicas int) []net.IP {
-
-	// TODO: should master store files? return minReplicas based on that (rn we return 3 replicas)
-
-	i := 0
-	iplist := make([]net.IP, 0)
-
-	// first get all alive IP Addresses in list
-	for k := range mem.membershipList {
-		if mem.membershipList[k].Health == Alive {
-			iplist = append(iplist, mem.membershipList[k].IPaddr)
-		}
-		i++
-	}
-
-	if len(iplist) < minReplicas {
-		return nil
-	}
-
-	// shuffle and choose first few
-	rand.Shuffle(len(iplist), func(i, j int) { iplist[i], iplist[j] = iplist[j], iplist[i] })
-	return iplist[:minReplicas]
-}
-
-func (mem *Member) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
+func (node *SdfsMaster) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
 
 	if req.Type != PutReq {
 		return errors.New("Error: Invalid request type for Put Request")
 	}
 
+        /*
 	if len(fileMap) == 0 {
 		fileMap = make(map[string][]net.IP)
-	}
+	}*/
 
 	var response SdfsResponse
-	ipList := mem.pickRandomNodes(3)
+	ipList := node.pickRandomNodes(3)
 
-	if ipList != nil {
-		fileMap[req.RemoteFName] = ipList
+        if ipList != nil {
+                node.AddIPToFileMap(req.RemoteFName, ipList)
 		response.IPList = ipList
 		*reply = response
 		return nil
-	}
+        }
 
 	return errors.New("Error: Could not find 3 alive nodes")
 }
 
-func (mem *Member) AddIPToFileMap(ack UploadAck, reply *SdfsResponse) error {
-	fileMap[ack.RemoteFname] = append(fileMap[ack.RemoteFname], ack.IPaddr)
-	return nil
-}
-
-func (mem *Member) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error {
+func (node *SdfsMaster) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error {
 
 	if req.Type != GetReq {
 		return errors.New("Error: Invalid request type for Get Request")
@@ -96,7 +62,7 @@ func (mem *Member) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error 
 
 	var response SdfsResponse
 
-	if val, ok := fileMap[req.RemoteFName]; ok && len(val) != 0 {
+	if val, ok := node.fileMap[req.RemoteFName]; ok && len(val) != 0 {
 		response.IPList = val
 		*reply = response
 		return nil
@@ -105,7 +71,7 @@ func (mem *Member) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error 
 	return errors.New("Error: File not found")
 }
 
-func (mem *Member) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
+func (node *SdfsMaster) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
 	// TODO: delete the local file before returning nil, else return error
 	return nil
 }
@@ -125,12 +91,12 @@ func sendDeleteCommand(ip net.IP, RemoteFName string) error {
 	return client.Call("Member.DeleteFile", req, &res)
 }
 
-func (mem *Member) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) error {
+func (node *SdfsMaster) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if req.Type != DelReq {
 		return errors.New("Error: Invalid request type for Delete Request")
 	}
 
-	if val, ok := fileMap[req.RemoteFName]; ok && len(val) != 0 {
+	if val, ok := node.fileMap[req.RemoteFName]; ok && len(val) != 0 {
 		failedIndices := make([]int, 0)
 
 		for index, ip := range val {
@@ -141,18 +107,18 @@ func (mem *Member) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) err
 		}
 
 		if len(failedIndices) == 0 {
-			delete(fileMap, req.RemoteFName)
+			delete(node.fileMap, req.RemoteFName)
 			return nil
 
 		} else {
 			// make list of failed IPs
 			failedIps := make([]net.IP, 0)
 			for _, i := range failedIndices {
-				failedIps = append(failedIps, fileMap[req.RemoteFName][i])
+				failedIps = append(failedIps, node.fileMap[req.RemoteFName][i])
 			}
 
 			// replace old list with this one
-			fileMap[req.RemoteFName] = failedIps
+			node.fileMap[req.RemoteFName] = failedIps
 
 			// send list of failed deletes back to process, exit with error
 			var res SdfsResponse

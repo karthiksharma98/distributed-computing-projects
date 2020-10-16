@@ -130,8 +130,8 @@ func (mem *Member) Listen(port string) {
 	}
 }
 
-func startRPCServer(process *Member) {
-	err := rpc.Register(process)
+func (node *SdfsMaster) startRPCServer() {
+	err := rpc.Register(node)
 	if err != nil {
 		fmt.Println("Format isn't correct. ", err)
 	}
