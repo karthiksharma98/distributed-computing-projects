@@ -57,7 +57,7 @@ func (mem *Member) pickRandomNodes(minReplicas int) []net.IP {
 
 	// shuffle and choose first few
 	rand.Shuffle(len(iplist), func(i, j int) { iplist[i], iplist[j] = iplist[j], iplist[i] })
-	return iplist[:minReplicas+1]
+	return iplist[:minReplicas]
 }
 
 func (mem *Member) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
@@ -80,7 +80,7 @@ func (mem *Member) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error 
 		return nil
 	}
 
-	return errors.New("Error: Could not find 4 alive nodes")
+	return errors.New("Error: Could not find 3 alive nodes")
 }
 
 func (mem *Member) AddIPToFileMap(ack UploadAck, reply *SdfsResponse) error {

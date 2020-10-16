@@ -394,6 +394,5 @@ func (mem *Member) PickRandMemberIP() net.IP {
 			return randEntry.IPaddr
 		}
 	}
-
 	return nil
 }

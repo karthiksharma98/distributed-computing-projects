@@ -99,7 +99,7 @@ func main() {
 				if rpcInitialized == false {
 					var err error
 
-					// start own RpcServer
+					// start RPC Server
 					startRPCServer(process)
 
 					// establish connection to master
