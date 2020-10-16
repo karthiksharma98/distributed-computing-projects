@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"net/rpc"
 	"os"
 	"strconv"
 	"strings"
@@ -14,6 +15,7 @@ var (
 	// Configuration stores all info in config.json
 	Configuration Config
 	process       *Member
+	client        *rpc.Client
 )
 
 func printOptions() {
@@ -31,6 +33,8 @@ func main() {
 	InitMonitor()
 	Configuration = ReadConfig()
 	Configuration.Print()
+
+	rpcInitialized := false
 
 	for {
 		printOptions()
@@ -55,6 +59,7 @@ func main() {
 
 			if len(inputFields) == 2 && inputFields[1] == "introducer" {
 				process = NewMember(true)
+
 				if Configuration.Service.detectorType == "alltoall" {
 					isGossip = false
 				}
@@ -62,6 +67,14 @@ func main() {
 				process.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
 				Info.Println("You are now the introducer.")
+
+				// start RPC server
+				if process != nil {
+					if rpcInitialized == false {
+						startRPCServer(process)
+						rpcInitialized = true
+					}
+				}
 
 			} else {
 				// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
@@ -81,6 +94,20 @@ func main() {
 					fmt.Println("Timeout join. Please retry again.")
 					listener.Close()
 					process = nil
+				}
+
+				if rpcInitialized == false {
+					var err error
+
+					// start RPC Server
+					startRPCServer(process)
+
+					// establish connection to master
+					client, err = rpc.DialHTTP("tcp", Configuration.Service.masterIP+":"+fmt.Sprint(Configuration.Service.rpcReqPort))
+					if err != nil {
+						fmt.Println("Connection error: ", err)
+					}
+					rpcInitialized = true
 				}
 			}
 
@@ -198,6 +225,62 @@ func main() {
 		case "sim":
 			if len(inputFields) >= 2 && inputFields[1] == "failtest" {
 				process.SendAll(TestMsg, []byte{})
+			}
+
+		case "putfile":
+			if len(inputFields) >= 3 {
+				req := SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], Type: PutReq}
+				var res SdfsResponse
+
+				err := client.Call("Member.HandlePutRequest", req, &res)
+
+				if err != nil {
+					fmt.Println("putfile failed", err)
+				} else {
+					// TODO: copy local file to store as well
+
+					// TODO: Initiate upload to each alive node
+					for _, val := range res.IPList {
+						fmt.Println(val)
+						// call upload
+
+						// TODO: post each successful upload to an IP, call Member.AddIPToFileMap so master can add IP to list of IPs containing file
+						// client.Call("Member.AddIPToFileMap", UploadAck{RemoteFName: <file_name>, IPAddr: <process_ip>}, <pointer to res>)
+					}
+				}
+			}
+
+		case "getfile":
+			if len(inputFields) >= 3 {
+				req := SdfsRequest{LocalFName: inputFields[2], RemoteFName: inputFields[1], Type: GetReq}
+				var res SdfsResponse
+
+				err := client.Call("Member.HandleGetRequest", req, &res)
+
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println(res.IPList)
+					// TODO: Choose one of the received IPs and initiate download
+
+					// TODO: after successful download, call Member.AddIPToFileMap so master can add to list of IPs containing file
+					// client.Call("Member.AddIPToFileMap", UploadAck{RemoteFName: <file_name>, IPAddr: <process_ip>}, <pointer to res>)
+				}
+
+			}
+
+		case "deletefile":
+			if len(inputFields) >= 2 {
+				req := SdfsRequest{LocalFName: "", RemoteFName: inputFields[1], Type: DelReq}
+				var res SdfsResponse
+
+				err := client.Call("Member.HandleDeleteRequest", req, &res)
+
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println("Deleted successfully:", req.RemoteFName)
+				}
 			}
 
 		default:

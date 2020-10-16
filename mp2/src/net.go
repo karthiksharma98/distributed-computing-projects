@@ -1,8 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"net"
+	"net/http"
+	"net/rpc"
+	"strings"
 )
 
 type MessageType uint8
@@ -67,4 +71,77 @@ func Send(address string, msgType MessageType, msg []byte) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// Listen function to keep listening for messages
+func (mem *Member) Listen(port string) {
+	// UDP buffer 1024 bytes for now
+	buffer := make([]byte, 1024)
+	addr, err := net.ResolveUDPAddr("udp", ":"+port)
+	if err != nil {
+		panic(err)
+	}
+
+	listener, err = net.ListenUDP("udp", addr)
+	if err != nil {
+		panic(err)
+	}
+
+	// listener loop
+	for {
+		n, senderAddr, err := listener.ReadFromUDP(buffer)
+		if err != nil {
+			return
+		}
+
+		msgType := buffer[0]
+		memMetrics.Increment(bytesReceived, int64(n))
+
+		switch msgType {
+		case TextMsg:
+			fmt.Println(string(buffer[1:n]))
+		case JoinMsg: // only introducer can accept join messages
+			if mem.isIntroducer == true {
+				Info.Println(senderAddr.String() + " requests to join.")
+				mem.acceptMember(senderAddr.IP)
+			}
+		case HeartbeatMsg: // handles receipt of heartbeat
+			mem.HeartbeatHandler(buffer[1:n])
+			Info.Println("Recieved heartbeat from ", senderAddr.String())
+		case AcceptMsg: // handles receipt of membership list from introducer
+			Info.Println("Introducer has accepted join request.")
+			mem.joinResponse(buffer[1:n])
+		case GrepReq: // handles grep request
+			ipAddr := senderAddr.String()[:strings.IndexByte(senderAddr.String(), ':')]
+			mem.HandleGrepRequest(ipAddr, buffer[1:n])
+		case GrepResp: // handles grep response when one is received
+			mem.HandleGrepResponse(buffer[1:n])
+		case SwitchMsg:
+			if buffer[1] == 1 {
+				SetHeartbeating(true)
+			} else {
+				SetHeartbeating(false)
+			}
+		case TestMsg:
+			memMetrics.PerfTest()
+		default:
+			Warn.Println("Invalid message type")
+		}
+	}
+}
+
+func startRPCServer(process *Member) {
+	err := rpc.Register(process)
+	if err != nil {
+		fmt.Println("Format isn't correct. ", err)
+	}
+	rpc.HandleHTTP()
+	rpcListener, e := net.Listen("tcp", ":"+fmt.Sprint(Configuration.Service.rpcReqPort))
+	if e != nil {
+		fmt.Println("error in starting listener")
+	}
+
+	fmt.Printf("Serving RPC server on port %f\n", Configuration.Service.rpcReqPort)
+	// Start accepting incoming HTTP connections
+	go http.Serve(rpcListener, nil)
 }

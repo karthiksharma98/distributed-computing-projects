@@ -1,8 +1,10 @@
 {
     "service": {
-        "failure_detector": "alltoall",
+        "failure_detector": "gossip",
         "introducer_ip": "172.22.156.42",
-        "port": 9090
+        "port": 9091,
+        "initial_master_ip": "172.22.156.42",
+        "rpc_req_port": 9092
     },
     "settings": {
         "gossip_interval": 1,

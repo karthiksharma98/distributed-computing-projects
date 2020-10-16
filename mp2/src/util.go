@@ -18,6 +18,8 @@ type Service struct {
 	detectorType string  `json:"failure_detector"`
 	introducerIP string  `json:"introducer_ip"`
 	port         float64 `json:"port"`
+	masterIP     string  `json:"initial_master_ip"`
+	rpcReqPort   float64 `json:"rpc_req_port"`
 }
 
 // Settings struct
@@ -48,12 +50,16 @@ func ReadConfig() Config {
 	serviceJSON := result["service"].(map[string]interface{})
 	detectType := serviceJSON["failure_detector"].(string)
 	addr := serviceJSON["introducer_ip"].(string)
+	rpcReqPort := serviceJSON["rpc_req_port"].(float64)
+	masterIP := serviceJSON["initial_master_ip"].(string)
 	port := serviceJSON["port"].(float64)
 
 	service := Service{
 		detectorType: detectType,
 		introducerIP: addr,
 		port:         port,
+		masterIP:     masterIP,
+		rpcReqPort:   rpcReqPort,
 	}
 
 	// Create settings struct
