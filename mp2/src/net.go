@@ -20,6 +20,11 @@ const (
 	GrepResp
 	SwitchMsg
 	TestMsg
+
+        // Leader Election
+        ElectionMsg
+        CoordinatorMsg
+        OkMsg
 )
 
 // Debugging consts
@@ -107,7 +112,7 @@ func (mem *Member) Listen(port string) {
 			}
 		case HeartbeatMsg: // handles receipt of heartbeat
 			mem.HeartbeatHandler(buffer[1:n])
-			Info.Println("Recieved heartbeat from ", senderAddr.String())
+			//Info.Println("Recieved heartbeat from ", senderAddr.String())
 		case AcceptMsg: // handles receipt of membership list from introducer
 			Info.Println("Introducer has accepted join request.")
 			mem.joinResponse(buffer[1:n])
@@ -130,7 +135,45 @@ func (mem *Member) Listen(port string) {
 	}
 }
 
-func (node *SdfsMaster) startRPCServer() {
+func (node *SdfsNode) ListenSdfs(port string) {
+	// UDP buffer 1024 bytes for now
+	buffer := make([]byte, 1024)
+	addr, err := net.ResolveUDPAddr("udp", ":"+port)
+	if err != nil {
+		panic(err)
+	}
+
+	sdfsListener, err = net.ListenUDP("udp", addr)
+	if err != nil {
+		panic(err)
+	}
+
+        // Listen for failures from membership list
+        go node.MemberListen()
+
+	// listener loop
+	for {
+		_, senderAddr, err := sdfsListener.ReadFromUDP(buffer)
+		if err != nil {
+			return
+		}
+
+		msgType := buffer[0]
+
+		switch msgType {
+		case ElectionMsg:
+                        node.handleElection(senderAddr.IP, buffer[1])
+		case CoordinatorMsg:
+                        node.handleCoordinator(buffer[1])
+                case OkMsg:
+                        node.handleOk()
+		default:
+			Warn.Println("Invalid message type")
+		}
+	}
+}
+
+func (node *SdfsNode) startRPCServer() {
 	err := rpc.Register(node)
 	if err != nil {
 		fmt.Println("Format isn't correct. ", err)
