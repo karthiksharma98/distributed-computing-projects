@@ -20,6 +20,11 @@ const (
 	GrepResp
 	SwitchMsg
 	TestMsg
+
+        // Leader Election
+        ElectionMsg
+        CoordinatorMsg
+        OkMsg
 )
 
 // Debugging consts
@@ -130,7 +135,43 @@ func (mem *Member) Listen(port string) {
 	}
 }
 
-func (node *SdfsMaster) startRPCServer() {
+func (node *SdfsNode) ListenSdfs(port string) {
+	// UDP buffer 1024 bytes for now
+	buffer := make([]byte, 1024)
+	addr, err := net.ResolveUDPAddr("udp", ":"+port)
+	if err != nil {
+		panic(err)
+	}
+
+	listener, err = net.ListenUDP("udp", addr)
+	if err != nil {
+		panic(err)
+	}
+
+	// listener loop
+	for {
+		n, senderAddr, err := listener.ReadFromUDP(buffer)
+		if err != nil {
+			return
+		}
+
+		msgType := buffer[0]
+		memMetrics.Increment(bytesReceived, int64(n))
+
+		switch msgType {
+		case ElectionMsg:
+                        node.handleElection(senderAddr.String(), buffer[1])
+		case CoordinatorMsg:
+                        node.handleCoordinator(buffer[1])
+                case OkMsg:
+                        node.handleOk()
+		default:
+			Warn.Println("Invalid message type")
+		}
+	}
+}
+
+func (node *SdfsNode) startRPCServer() {
 	err := rpc.Register(node)
 	if err != nil {
 		fmt.Println("Format isn't correct. ", err)
