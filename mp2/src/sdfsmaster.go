@@ -62,11 +62,12 @@ func NewSdfsNode(mem *Member) *SdfsNode {
         return node
 }
 
-func NewSdfsMaster(node *SdfsNode) *SdfsMaster {
+func NewSdfsMaster(node *SdfsNode, enableMaster bool) *SdfsMaster {
         master := &SdfsMaster{
                 node,
                 make(map[string][]net.IP),
         }
+        master.SdfsNode.isMaster = enableMaster
         return master
 }
 
