@@ -15,7 +15,7 @@ var (
 	// Configuration stores all info in config.json
 	Configuration Config
 	process       *Member
-        sdfs *SdfsNode
+	sdfs          *SdfsNode
 	client        *rpc.Client
 )
 
@@ -73,10 +73,10 @@ func main() {
 				// start RPC server
 				if process != nil {
 					if rpcInitialized == false {
-                                                // Initialize SDFS node
-                                                sdfs = NewSdfsNode(process, true)
+						// Initialize SDFS node
+						sdfs = NewSdfsNode(process, true)
 						sdfs.startRPCServer()
-                                                go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.rpcReqPort))
+						go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.rpcReqPort))
 						rpcInitialized = true
 					}
 				}
@@ -101,21 +101,16 @@ func main() {
 					process = nil
 				}
 
-
 				if rpcInitialized == false {
-                                        // Initialize SDFS node
-                                        sdfs = NewSdfsNode(process, false)
-					var err error
+					// Initialize SDFS node
+					sdfs = NewSdfsNode(process, false)
 
 					// start RPC Server
 					sdfs.startRPCServer()
-                                        go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.rpcReqPort))
+					go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.rpcReqPort))
 
 					// establish connection to master
-					client, err = rpc.DialHTTP("tcp", Configuration.Service.masterIP+":"+fmt.Sprint(Configuration.Service.rpcReqPort))
-					if err != nil {
-						fmt.Println("Connection error: ", err)
-					}
+					sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.rpcReqPort))
 					rpcInitialized = true
 				}
 			}
@@ -307,10 +302,10 @@ func main() {
 					inputFields[2])
 			}
 
-                case "master":
-                        if sdfs != nil {
-                                fmt.Println(sdfs.MasterId)
-                        }
+		case "master":
+			if sdfs != nil {
+				fmt.Println(sdfs.MasterId)
+			}
 		default:
 			fmt.Println("invalid command")
 		}

@@ -21,10 +21,13 @@ const (
 	SwitchMsg
 	TestMsg
 
-        // Leader Election
-        ElectionMsg
-        CoordinatorMsg
-        OkMsg
+	// Leader Election
+	ElectionMsg
+	CoordinatorMsg
+	OkMsg
+
+	// Recovery
+	RecoverMasterMsg
 )
 
 // Debugging consts
@@ -148,12 +151,12 @@ func (node *SdfsNode) ListenSdfs(port string) {
 		panic(err)
 	}
 
-        // Listen for failures from membership list
-        go node.MemberListen()
+	// Listen for failures from membership list
+	go node.MemberListen()
 
 	// listener loop
 	for {
-		_, senderAddr, err := sdfsListener.ReadFromUDP(buffer)
+		n, senderAddr, err := sdfsListener.ReadFromUDP(buffer)
 		if err != nil {
 			return
 		}
@@ -162,14 +165,35 @@ func (node *SdfsNode) ListenSdfs(port string) {
 
 		switch msgType {
 		case ElectionMsg:
-                        node.handleElection(senderAddr.IP, buffer[1])
+			node.handleElection(senderAddr.IP, buffer[1])
 		case CoordinatorMsg:
-                        node.handleCoordinator(buffer[1])
-                case OkMsg:
-                        node.handleOk()
+			node.handleCoordinator(buffer[1])
+		case OkMsg:
+			node.handleOk()
+		case RecoverMasterMsg:
+			node.handleRecoverMaster(senderAddr.IP, buffer[1:n])
 		default:
 			Warn.Println("Invalid message type")
 		}
+	}
+}
+
+func (node *SdfsNode) closeRPCClient() {
+	if client == nil {
+		return
+	}
+
+	err := client.Close()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (node *SdfsNode) startRPCClient(serverIP string, port string) {
+	var err error
+	client, err = rpc.DialHTTP("tcp", serverIP+":"+port)
+	if err != nil {
+		fmt.Println("Connection error: ", err)
 	}
 }
 

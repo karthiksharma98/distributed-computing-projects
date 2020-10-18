@@ -7,9 +7,9 @@ import (
 	"io"
 	"math/rand"
 	"net"
+	"sort"
 	"text/tabwriter"
 	"time"
-        "sort"
 )
 
 // Member struct to hold member info
@@ -39,7 +39,7 @@ const (
 var (
 	joinAck      = make(chan bool)
 	disableHeart = make(chan bool)
-        failCh = make(chan uint8)
+	failCh       = make(chan uint8)
 	ticker       *time.Ticker
 	enabledHeart = false
 	isGossip     = true
@@ -123,7 +123,7 @@ func (mem *Member) FailMember(memberId uint8, oldTime time.Time) {
 					currEntry.Timestamp,
 					Failed,
 				}
-                                failCh <- memberId
+				failCh <- memberId
 				Info.Println("Marked member failed: ", memberId,
 					"\nFail time: ", time.Now(),
 					"\nOld time: ", oldTime)
@@ -368,20 +368,20 @@ func (mem *Member) acceptMember(address net.IP) {
 
 // Get k largest key in list
 func (mem *Member) kLargestID(k int) uint8 {
-        var ids []uint8
-        for key := range mem.membershipList {
-                ids = append(ids, key)
-        }
-        sort.Slice(
-                ids,
-                func(i, j int) bool {
-                        return ids[i] < ids[j]
-                },
-        )
-        if k < len(ids) {
-                return ids[k]
-        }
-        return 0
+	var ids []uint8
+	for key := range mem.membershipList {
+		ids = append(ids, key)
+	}
+	sort.Slice(
+		ids,
+		func(i, j int) bool {
+			return ids[i] < ids[j]
+		},
+	)
+	if k < len(ids) {
+		return ids[k]
+	}
+	return 0
 }
 
 // getMaxID to get the maximum of all memberIDs

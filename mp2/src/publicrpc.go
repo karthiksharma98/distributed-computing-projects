@@ -32,36 +32,36 @@ const (
 
 func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
 
-        if node.isMaster == false && node.Master == nil {
-                return errors.New("Error: Master not initialized")
-        }
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
+	}
 
 	if req.Type != PutReq {
 		return errors.New("Error: Invalid request type for Put Request")
 	}
 
-        /*
-	if len(fileMap) == 0 {
-		fileMap = make(map[string][]net.IP)
-	}*/
+	/*
+		if len(fileMap) == 0 {
+			fileMap = make(map[string][]net.IP)
+		}*/
 
 	var response SdfsResponse
 	ipList := node.pickRandomNodes(int(Configuration.Settings.replicationFactor))
 
-        if ipList != nil {
-                node.Master.AddIPToFileMap(req.RemoteFName, ipList)
+	if ipList != nil {
+		node.Master.AddIPToFileMap(req.RemoteFName, ipList)
 		response.IPList = ipList
 		*reply = response
 		return nil
-        }
+	}
 
 	return errors.New("Error: Could not find 3 alive nodes")
 }
 
 func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error {
-        if node.isMaster == false && node.Master == nil {
-                return errors.New("Error: Master not initialized")
-        }
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
+	}
 
 	if req.Type != GetReq {
 		return errors.New("Error: Invalid request type for Get Request")
@@ -84,9 +84,9 @@ func (node *SdfsNode) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
 }
 
 func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
-        if node.isMaster == false && node.Master == nil {
-                return errors.New("Error: Master not initialized")
-        }
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
+	}
 
 	client, err := rpc.DialHTTP("tcp", ip.String()+":"+fmt.Sprint(Configuration.Service.rpcReqPort))
 	if err != nil {
