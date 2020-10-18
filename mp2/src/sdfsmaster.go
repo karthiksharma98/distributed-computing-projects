@@ -26,7 +26,7 @@ type SdfsMaster struct {
 
 var (
         electionFlag = false
-        okAck = make(chan bool)
+        okAck chan bool
         sdfsListener *net.UDPConn
 )
 
@@ -75,7 +75,9 @@ func (node *SdfsNode) Election() {
                 return
         }
         electionFlag = true
+        Info.Println("Starting election. Election in progress.")
 
+        okAck = make(chan bool)
         // Send ElectionMsg to nodes with higher IDs than itself
         for _, mem := range node.Member.membershipList {
                 if mem.MemberID > node.Member.memberID {
@@ -86,9 +88,15 @@ func (node *SdfsNode) Election() {
         select {
         case <-okAck:
                 return
-        case <-time.After(3 * time.Second):
+        case <-time.After(2 * time.Second):
+                Info.Println("Coordinator is self.")
+                // Send CoordinatorMsg to nodes lower than itself
                 for _, mem := range node.Member.membershipList {
-                        Send(mem.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.rpcReqPort), CoordinatorMsg, []byte{node.Member.memberID})
+                        node.handleCoordinator(node.Member.memberID)
+                        if mem.MemberID < node.Member.memberID {
+                                Info.Println("Sending to", mem.IPaddr.String())
+                                Send(mem.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.rpcReqPort), CoordinatorMsg, []byte{node.Member.memberID})
+                        }
                 }
         }
 }
@@ -105,18 +113,19 @@ func (node *SdfsNode) handleElection(senderAddr net.IP, id uint8)  {
 
 // Set new coordinator/master
 func (node *SdfsNode) handleCoordinator(id uint8) {
-        if id > node.MasterId {
-                Info.Println("Elected ", id)
-                electionFlag = false
-                node.MasterId = id
-        }
+        Info.Println("Elected", id, ". Election complete.")
+        electionFlag = false
+        node.MasterId = id
 }
 
 // Handle election ok message
 func (node *SdfsNode) handleOk() {
-        Info.Println("Ok")
-        okAck <- true
-        return
+        select {
+        case okAck <- true:
+                Info.Println("Ok")
+        default:
+                Info.Println("Ok returned")
+        }
 }
 
 func (node *SdfsMaster) AddIPToFileMap(fname string, ipList []net.IP) {
