@@ -28,6 +28,7 @@ const (
 	PutReq ReqType = iota
 	GetReq
 	DelReq
+	LsReq
 )
 
 func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
@@ -138,5 +139,17 @@ func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) 
 			return errors.New("Failed deleting files")
 		}
 	}
+	return nil
+}
+
+func (node *SdfsNode) HandleLsRequest(req SdfsRequest, reply *SdfsResponse) error {
+	if req.Type != LsReq {
+		return errors.New("Error: Invalid request type for Ls Request")
+	}
+
+	for sdfsFn, ipAddr := range node.Master.fileMap {
+		fmt.Println(ipAddr, ":", sdfsFn)
+	}
+
 	return nil
 }

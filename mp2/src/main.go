@@ -286,6 +286,13 @@ func main() {
 					fmt.Println("Deleted successfully:", req.RemoteFName)
 				}
 			}
+
+		case "ls":
+			req := SdfsRequest{LocalFName: "", RemoteFName: "", Type: LsReq}
+			var res SdfsResponse
+
+			client.Call("Member.HandleLsRequest", req, &res)
+
 		case "upload":
 			if process != nil && len(inputFields) == 3 {
 				process.Upload(fmt.Sprint(Configuration.Service.introducerIP),
