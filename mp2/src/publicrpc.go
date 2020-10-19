@@ -19,7 +19,8 @@ type UploadAck struct {
 }
 
 type SdfsResponse struct {
-	IPList []net.IP
+	IPList  []net.IP
+	fileMap map[string][]string
 }
 
 type ReqType int
@@ -29,10 +30,10 @@ const (
 	GetReq
 	DelReq
 	LsReq
+	AddReq
 )
 
 func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
-
 	if node.isMaster == false && node.Master == nil {
 		return errors.New("Error: Master not initialized")
 	}
@@ -41,22 +42,18 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 		return errors.New("Error: Invalid request type for Put Request")
 	}
 
-	/*
-		if len(fileMap) == 0 {
-			fileMap = make(map[string][]net.IP)
-		}*/
-
-	var response SdfsResponse
 	ipList := node.pickRandomNodes(int(Configuration.Settings.replicationFactor))
 
-	if ipList != nil {
-		node.Master.AddIPToFileMap(req.RemoteFName, ipList)
-		response.IPList = ipList
-		*reply = response
-		return nil
+	if ipList == nil {
+		return errors.New("Error: Could not find 3 alive nodes")
 	}
 
-	return errors.New("Error: Could not find 3 alive nodes")
+	var resp SdfsResponse
+	resp.IPList = ipList
+	*reply = resp
+
+	return nil
+
 }
 
 func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error {
@@ -103,6 +100,26 @@ func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
 	return client.Call("Member.DeleteFile", req, &res)
 }
 
+func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) error {
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
+	}
+
+	// convert string -> ip.net
+	// req.LocalFName here is ip address, need the 27 for the method call to work
+	stringIp := req.LocalFName + "/27"
+	ipToModify, _, _ := net.ParseCIDR(stringIp)
+
+	if req.Type == AddReq {
+		ogList := node.Master.fileMap[req.RemoteFName]
+		ogList = append(ogList, ipToModify)
+		node.Master.fileMap[req.RemoteFName] = ogList
+
+	}
+
+	return nil
+}
+
 func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if req.Type != DelReq {
 		return errors.New("Error: Invalid request type for Delete Request")
@@ -147,9 +164,18 @@ func (node *SdfsNode) HandleLsRequest(req SdfsRequest, reply *SdfsResponse) erro
 		return errors.New("Error: Invalid request type for Ls Request")
 	}
 
-	for sdfsFn, ipAddr := range node.Master.fileMap {
-		fmt.Println(ipAddr, ":", sdfsFn)
+	var resp SdfsResponse
+	mapCopy := make(map[string][]string)
+	for fileName, ipList := range node.Master.fileMap {
+		listCopy := make([]string, 0)
+		for _, ipAddr := range ipList {
+			listCopy = append(listCopy, ipAddr.String())
+		}
+		mapCopy[fileName] = listCopy
 	}
+
+	resp.fileMap = mapCopy
+	*reply = resp
 
 	return nil
 }

@@ -67,7 +67,7 @@ func main() {
 
 				process.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
-				go process.InitializeServer(fmt.Sprint(Configuration.Service.port))
+				go InitializeServer(fmt.Sprint(Configuration.Service.port))
 				Info.Println("You are now the introducer.")
 
 				if rpcInitialized == false {
@@ -88,6 +88,7 @@ func main() {
 				}
 
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
+				go InitializeServer(fmt.Sprint(Configuration.Service.port))
 				time.Sleep(100 * time.Millisecond) // Sleep a tiny bit so listener can start
 				process.joinRequest()
 				// Wait for response
@@ -229,15 +230,17 @@ func main() {
 				if err != nil {
 					fmt.Println("putfile failed", err)
 				} else {
-					// TODO: copy local file to store as well
+					// upload each file and add to master's file map
+					for _, ipAddr := range res.IPList {
+						err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.port), req.LocalFName, req.RemoteFName)
 
-					// TODO: Initiate upload to each alive node
-					for _, val := range res.IPList {
-						fmt.Println(val)
-						// call upload
+						if err != nil {
+							fmt.Println("error in upload process.")
+						}
 
-						// TODO: post each successful upload to an IP, call Member.AddIPToFileMap so master can add IP to list of IPs containing file
-						// client.Call("Member.AddIPToFileMap", UploadAck{RemoteFName: <file_name>, IPAddr: <process_ip>}, <pointer to res>)
+						mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: inputFields[2], Type: AddReq}
+						var mapRes SdfsResponse
+						client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
 					}
 				}
 			}
@@ -256,11 +259,16 @@ func main() {
 				if err != nil {
 					fmt.Println(err)
 				} else {
-					fmt.Println(res.IPList)
-					// TODO: Choose one of the received IPs and initiate download
+					for _, ipAddr := range res.IPList {
+						err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.port), req.RemoteFName, req.LocalFName)
 
-					// TODO: after successful download, call Member.AddIPToFileMap so master can add to list of IPs containing file
-					// client.Call("Member.AddIPToFileMap", UploadAck{RemoteFName: <file_name>, IPAddr: <process_ip>}, <pointer to res>)
+						if err != nil {
+							fmt.Println("error in download process.")
+						} else {
+							// successful download
+							break
+						}
+					}
 				}
 
 			}
@@ -291,7 +299,18 @@ func main() {
 			req := SdfsRequest{LocalFName: "", RemoteFName: "", Type: LsReq}
 			var res SdfsResponse
 
-			client.Call("Member.HandleLsRequest", req, &res)
+			err := client.Call("SdfsNode.HandleLsRequest", req, &res)
+			if err != nil {
+				fmt.Println("Failed ls. ", err)
+			} else {
+				for fileName, ipList := range res.fileMap {
+					fmt.Println(fileName, " =>")
+					for _, ip := range ipList {
+						fmt.Println("	", ip)
+					}
+				}
+			}
+
 		case "store":
 			if sdfs == nil {
 				fmt.Println("SDFS not initialized.")
@@ -300,16 +319,16 @@ func main() {
 			sdfs.Store()
 
 		case "upload":
-			if process != nil && len(inputFields) == 3 {
-				process.Upload(fmt.Sprint(Configuration.Service.introducerIP),
+			if len(inputFields) == 4 {
+				Upload(fmt.Sprint(inputFields[1]),
 					fmt.Sprint(Configuration.Service.port),
-					inputFields[1],
-					inputFields[2])
+					inputFields[2],
+					inputFields[3])
 			}
 
 		case "download":
-			if process != nil && len(inputFields) == 3 {
-				process.Download(fmt.Sprint(Configuration.Service.introducerIP),
+			if len(inputFields) == 3 {
+				Download(fmt.Sprint(Configuration.Service.introducerIP),
 					fmt.Sprint(Configuration.Service.port),
 					inputFields[1],
 					inputFields[2])

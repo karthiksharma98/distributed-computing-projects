@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"gitlab.com/CS425_MPs/FileService" // go mod init "gitlab.com/CS425_MPs"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc" // go get -u google.golang.org/grpc
@@ -21,7 +22,7 @@ var (
 
 type FileTransferServer struct{}
 
-func (mem *Member) InitializeServer(port string) {
+func InitializeServer(port string) {
 	serverListener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		panic(err)
@@ -78,7 +79,7 @@ func GetFileContents(localFileName string) []byte {
 	return content
 }
 
-func (mem *Member) Upload(ipAddr string, port string, localFileName string, sdfsFileName string) {
+func Upload(ipAddr string, port string, localFileName string, sdfsFileName string) error {
 	dest := ipAddr + ":" + port
 	conn, err := grpc.Dial(dest, clientDialOpts[0:4]...)
 	if err != nil {
@@ -87,22 +88,27 @@ func (mem *Member) Upload(ipAddr string, port string, localFileName string, sdfs
 	defer conn.Close()
 
 	client := service.NewFileTransferClient(conn)
-
 	fileContents := GetFileContents(localFileName)
 	uploadReply, err2 := client.Upload(context.Background(), &service.UploadRequest{
 		FileContents: fileContents,
 		SdfsFileName: sdfsFileName})
 	if err2 != nil {
-		Warn.Println("fail to upload: ", err2)
-		return
+		errorMsg := "Error: Unable to upload file."
+		Warn.Println(errorMsg, err2)
+		return errors.New(errorMsg)
 	}
 
 	if uploadReply.GetStatus() == true {
 		Info.Println("Successfully uploaded file: [", localFileName, "] as [", sdfsFileName, "] at addr ", dest)
+		return nil
 	}
+
+	errorMsg := "Error: Bad reply status."
+	Warn.Println(errorMsg)
+	return errors.New(errorMsg)
 }
 
-func (mem *Member) Download(ipAddr string, port string, sdfsFileName string, localFileName string) {
+func Download(ipAddr string, port string, sdfsFileName string, localFileName string) error {
 	dest := ipAddr + ":" + port
 	conn, err := grpc.Dial(dest, clientDialOpts[0:4]...)
 	if err != nil {
@@ -116,17 +122,20 @@ func (mem *Member) Download(ipAddr string, port string, sdfsFileName string, loc
 		&service.DownloadRequest{SdfsFileName: sdfsFileName})
 
 	if !downloadReply.DoesFileExist {
-		Warn.Println("Failed to download ", sdfsFileName, ". File does not exist.")
-		return
+		errorMsg := "Error: Unable to download file " + sdfsFileName + ". File does not exist."
+		Warn.Println(errorMsg, err2)
+		return errors.New(errorMsg)
 	}
 
 	file, err2 := os.Create(localFileName)
 	if err2 != nil {
-		Warn.Println("Failed to create file: ", err2)
-		return
+		errorMsg := "Failed to create file."
+		Warn.Println(errorMsg, err2)
+		return errors.New(errorMsg)
 	}
 	defer file.Close()
 
 	file.Write(downloadReply.FileContents)
 	Info.Println("Successfully downloaded file: [", sdfsFileName, "]")
+	return nil
 }
