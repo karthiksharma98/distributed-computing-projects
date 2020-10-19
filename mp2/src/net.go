@@ -33,7 +33,7 @@ const (
 // Debugging consts
 var (
 	dropMessage = false
-	dropRate    = 1
+	dropRate    = 0
 )
 
 // Send text message over UDP given address and string
@@ -133,7 +133,7 @@ func (mem *Member) Listen(port string) {
 		case TestMsg:
 			memMetrics.PerfTest()
 		default:
-			Warn.Println("Invalid message type")
+			Warn.Println("Member: Invalid message type")
 		}
 	}
 }
@@ -173,7 +173,7 @@ func (node *SdfsNode) ListenSdfs(port string) {
 		case RecoverMasterMsg:
 			node.handleRecoverMaster(senderAddr.IP, buffer[1:n])
 		default:
-			Warn.Println("Invalid message type")
+			Warn.Println("Sdfs: Invalid message type")
 		}
 	}
 }
@@ -197,18 +197,18 @@ func (node *SdfsNode) startRPCClient(serverIP string, port string) {
 	}
 }
 
-func (node *SdfsNode) startRPCServer() {
+func (node *SdfsNode) startRPCServer(port string) {
 	err := rpc.Register(node)
 	if err != nil {
 		fmt.Println("Format isn't correct. ", err)
 	}
 	rpc.HandleHTTP()
-	rpcListener, e := net.Listen("tcp", ":"+fmt.Sprint(Configuration.Service.rpcReqPort))
+	rpcListener, e := net.Listen("tcp", ":"+port)
 	if e != nil {
 		fmt.Println("error in starting listener")
 	}
 
-	fmt.Printf("Serving RPC server on port %f\n", Configuration.Service.rpcReqPort)
+	fmt.Printf("Serving RPC server on port %f\n", port)
 	// Start accepting incoming HTTP connections
 	go http.Serve(rpcListener, nil)
 }

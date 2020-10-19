@@ -84,7 +84,7 @@ func (node *SdfsNode) Election() {
 	// Send ElectionMsg to nodes with higher IDs than itself
 	for _, mem := range node.Member.membershipList {
 		if mem.MemberID > node.Member.memberID {
-			Send(mem.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.rpcReqPort), ElectionMsg, []byte{node.Member.memberID})
+			Send(mem.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.masterPort), ElectionMsg, []byte{node.Member.memberID})
 		}
 	}
 	// Wait for timeout and send CoordinatorMsg to all nodes if determined that it has the highest ID
@@ -98,7 +98,7 @@ func (node *SdfsNode) Election() {
 		for _, mem := range node.Member.membershipList {
 			if mem.MemberID < node.Member.memberID {
 				Info.Println("Sending to", mem.IPaddr.String())
-				Send(mem.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.rpcReqPort), CoordinatorMsg, []byte{node.Member.memberID})
+				Send(mem.IPaddr.String()+":"+fmt.Sprint(Configuration.Service.masterPort), CoordinatorMsg, []byte{node.Member.memberID})
 			}
 		}
 	}
@@ -107,7 +107,7 @@ func (node *SdfsNode) Election() {
 // handle election message
 func (node *SdfsNode) handleElection(senderAddr net.IP, id uint8) {
 	if id < node.Member.memberID {
-		Send(senderAddr.String()+":"+fmt.Sprint(Configuration.Service.rpcReqPort), OkMsg, []byte{node.Member.memberID})
+		Send(senderAddr.String()+":"+fmt.Sprint(Configuration.Service.masterPort), OkMsg, []byte{node.Member.memberID})
 
 		// Start election again
 		go node.Election()
@@ -124,13 +124,11 @@ func (node *SdfsNode) handleCoordinator(id uint8) {
 	electionFlag = false
 	node.MasterId = id
 
-	node.closeRPCClient()
-	node.startRPCClient(node.Member.membershipList[id].IPaddr.String(), fmt.Sprint(Configuration.Service.rpcReqPort))
-	// If self is elected, initialize an SdfsMaster object and set
+	// If self is elected, initialize an SdfsMaster object, start listening to RPC
 	if id == node.Member.memberID {
+		node.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
 		node.isMaster = true
 		node.Master = NewSdfsMaster()
-		return
 	}
 
 	// Encode file list
@@ -142,7 +140,11 @@ func (node *SdfsNode) handleCoordinator(id uint8) {
 	}
 
 	// Send fileList, numFiles to new coordinator/master
-	Send(node.Member.membershipList[id].IPaddr.String()+":"+fmt.Sprint(Configuration.Service.port), RecoverMasterMsg, b.Bytes())
+	Send(node.Member.membershipList[id].IPaddr.String()+":"+fmt.Sprint(Configuration.Service.masterPort), RecoverMasterMsg, b.Bytes())
+
+	// Redirect RPC connection to new IP when Master ready
+	node.closeRPCClient()
+	node.startRPCClient(node.Member.membershipList[id].IPaddr.String(), fmt.Sprint(Configuration.Service.masterPort))
 }
 
 // Handle election ok message

@@ -7,7 +7,6 @@ import (
 	"io"
 	"math/rand"
 	"net"
-	"sort"
 	"text/tabwriter"
 	"time"
 )
@@ -67,27 +66,6 @@ func NewMembershipListEntry(memberID uint8, address net.IP) membershipListEntry 
 		Alive,
 	}
 	return mlEntry
-}
-
-// Getter for member entry
-func (mem *Member) GetMemberEntry(key uint8) membershipListEntry {
-	return mem.membershipList[key]
-}
-
-// Setter for member entry
-func (mem *Member) SetMemberEntry(key uint8, val membershipListEntry) {
-	mem.membershipList[key] = val
-	return
-}
-
-// Remove fn for member entry
-func (mem *Member) RemoveMemberEntry(key uint8) {
-	delete(mem.membershipList, key)
-}
-
-// Get all members in membership list
-func (mem *Member) GetAllMembers() map[uint8]membershipListEntry {
-	return mem.membershipList
 }
 
 // PrintMembershipList pretty-prints all values inside the membership list
@@ -364,24 +342,6 @@ func (mem *Member) acceptMember(address net.IP) {
 
 	// Send the memberID by appending it to start of buffer, and the membershiplist
 	Send(address.String()+":"+fmt.Sprint(Configuration.Service.port), AcceptMsg, append([]byte{newMemberID}, b.Bytes()...))
-}
-
-// Get k largest key in list
-func (mem *Member) kLargestID(k int) uint8 {
-	var ids []uint8
-	for key := range mem.membershipList {
-		ids = append(ids, key)
-	}
-	sort.Slice(
-		ids,
-		func(i, j int) bool {
-			return ids[i] < ids[j]
-		},
-	)
-	if k < len(ids) {
-		return ids[k]
-	}
-	return 0
 }
 
 // getMaxID to get the maximum of all memberIDs

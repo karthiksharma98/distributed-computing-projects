@@ -89,7 +89,7 @@ func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
 		return errors.New("Error: Master not initialized")
 	}
 
-	client, err := rpc.DialHTTP("tcp", ip.String()+":"+fmt.Sprint(Configuration.Service.rpcReqPort))
+	client, err := rpc.DialHTTP("tcp", ip.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
 	if err != nil {
 		fmt.Println("Delete connection error: ", err)
 	}

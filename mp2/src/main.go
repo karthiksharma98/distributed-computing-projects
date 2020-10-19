@@ -70,15 +70,14 @@ func main() {
 				go process.InitializeServer(fmt.Sprint(Configuration.Service.port))
 				Info.Println("You are now the introducer.")
 
-				// start RPC server
-				if process != nil {
-					if rpcInitialized == false {
-						// Initialize SDFS node
-						sdfs = NewSdfsNode(process, true)
-						sdfs.startRPCServer()
-						go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.rpcReqPort))
-						rpcInitialized = true
-					}
+				if rpcInitialized == false {
+					// Initialize SDFS node
+					sdfs = NewSdfsNode(process, true)
+					// start RPC Server
+					sdfs.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
+					go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.masterPort))
+					sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.masterPort))
+					rpcInitialized = true
 				}
 
 			} else {
@@ -104,13 +103,10 @@ func main() {
 				if rpcInitialized == false {
 					// Initialize SDFS node
 					sdfs = NewSdfsNode(process, false)
-
-					// start RPC Server
-					sdfs.startRPCServer()
-					go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.rpcReqPort))
+					go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.masterPort))
 
 					// establish connection to master
-					sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.rpcReqPort))
+					sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.masterPort))
 					rpcInitialized = true
 				}
 			}
@@ -177,18 +173,6 @@ func main() {
 				}
 			}
 
-		case "chat":
-			// FOR DEBUGGING PURPOSES
-			// DEBUG addresses
-			addresses := []string{"172.22.156.42:9000", "172.22.158.42:9000", "172.22.94.42:9000", "172.22.156.43:9000"}
-			Info.Println("Joined chat")
-			for {
-				consoleReader := bufio.NewReader(os.Stdin)
-				fmt.Print("> ")
-				input, _ := consoleReader.ReadString('\n')
-				SendBroadcast(addresses, 2, []byte(input))
-			}
-
 		case "stop":
 			process.StopTick()
 
@@ -233,6 +217,10 @@ func main() {
 
 		case "putfile":
 			if len(inputFields) >= 3 {
+				if client == nil {
+					Warn.Println("Client not initialized.")
+					continue
+				}
 				req := SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], Type: PutReq}
 				var res SdfsResponse
 
@@ -256,6 +244,10 @@ func main() {
 
 		case "getfile":
 			if len(inputFields) >= 3 {
+				if client == nil {
+					Warn.Println("Client not initialized.")
+					continue
+				}
 				req := SdfsRequest{LocalFName: inputFields[2], RemoteFName: inputFields[1], Type: GetReq}
 				var res SdfsResponse
 
@@ -275,6 +267,10 @@ func main() {
 
 		case "deletefile":
 			if len(inputFields) >= 2 {
+				if client == nil {
+					Warn.Println("Client not initialized.")
+					continue
+				}
 				req := SdfsRequest{LocalFName: "", RemoteFName: inputFields[1], Type: DelReq}
 				var res SdfsResponse
 
@@ -288,6 +284,10 @@ func main() {
 			}
 
 		case "ls":
+			if client == nil {
+				Warn.Println("Client not initialized.")
+				continue
+			}
 			req := SdfsRequest{LocalFName: "", RemoteFName: "", Type: LsReq}
 			var res SdfsResponse
 
