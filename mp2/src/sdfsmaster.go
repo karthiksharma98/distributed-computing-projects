@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -22,11 +23,11 @@ type SdfsNode struct {
 	Master   *SdfsMaster
 }
 
-type SdfsMaster struct {
-	fileMap map[string][]net.IP
-}
-
 // stores file metadata
+type SdfsMaster struct {
+	fileMap  map[string][]net.IP
+	fileLock map[string]*sync.RWMutex
+}
 
 var (
 	electionFlag = false
@@ -54,6 +55,7 @@ func NewSdfsNode(mem *Member, setMaster bool) *SdfsNode {
 func NewSdfsMaster() *SdfsMaster {
 	master := &SdfsMaster{
 		make(map[string][]net.IP),
+		make(map[string]*sync.RWMutex),
 	}
 	return master
 }
