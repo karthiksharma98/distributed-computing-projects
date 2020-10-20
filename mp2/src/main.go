@@ -21,10 +21,25 @@ var (
 
 func printOptions() {
 	if process == nil {
-		fmt.Println("Welcome! Don't be a loner and join the group by saying \"join introducer\" or \"join\".")
+		fmt.Println("Welcome! Don't be a loner and join the group by saying one of the following:\n" +
+			"-	join introducer\n" +
+			"-	join")
 	} else {
-		fmt.Print("Interact with the group using any of the following: leave, kill, ")
-		fmt.Println("status, print logs {-n}, grep {all}, stop, switch (gossip/alltoall), or chat")
+		fmt.Println("\nGroup Interaction Options:")
+		fmt.Println("-	leave | kill | stop | switch [gossip/alltoall]")
+
+		fmt.Println("\nQuery Group Information:")
+		fmt.Println("-	status | whoami | print logs {-n} | grep {all} [query]")
+
+		fmt.Println("\nResource Monitoring:")
+		fmt.Println("-	metrics | sim failtest")
+
+		fmt.Println("\nSDFS Commands:")
+		fmt.Println("-	put [local file] [sdfsfile]")
+		fmt.Println("-	get [sdfs file] [local file]")
+		fmt.Println("-	delete [sdfs file]")
+		fmt.Println("-	ls")
+		fmt.Println("-	store")
 	}
 }
 
