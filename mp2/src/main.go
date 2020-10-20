@@ -217,7 +217,7 @@ func main() {
 				process.SendAll(TestMsg, []byte{})
 			}
 
-		case "putfile":
+		case "put":
 			if len(inputFields) >= 3 {
 				if client == nil {
 					Warn.Println("Client not initialized.")
@@ -246,7 +246,7 @@ func main() {
 				}
 			}
 
-		case "getfile":
+		case "get":
 			if len(inputFields) >= 3 {
 				if client == nil {
 					Warn.Println("Client not initialized.")
@@ -274,7 +274,7 @@ func main() {
 
 			}
 
-		case "deletefile":
+		case "delete":
 			if len(inputFields) >= 2 {
 				if client == nil {
 					Warn.Println("Client not initialized.")
