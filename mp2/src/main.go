@@ -350,16 +350,16 @@ func main() {
 					Warn.Println("Client not initialized.")
 					continue
 				}
-				req := SdfsRequest{LocalFName: "", RemoteFName: inputFields[1], Type: LsReq}
+				req := SdfsRequest{LocalFName: "", RemoteFName: inputFields[1], Type: GetReq}
 				var res SdfsResponse
 
 				err := client.Call("SdfsNode.HandleGetRequest", req, &res)
 				if err != nil {
 					fmt.Println("Failed ls. ", err)
 				} else {
-					fmt.Println(fileName, " => ")
+					fmt.Print(fileName, " =>   ")
 					for _, ip := range res.IPList {
-						fmt.Print(ip.String(), " ")
+						fmt.Print(ip.String(), ", ")
 					}
 					fmt.Println()
 				}

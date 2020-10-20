@@ -140,10 +140,8 @@ func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) 
 		return errors.New("Error: Master not initialized")
 	}
 
-	// convert string -> ip.net
-	// req.LocalFName here is ip address, need the 27 for the method call to work
-	stringIp := req.LocalFName + "/27"
-	ipToModify, _, _ := net.ParseCIDR(stringIp)
+	// req.LocalFName here is ip address
+	ipToModify := net.ParseIP(req.LocalFName)
 
 	if req.Type == AddReq {
 		ogList := node.Master.fileMap[req.RemoteFName]
