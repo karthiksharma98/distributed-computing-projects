@@ -132,7 +132,7 @@ func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
 	req.RemoteFName = RemoteFName
 	req.Type = DelReq
 
-	return client.Call("Member.DeleteFile", req, &res)
+	return client.Call("SdfsNode.DeleteFile", req, &res)
 }
 
 func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) error {
