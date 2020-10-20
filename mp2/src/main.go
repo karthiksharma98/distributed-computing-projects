@@ -83,7 +83,7 @@ func main() {
 
 				process.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
-				go InitializeServer(fmt.Sprint(Configuration.Service.port))
+				go InitializeServer(fmt.Sprint(Configuration.Service.filePort))
 				Info.Println("You are now the introducer.")
 
 				if rpcInitialized == false {
@@ -104,7 +104,7 @@ func main() {
 				}
 
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
-				go InitializeServer(fmt.Sprint(Configuration.Service.port))
+				go InitializeServer(fmt.Sprint(Configuration.Service.filePort))
 				time.Sleep(100 * time.Millisecond) // Sleep a tiny bit so listener can start
 				process.joinRequest()
 				// Wait for response
@@ -302,7 +302,7 @@ func main() {
 					fmt.Println(err)
 				} else {
 					for _, ipAddr := range res.IPList {
-						err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.port), req.RemoteFName, req.LocalFName)
+						err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.LocalFName)
 
 						if err != nil {
 							fmt.Println("error in download process.")

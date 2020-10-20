@@ -111,8 +111,8 @@ func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) err
 }
 
 func (node *SdfsNode) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
-	// TODO: delete the local file before returning nil, else return error
-	return nil
+	// TODO: delete the replica before returning nil, else return error
+	return errors.New("DeleteFile not implemented")
 }
 
 func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
@@ -133,6 +133,25 @@ func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
 	req.Type = DelReq
 
 	return client.Call("Member.DeleteFile", req, &res)
+}
+
+func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) error {
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
+	}
+
+	// convert string -> ip.net
+	// req.LocalFName here is ip address, need the 27 for the method call to work
+	stringIp := req.LocalFName + "/27"
+	ipToModify, _, _ := net.ParseCIDR(stringIp)
+
+	if req.Type == AddReq {
+		ogList := node.Master.fileMap[req.RemoteFName]
+		ogList = append(ogList, ipToModify)
+		node.Master.fileMap[req.RemoteFName] = ogList
+	}
+
+	return nil
 }
 
 func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) error {
@@ -179,6 +198,8 @@ func (node *SdfsNode) HandleLsRequest(req SdfsRequest, reply *SdfsResponse) erro
 		return errors.New("Error: Invalid request type for Ls Request")
 	}
 
+	fmt.Println(node.Master.fileMap)
+
 	var resp SdfsResponse
 	resp.fileMap = make(map[string][]string)
 	for fileName, ipList := range node.Master.fileMap {
@@ -188,6 +209,8 @@ func (node *SdfsNode) HandleLsRequest(req SdfsRequest, reply *SdfsResponse) erro
 		}
 		resp.fileMap[fileName] = listCopy
 	}
+
+	fmt.Println(resp)
 
 	*reply = resp
 
