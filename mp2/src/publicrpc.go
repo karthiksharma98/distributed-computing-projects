@@ -180,16 +180,15 @@ func (node *SdfsNode) HandleLsRequest(req SdfsRequest, reply *SdfsResponse) erro
 	}
 
 	var resp SdfsResponse
-	mapCopy := make(map[string][]string)
+	resp.fileMap = make(map[string][]string)
 	for fileName, ipList := range node.Master.fileMap {
 		listCopy := make([]string, 0)
 		for _, ipAddr := range ipList {
 			listCopy = append(listCopy, ipAddr.String())
 		}
-		mapCopy[fileName] = listCopy
+		resp.fileMap[fileName] = listCopy
 	}
 
-	resp.fileMap = mapCopy
 	*reply = resp
 
 	return nil
