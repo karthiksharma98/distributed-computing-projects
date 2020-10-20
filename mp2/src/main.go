@@ -24,7 +24,7 @@ func printOptions() {
 		fmt.Println("Welcome! Don't be a loner and join the group by saying \"join introducer\" or \"join\".")
 	} else {
 		fmt.Print("Interact with the group using any of the following: leave, kill, ")
-		fmt.Println("status, get logs {-n}, grep {all}, stop, switch (gossip/alltoall), or chat")
+		fmt.Println("status, print logs {-n}, grep {all}, stop, switch (gossip/alltoall), or chat")
 	}
 }
 
@@ -143,7 +143,7 @@ func main() {
 
 			process.PrintMembershipList(os.Stdout)
 
-		case "get":
+		case "print":
 			if len(inputFields) >= 2 && inputFields[1] == "logs" {
 				if len(inputFields) == 4 && inputFields[2] == "-n" {
 					num, err := strconv.Atoi(inputFields[3])
@@ -229,7 +229,7 @@ func main() {
 				err := client.Call("SdfsNode.HandlePutRequest", req, &res)
 
 				if err != nil {
-					fmt.Println("putfile failed", err)
+					fmt.Println("put failed", err)
 				} else {
 					// upload each file and add to master's file map
 					for _, ipAddr := range res.IPList {
