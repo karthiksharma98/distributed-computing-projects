@@ -345,22 +345,23 @@ func main() {
 			}
 
 		case "ls":
-			if client == nil {
-				Warn.Println("Client not initialized.")
-				continue
-			}
-			req := SdfsRequest{LocalFName: "", RemoteFName: "", Type: LsReq}
-			var res SdfsResponse
+			if len(inputFields) >= 2 {
+				if client == nil {
+					Warn.Println("Client not initialized.")
+					continue
+				}
+				req := SdfsRequest{LocalFName: "", RemoteFName: inputFields[1], Type: LsReq}
+				var res SdfsResponse
 
-			err := client.Call("SdfsNode.HandleLsRequest", req, &res)
-			if err != nil {
-				fmt.Println("Failed ls. ", err)
-			} else {
-				for fileName, ipList := range res.fileMap {
-					fmt.Println(fileName, " =>")
-					for _, ip := range ipList {
-						fmt.Println("	", ip)
+				err := client.Call("SdfsNode.HandleGetRequest", req, &res)
+				if err != nil {
+					fmt.Println("Failed ls. ", err)
+				} else {
+					fmt.Println(fileName, " => ")
+					for _, ip := range res.IPList {
+						fmt.Print(ip.String(), " ")
 					}
+					fmt.Println()
 				}
 			}
 

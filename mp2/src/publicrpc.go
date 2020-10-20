@@ -20,8 +20,7 @@ type UploadAck struct {
 }
 
 type SdfsResponse struct {
-	IPList  []net.IP
-	fileMap map[string][]string
+	IPList []net.IP
 }
 
 type ReqType int
@@ -173,7 +172,6 @@ func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) 
 		if len(failedIndices) == 0 {
 			delete(node.Master.fileMap, req.RemoteFName)
 			return nil
-
 		} else {
 			// make list of failed IPs
 			failedIps := make([]net.IP, 0)
@@ -191,29 +189,5 @@ func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) 
 			return errors.New("Failed deleting files")
 		}
 	}
-	return nil
-}
-
-func (node *SdfsNode) HandleLsRequest(req SdfsRequest, reply *SdfsResponse) error {
-	if req.Type != LsReq {
-		return errors.New("Error: Invalid request type for Ls Request")
-	}
-
-	fmt.Println(node.Master.fileMap)
-
-	var resp SdfsResponse
-	resp.fileMap = make(map[string][]string)
-	for fileName, ipList := range node.Master.fileMap {
-		listCopy := make([]string, 0)
-		for _, ipAddr := range ipList {
-			listCopy = append(listCopy, ipAddr.String())
-		}
-		resp.fileMap[fileName] = listCopy
-	}
-
-	fmt.Println(resp)
-
-	*reply = resp
-
 	return nil
 }
