@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"os"
 	"time"
 )
 
@@ -183,12 +184,67 @@ func (node *SdfsNode) handleRecoverMaster(senderAddr net.IP, fileListBytes []byt
 	}
 }
 
+// Delete file local
+func (node *SdfsNode) deleteFile(localFilename string) bool {
+	// delete file given file name
+	err := os.Remove(localFilename)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+// Cleanup files, file lists, etc
+func (node *SdfsNode) cleanupLocal() {
+	for _, fname := range node.FileList {
+		node.deleteFile(fname)
+	}
+}
+
+// Remove ip from iplist
+func (node *SdfsMaster) deleteIP(fname string, ipAddr string) {
+	ipList, ok := node.fileMap[fname]
+	if !ok {
+		return
+	}
+
+	for idx, ip := range ipList {
+		if ip.String() != ipAddr {
+			continue
+		}
+		ipList[idx] = ipList[len(ipList)-1]
+		node.fileMap[fname] = ipList[:len(ipList)-1]
+	}
+}
+
+// Cleanup node
+func (node *SdfsNode) cleanupNode(id uint8) {
+	if node.Master != nil {
+		return
+	}
+	// get ip of node to cleanup
+	ipAddr := node.Member.membershipList[id].IPaddr.String()
+	// read fileMap, remove ip from list if matches node
+	for fname, _ := range node.Master.fileMap {
+		node.Master.deleteIP(fname, ipAddr)
+	}
+}
+
+// List set of file names replicated on process
+func (node *SdfsNode) Store() {
+	for _, fname := range node.FileList {
+		fmt.Println(fname)
+	}
+}
+
+// Add IPList to file map
 func (node *SdfsMaster) AddIPToFileMap(fname string, ipList []net.IP) {
 	if ipList != nil {
 		node.fileMap[fname] = ipList
 	}
 }
 
+// Chooses random set of nodes to replicate
 func (node *SdfsNode) pickRandomNodes(minReplicas int) []net.IP {
 
 	// TODO: should master store files? return minReplicas based on that (rn we return 3 replicas)

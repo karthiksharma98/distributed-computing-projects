@@ -292,6 +292,12 @@ func main() {
 			var res SdfsResponse
 
 			client.Call("Member.HandleLsRequest", req, &res)
+		case "store":
+			if sdfs == nil {
+				fmt.Println("SDFS not initialized.")
+				continue
+			}
+			sdfs.Store()
 
 		case "upload":
 			if process != nil && len(inputFields) == 3 {
