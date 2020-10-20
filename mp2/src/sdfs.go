@@ -9,14 +9,25 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"path/filepath"
 )
 
 var (
 	// 1346378950 is the size of wiki corpus + some more for fun lol
-	dialSize       = 1346378950 + 2048
-	clientDialOpts = [4]grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock(), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(dialSize)), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(dialSize))}
-	serverDialOpts = [2]grpc.ServerOption{grpc.MaxRecvMsgSize(dialSize), grpc.MaxSendMsgSize(dialSize)}
+	dialSize              = 1346378950 + 2048
+	clientDialOpts        = [4]grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock(), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(dialSize)), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(dialSize))}
+	serverDialOpts        = [2]grpc.ServerOption{grpc.MaxRecvMsgSize(dialSize), grpc.MaxSendMsgSize(dialSize)}
+	dirName        string = "SDFS"
 )
+
+// Init
+func InitSdfsDirectory() {
+	_, err := os.Stat(dirName)
+
+	if os.IsNotExist(err) {
+		os.MkdirAll(dirName, 0755)
+	}
+}
 
 // Server methods
 
@@ -38,7 +49,7 @@ func InitializeServer(port string) {
 }
 
 func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.UploadRequest) (*service.UploadReply, error) {
-	file, err := os.Create(uploadReq.SdfsFileName)
+	file, err := os.Create(filepath.Join(dirName, filepath.Base(uploadReq.SdfsFileName)))
 	if err != nil {
 		return &service.UploadReply{Status: false}, err
 	}
@@ -50,7 +61,7 @@ func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.Uplo
 }
 
 func (s *FileTransferServer) Download(ctx context.Context, downloadReq *service.DownloadRequest) (*service.DownloadReply, error) {
-	file, err := os.Open(downloadReq.GetSdfsFileName())
+	file, err := os.Open(filepath.Join(dirName, filepath.Base(downloadReq.GetSdfsFileName())))
 	defer file.Close()
 	if err != nil {
 		return &service.DownloadReply{DoesFileExist: false, FileContents: []byte(err.Error())}, nil

@@ -34,6 +34,7 @@ func main() {
 	InitMonitor()
 	Configuration = ReadConfig()
 	Configuration.Print()
+	InitSdfsDirectory()
 
 	rpcInitialized := false
 
