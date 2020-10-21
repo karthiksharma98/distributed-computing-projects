@@ -285,6 +285,7 @@ func (node *SdfsNode) pickRandomNodes(minReplicas int) []net.IP {
 	return iplist[:minReplicas]
 }
 
+// asks aliveIP to upload filename to newIP
 func sendUploadCommand(aliveIP net.IP, newIP net.IP, filename string) error {
 	client, err := rpc.DialHTTP("tcp", aliveIP.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
 	if err != nil {

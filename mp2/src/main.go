@@ -93,7 +93,7 @@ func main() {
 					sdfs = NewSdfsNode(process, true)
 					// start RPC Server for handling requests get/put/delete/ls
 					sdfs.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
-					// start election listener
+					// start SDFS listener
 					go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.masterPort))
 
 					sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.masterPort))
@@ -128,7 +128,7 @@ func main() {
 					sdfs = NewSdfsNode(process, false)
 					// start RPC Server for handling requests
 					sdfs.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
-					// start election listener
+					// start SDFS listener
 					go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.masterPort))
 					// establish connection to master
 					sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.masterPort))
@@ -240,6 +240,7 @@ func main() {
 				process.SendAll(TestMsg, []byte{})
 			}
 
+		// SDFS
 		case "put":
 			if len(inputFields) >= 3 && process != nil {
 				if client == nil || sdfs == nil {
@@ -311,7 +312,6 @@ func main() {
 				var res SdfsResponse
 
 				err := client.Call("SdfsNode.HandleGetRequest", req, &res)
-
 				if err != nil {
 					fmt.Println(err)
 				} else {
@@ -319,7 +319,7 @@ func main() {
 						err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.LocalFName)
 
 						if err != nil {
-							fmt.Println("error in download process.")
+							fmt.Println("Error downloading " + req.RemoteFName + " from " + ipAddr.String())
 						} else {
 							// successful download
 							break
@@ -345,7 +345,7 @@ func main() {
 				if err != nil {
 					fmt.Println(err)
 				} else {
-					fmt.Println("Deleted successfully:", req.RemoteFName)
+					fmt.Println("Deleted successfully: ", req.RemoteFName)
 				}
 				sessionId = sdfs.RpcLock(sessionId, inputFields[1], SdfsLock)
 			}
