@@ -58,11 +58,12 @@ func (node *SdfsNode) AcquireLock(req SdfsLockRequest, reply *SdfsLockResponse) 
                 case id := <-failCh:
                         if int(id) == req.NodeId {
                                 Info.Println("Detected lock owner failure, unlocking: ", id)
+                                /*
                                 if req.Type == SdfsRLock {
                                         node.Master.fileLock[req.RemoteFname].RUnlock()
                                 } else if req.Type == SdfsLock {
                                         node.Master.fileLock[req.RemoteFname].Unlock()
-                                }
+                                }*/
                         }
                 }
 	}()
