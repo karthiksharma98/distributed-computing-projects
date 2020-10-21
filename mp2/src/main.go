@@ -233,32 +233,47 @@ func main() {
 			}
 
 		case "put":
-			if len(inputFields) >= 3 {
+			if len(inputFields) >= 3 && process != nil {
 				if client == nil {
 					Warn.Println("Client not initialized.")
 					continue
 				}
 				req := SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], Type: PutReq}
-				var res SdfsResponse
 
-				err := client.Call("SdfsNode.HandlePutRequest", req, &res)
+				numAlive := process.GetNumAlive()
+				numSuccessful := 0
+				ipsAttempted := make(map[string]bool)
+				// attempt to get as many replications needed, until you've attempted all the IPs
+				for numSuccessful < int(Configuration.Settings.replicationFactor) &&
+					len(ipsAttempted) < numAlive {
+					var res SdfsResponse
+					err := client.Call("SdfsNode.HandlePutRequest", req, &res)
 
-				if err != nil {
-					fmt.Println("put failed", err)
-				} else {
-					// upload each file and add to master's file map
-					for _, ipAddr := range res.IPList {
-						err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.port), req.LocalFName, req.RemoteFName)
+					if err != nil {
+						fmt.Println("Put failed", err)
+						break
+					} else {
+						// attempt upload each file
+						for _, ipAddr := range res.IPList {
+							if _, exists := ipsAttempted[ipAddr.String()]; !exists {
+								ipsAttempted[ipAddr.String()] = true
+								err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.port), req.LocalFName, req.RemoteFName)
 
-						if err != nil {
-							fmt.Println("error in upload process.")
+								if err != nil {
+									fmt.Println("error in upload process.", err)
+								} else {
+									numSuccessful += 1
+									// succesfull upload -> add to master's file map
+									mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: inputFields[2], Type: AddReq}
+									var mapRes SdfsResponse
+									client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
+								}
+							}
 						}
-
-						mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: inputFields[2], Type: AddReq}
-						var mapRes SdfsResponse
-						client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
 					}
 				}
+
+				fmt.Println("Finished put.")
 			}
 
 		case "get":
