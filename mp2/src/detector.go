@@ -344,6 +344,17 @@ func (mem *Member) acceptMember(address net.IP) {
 	Send(address.String()+":"+fmt.Sprint(Configuration.Service.port), AcceptMsg, append([]byte{newMemberID}, b.Bytes()...))
 }
 
+func (mem *Member) GetNumAlive() int {
+	numAlive := 0
+	for _,entry := range mem.membershipList {
+		if entry.Health == Alive {
+			numAlive += 1
+		}
+	}
+
+	return numAlive
+}
+
 // getMaxID to get the maximum of all memberIDs
 func getMaxID() uint8 {
 	maxID++

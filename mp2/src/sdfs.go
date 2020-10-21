@@ -14,8 +14,11 @@ import (
 
 var (
 	// 1346378950 is the size of wiki corpus + some more for fun lol
-	dialSize              = 1346378950 + 2048
-	clientDialOpts        = [4]grpc.DialOption{grpc.WithInsecure(), grpc.WithBlock(), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(dialSize)), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(dialSize))}
+	dialSize       = 1346378950 + 2048
+	clientDialOpts = [4]grpc.DialOption{grpc.WithInsecure(),
+		grpc.WithBlock(),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(dialSize)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(dialSize))}
 	serverDialOpts        = [2]grpc.ServerOption{grpc.MaxRecvMsgSize(dialSize), grpc.MaxSendMsgSize(dialSize)}
 	dirName        string = "SDFS"
 )
@@ -49,7 +52,8 @@ func InitializeServer(port string) {
 }
 
 func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.UploadRequest) (*service.UploadReply, error) {
-	file, err := os.Create(filepath.Join(dirName, filepath.Base(uploadReq.SdfsFileName)))
+	filePath := filepath.Join(dirName, filepath.Base(uploadReq.SdfsFileName))
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
 	if err != nil {
 		return &service.UploadReply{Status: false}, err
 	}
@@ -90,18 +94,10 @@ func GetFileContents(localFileName string) []byte {
 	return content
 }
 
-func Upload(ipAddr string, port string, localFileName string, sdfsFileName string) error {
-	dest := ipAddr + ":" + port
-	conn, err := grpc.Dial(dest, clientDialOpts[0:4]...)
-	if err != nil {
-		panic(err)
-	}
-	defer conn.Close()
-
+func DialAndSend(conn *grpc.ClientConn, dest string, fileChunk []byte, sdfsFileName string) error {
 	client := service.NewFileTransferClient(conn)
-	fileContents := GetFileContents(localFileName)
 	uploadReply, err2 := client.Upload(context.Background(), &service.UploadRequest{
-		FileContents: fileContents,
+		FileContents: fileChunk,
 		SdfsFileName: sdfsFileName})
 	if err2 != nil {
 		errorMsg := "Error: Unable to upload file."
@@ -110,13 +106,40 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 	}
 
 	if uploadReply.GetStatus() == true {
-		Info.Println("Successfully uploaded file: [", localFileName, "] as [", sdfsFileName, "] at addr ", dest)
+		Info.Println("Successfully uploaded chunk: [", sdfsFileName, "] at addr ", dest)
 		return nil
 	}
 
 	errorMsg := "Error: Bad reply status."
 	Warn.Println(errorMsg)
 	return errors.New(errorMsg)
+}
+
+func Upload(ipAddr string, port string, localFileName string, sdfsFileName string) error {
+	dest := ipAddr + ":" + port
+	conn, err := grpc.Dial(dest, clientDialOpts[0:4]...)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+
+	fileContents := GetFileContents(localFileName)
+	fileSize := len(fileContents)
+	chunkSize := 500000
+	for i := 0; i < fileSize; i += chunkSize {
+		lastIdx := i + chunkSize
+		if lastIdx > fileSize {
+			lastIdx = fileSize
+		}
+
+		fileChunk := fileContents[i:lastIdx]
+		err := DialAndSend(conn, dest, fileChunk, sdfsFileName)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func Download(ipAddr string, port string, sdfsFileName string, localFileName string) error {
