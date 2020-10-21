@@ -32,6 +32,7 @@ func (node *SdfsNode) AcquireLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 	// If lock does not exist, create lock
 	if _, ok := node.Master.fileLock[req.RemoteFname]; !ok {
 		node.Master.fileLock[req.RemoteFname] = &sync.RWMutex{}
+		node.Master.condLock[req.RemoteFname] = &sync.Cond{}
 	}
 
 	// Acquire RW lock for remoteFname mutex
