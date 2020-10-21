@@ -134,9 +134,8 @@ func (node *SdfsNode) handleCoordinator(id uint8) {
 	electionFlag = false
 	node.MasterId = id
 
-	// If self is elected, initialize an SdfsMaster object, start listening to RPC
+	// If self is elected, initialize new SdfsMaster object
 	if id == node.Member.memberID {
-		node.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
 		node.isMaster = true
 		node.Master = NewSdfsMaster()
 	}
