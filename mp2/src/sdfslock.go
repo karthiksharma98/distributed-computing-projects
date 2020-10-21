@@ -33,7 +33,10 @@ func (node *SdfsNode) AcquireLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 	if _, ok := node.Master.fileLock[req.RemoteFname]; !ok {
 		node.Master.fileLock[req.RemoteFname] = &sync.RWMutex{}
                 node.Master.fileCond[req.RemoteFname] = sync.NewCond(node.Master.fileLock[req.RemoteFname])
+                Info.Println("AcquireLock: Created new lock")
 	}
+
+        Info.Println("AcquireLock: Acquiring lock")
 
 	// Acquire RW lock for remoteFname mutex
 	// If read, try to lock
@@ -44,6 +47,8 @@ func (node *SdfsNode) AcquireLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 		// If write (exclusive), can lock, respond
 		node.Master.fileLock[req.RemoteFname].Lock()
 	}
+
+        Info.Println("AcquireLock: Creating release channel to check lock")
 
         // Make channel to check if locks been released
         releaseCh := make(chan bool, 1)
@@ -92,6 +97,8 @@ func (node *SdfsNode) ReleaseLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 		return errors.New("Error: Lock for file does not exist.")
 	}
 
+        Info.Println("Releasing lock")
+
 	// If read, try to unlock
 	if req.Type == SdfsRLock {
 		node.Master.fileLock[req.RemoteFname].RUnlock()
@@ -101,6 +108,8 @@ func (node *SdfsNode) ReleaseLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 	if req.Type == SdfsLock {
 		node.Master.fileLock[req.RemoteFname].Unlock()
 	}
+
+        Info.Println("Lock released")
 
         node.Master.fileCond[req.RemoteFname].Signal()
 
