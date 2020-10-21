@@ -30,7 +30,7 @@ type Settings struct {
 	failTimeout          float64 `json:"fail_timeout"`
 	cleanupTimeout       float64 `json:"cleanup_timeout"`
 	numProcessesToGossip float64 `json:"num_processes_to_gossip"`
-	replicationFactor    int     `json:"replication_factor"`
+	replicationFactor    float64 `json:"replication_factor"`
 }
 
 // ReadConfig function to read the configuration JSON
@@ -73,7 +73,7 @@ func ReadConfig() Config {
 	fTime := settingsJSON["fail_timeout"].(float64)
 	cTime := settingsJSON["cleanup_timeout"].(float64)
 	numProcessesToGossip := settingsJSON["num_processes_to_gossip"].(float64)
-	rFactor := settingsJSON["replication_factor"].(int)
+	rFactor := settingsJSON["replication_factor"].(float64)
 
 	settings := Settings{
 		gossipInterval:       gInterval,

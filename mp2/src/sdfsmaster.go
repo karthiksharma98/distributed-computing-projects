@@ -365,7 +365,7 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 			//remove failedIP from fileMap
 			node.Master.fileMap[filename] = append(ipList[:failedIndex], ipList[failedIndex+1:]...)
 
-			if len(node.Master.fileMap[fileName]) == Configuration.Settings.replicationFactor {
+			if len(node.Master.fileMap[fileName]) == int(Configuration.Settings.replicationFactor) {
 				// if file already has three alive replicas then don't do anything
 				continue
 			}
