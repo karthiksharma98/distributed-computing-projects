@@ -73,12 +73,25 @@ func (node *SdfsNode) AcquireLock(req SdfsLockRequest, reply *SdfsLockResponse) 
                 }
 	}()
 
+        Info.Println("AcquireLock: Monitor ready")
+
         // Checks if lock released
         go func() {
                 node.Master.fileCond[req.RemoteFname].Wait()
+                // If read, try to unlock
+                if req.Type == SdfsRLock {
+                        node.Master.fileLock[req.RemoteFname].RUnlock()
+                }
+
+                // If write (exclusive), try to unlock
+                if req.Type == SdfsLock {
+                        node.Master.fileLock[req.RemoteFname].Unlock()
+                }
                 releaseCh <- true
                 return
         }()
+
+        Info.Println("AcquireLock: Lock check wait ready")
 
 	var resp SdfsLockResponse
 	resp.RemoteFname = req.RemoteFname
@@ -99,6 +112,7 @@ func (node *SdfsNode) ReleaseLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 
         Info.Println("Releasing lock")
 
+        /*
 	// If read, try to unlock
 	if req.Type == SdfsRLock {
 		node.Master.fileLock[req.RemoteFname].RUnlock()
@@ -107,11 +121,9 @@ func (node *SdfsNode) ReleaseLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 	// If write (exclusive), try to unlock
 	if req.Type == SdfsLock {
 		node.Master.fileLock[req.RemoteFname].Unlock()
-	}
-
-        Info.Println("Lock released")
-
+	}*/
         node.Master.fileCond[req.RemoteFname].Signal()
+        Info.Println("Lock released")
 
 	var resp SdfsLockResponse
 	resp.RemoteFname = req.RemoteFname
