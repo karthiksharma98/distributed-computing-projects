@@ -98,7 +98,7 @@ func checkMember(ip net.IP, iplist []net.IP) int {
 
 func findNewReplicaIP(membershipList map[uint8]membershipListEntry, filename string, failedIP net.IP, replicas []net.IP) net.IP {
 	for _, listEntry := range membershipList {
-		if !listEntry.IPaddr.Equal(failedIP) && listEntry.Health == Alive && checkMember(listEntry.IPaddr, replicas) != -1 {
+		if !listEntry.IPaddr.Equal(failedIP) && listEntry.Health == Alive && checkMember(listEntry.IPaddr, replicas) == -1 {
 			return listEntry.IPaddr
 		}
 	}
