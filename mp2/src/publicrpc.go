@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/rpc"
+	"os"
 	"strconv"
 )
 
@@ -177,9 +178,7 @@ func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) err
 }
 
 func (node *SdfsNode) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
-	// TODO: delete the replica before returning nil, else return error
-	fmt.Println("DeleteFile not implemented")
-	return nil
+	return os.Remove(dirName + "/" + req.RemoteFName)
 }
 
 func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {

@@ -240,10 +240,17 @@ func (node *SdfsNode) cleanupNode(id uint8) {
 }
 
 // List set of file names replicated on process
-func (node *SdfsNode) Store() {
-	for _, fname := range node.FileList {
-		fmt.Println(fname)
+func (node *SdfsNode) Store() error {
+	file, err := os.Open("./SDFS/")
+	if err != nil {
+		return err
 	}
+	names, err := file.Readdirnames(0)
+	if err != nil {
+		return err
+	}
+	fmt.Println(names)
+	return nil
 }
 
 // Add IPList to file map
