@@ -369,8 +369,59 @@ func main() {
 			if sdfs != nil {
 				fmt.Println(sdfs.MasterId)
 			}
+                // Debug lock
+                case "lock":
+                        if sdfs == nil {
+                                return
+                        }
+			if len(inputFields) == 3 {
+                                if inputFields[1] == "get" {
+                                        // Acquire read
+                                        lockReq := SdfsLockRequest{NodeId: int(sdfs.Member.memberID), RemoteFname: inputFields[2], Type: SdfsRLock}
+                                        var lockRes SdfsLockResponse
+                                        err := client.Call("SdfsNode.AcquireLock", lockReq, &lockRes)
+                                        if err != nil {
+                                                fmt.Println(err)
+                                                break
+                                        }
+                                        fmt.Println("Lock (get) acquired! Test get for 10 seconds!")
+
+                                        // Timeout
+                                        time.Sleep(10 * time.Second)
+
+                                        // Release read
+                                        lockReq = SdfsLockRequest{NodeId: int(sdfs.Member.memberID), RemoteFname: inputFields[2], Type: SdfsRLock}
+                                        err = client.Call("SdfsNode.ReleaseLock", lockReq, &lockRes)
+                                        if err != nil {
+                                                fmt.Println(err)
+                                        }
+                                        fmt.Println("Lock write released!")
+                                } else if inputFields[1] == "put" {
+                                        // Acquire write
+                                        lockReq := SdfsLockRequest{NodeId: int(sdfs.Member.memberID), RemoteFname: inputFields[2], Type: SdfsLock}
+                                        var lockRes SdfsLockResponse
+                                        err := client.Call("SdfsNode.AcquireLock", lockReq, &lockRes)
+                                        if err != nil {
+                                                fmt.Println(err)
+                                                break
+                                        }
+                                        fmt.Println("Lock (write) acquired! Test put for 10 seconds!")
+
+                                        // Timeout
+                                        time.Sleep(10 * time.Second)
+
+                                        // Release write
+                                        lockReq = SdfsLockRequest{NodeId: int(sdfs.Member.memberID), RemoteFname: inputFields[2], Type: SdfsLock}
+                                        err = client.Call("SdfsNode.ReleaseLock", lockReq, &lockRes)
+                                        if err != nil {
+                                                fmt.Println(err)
+                                        }
+                                        fmt.Println("Lock write released!")
+                                }
+                        }
 		default:
 			fmt.Println("invalid command")
+
 		}
 	}
 
