@@ -87,18 +87,18 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 }
 
 // check if ip is in iplist
-func checkMember(ip net.IP, iplist []net.IP) bool {
-	for _, val := range iplist {
+func checkMember(ip net.IP, iplist []net.IP) int {
+	for i, val := range iplist {
 		if ip.Equal(val) {
-			return true
+			return i
 		}
 	}
-	return false
+	return -1
 }
 
 func findNewReplicaIP(membershipList map[uint8]membershipListEntry, filename string, failedIP net.IP, replicas []net.IP) net.IP {
 	for _, listEntry := range membershipList {
-		if !listEntry.IPaddr.Equal(failedIP) && listEntry.Health == Alive && !checkMember(listEntry.IPaddr, replicas) {
+		if !listEntry.IPaddr.Equal(failedIP) && listEntry.Health == Alive && checkMember(listEntry.IPaddr, replicas) != -1 {
 			return listEntry.IPaddr
 		}
 	}
@@ -131,7 +131,10 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 
 	// iterate over fileMap and find files that this member stores
 	for filename, ipList := range node.Master.fileMap {
-		if checkMember(failedIP, ipList) {
+		if failedIndex := checkMember(failedIP, ipList); failedIndex != -1 {
+			//remove failedIP from fileMap
+			node.Master.fileMap[filename] = append(ipList[:failedIndex], ipList[failedIndex+1:]...)
+
 			// find an alive IP that doesn't already contain file
 			newIP := findNewReplicaIP(node.Member.membershipList, filename, failedIP, ipList)
 			if newIP == nil {
@@ -142,11 +145,13 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 			for _, aliveIP := range ipList {
 				if !aliveIP.Equal(failedIP) {
 					chosenIP = aliveIP
+					break
 				}
 			}
 			// request chosenIP to upload file to newIP and add IP to fileMap
 			sendUploadCommand(chosenIP, newIP, filename)
 		}
+
 	}
 	return nil
 }
