@@ -178,7 +178,7 @@ func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) err
 }
 
 func (node *SdfsNode) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
-	return os.Remove(dirName + "/" + req.RemoteFName)
+	return os.Remove("./" + dirName + "/" + req.RemoteFName)
 }
 
 func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
