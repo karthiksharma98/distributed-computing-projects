@@ -238,14 +238,10 @@ func main() {
 					Warn.Println("Client not initialized.")
 					continue
 				}
-				// Acquire lock from lock service
-				lockReq := SdfsLockRequest{RemoteFname: inputFields[2], Type: SdfsLock}
-				var lockRes SdfsLockResponse
-				err := client.Call("SdfsNode.AcquireLock", lockReq, &lockRes)
-
 				req := SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], Type: PutReq}
 				var res SdfsResponse
-				err = client.Call("SdfsNode.HandlePutRequest", req, &res)
+
+				err := client.Call("SdfsNode.HandlePutRequest", req, &res)
 
 				if err != nil {
 					fmt.Println("put failed", err)
@@ -263,9 +259,6 @@ func main() {
 						client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
 					}
 				}
-				// Release lock from lock service
-				lockReq = SdfsLockRequest{RemoteFname: inputFields[2], Type: SdfsLock}
-				err = client.Call("SdfsNode.ReleaseLock", lockReq, &lockRes)
 			}
 
 		case "get":
@@ -274,15 +267,10 @@ func main() {
 					Warn.Println("Client not initialized.")
 					continue
 				}
-				// Acquire reader lock from lock service
-				lockReq := SdfsLockRequest{RemoteFname: inputFields[2], Type: SdfsRLock}
-				var lockRes SdfsLockResponse
-				err := client.Call("SdfsNode.AcquireLock", lockReq, &lockRes)
-
 				req := SdfsRequest{LocalFName: inputFields[2], RemoteFName: inputFields[1], Type: GetReq}
 				var res SdfsResponse
 
-				err = client.Call("SdfsNode.HandleGetRequest", req, &res)
+				err := client.Call("SdfsNode.HandleGetRequest", req, &res)
 
 				if err != nil {
 					fmt.Println(err)
@@ -292,12 +280,13 @@ func main() {
 
 						if err != nil {
 							fmt.Println("error in download process.")
+						} else {
+							// successful download
+							break
 						}
 					}
 				}
-				// Release reader lock from lock service
-				lockReq = SdfsLockRequest{RemoteFname: inputFields[2], Type: SdfsRLock}
-				err = client.Call("SdfsNode.ReleaseLock", lockReq, &lockRes)
+
 			}
 
 		case "delete":

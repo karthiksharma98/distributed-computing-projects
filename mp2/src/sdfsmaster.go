@@ -27,6 +27,7 @@ type SdfsNode struct {
 type SdfsMaster struct {
 	fileMap  map[string][]net.IP
 	fileLock map[string]*sync.RWMutex
+        fileCond map[string]*sync.Cond
 }
 
 var (
@@ -56,6 +57,7 @@ func NewSdfsMaster() *SdfsMaster {
 	master := &SdfsMaster{
 		make(map[string][]net.IP),
 		make(map[string]*sync.RWMutex),
+		make(map[string]*sync.Cond),
 	}
 	return master
 }

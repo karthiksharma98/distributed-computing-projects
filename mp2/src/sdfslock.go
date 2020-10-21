@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"sync"
-	"time"
 )
 
 type LockType int
@@ -14,6 +13,7 @@ const (
 )
 
 type SdfsLockRequest struct {
+        NodeId      int
 	RemoteFname string
 	Type        LockType
 }
@@ -44,15 +44,34 @@ func (node *SdfsNode) AcquireLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 		node.Master.fileLock[req.RemoteFname].Lock()
 	}
 
+        // Make channel to check if locks been released
+        releaseCh := make(chan bool, 1)
+
 	// Lock expiry deadline timer to avoid deadlock
 	go func() {
-		time.Sleep(60 * time.Second)
-		if req.Type == SdfsRLock {
-			node.Master.fileLock[req.RemoteFname].RUnlock()
-		} else if req.Type == SdfsLock {
-			node.Master.fileLock[req.RemoteFname].Unlock()
-		}
+                // Use conditional variable, wakes up upon receipt of unlock
+                select {
+                case <-releaseCh:
+                        Info.Println("Lock released, stop monitor")
+                        return
+                case id := <-failCh:
+                        if int(id) == req.NodeId {
+                                Info.Println("Detected lock owner failure, unlocking: ", id)
+                                if req.Type == SdfsRLock {
+                                        node.Master.fileLock[req.RemoteFname].RUnlock()
+                                } else if req.Type == SdfsLock {
+                                        node.Master.fileLock[req.RemoteFname].Unlock()
+                                }
+                        }
+                }
 	}()
+
+        // Checks if lock released
+        go func() {
+                node.Master.fileCond[req.RemoteFname].Wait()
+                releaseCh <- true
+                return
+        }()
 
 	var resp SdfsLockResponse
 	resp.RemoteFname = req.RemoteFname
@@ -80,6 +99,9 @@ func (node *SdfsNode) ReleaseLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 	if req.Type == SdfsLock {
 		node.Master.fileLock[req.RemoteFname].Unlock()
 	}
+
+        node.Master.fileCond[req.RemoteFname].Signal()
+
 	var resp SdfsLockResponse
 	resp.RemoteFname = req.RemoteFname
 	*reply = resp
