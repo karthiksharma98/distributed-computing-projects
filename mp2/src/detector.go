@@ -38,7 +38,7 @@ const (
 var (
 	joinAck      = make(chan bool)
 	disableHeart = make(chan bool)
-	failCh       = make(chan uint8)
+	failCh       = make(chan uint8, 10)
 	ticker       *time.Ticker
 	enabledHeart = false
 	isGossip     = true

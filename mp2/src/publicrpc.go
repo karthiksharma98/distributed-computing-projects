@@ -87,25 +87,6 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 	return node.GetRandomNodes(req, reply)
 }
 
-// check if ip is in iplist
-func checkMember(ip net.IP, iplist []net.IP) int {
-	for i, val := range iplist {
-		if ip.Equal(val) {
-			return i
-		}
-	}
-	return -1
-}
-
-func findNewReplicaIP(membershipList map[uint8]membershipListEntry, filename string, failedIP net.IP, replicas []net.IP) net.IP {
-	for _, listEntry := range membershipList {
-		if !listEntry.IPaddr.Equal(failedIP) && listEntry.Health == Alive && checkMember(listEntry.IPaddr, replicas) == -1 {
-			return listEntry.IPaddr
-		}
-	}
-	return nil
-}
-
 func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) error {
 	if req.Type != UploadReq {
 		return errors.New("Error: Invalid request type for Upload Request")
@@ -115,6 +96,7 @@ func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) e
 
 	if err != nil {
 		fmt.Println("error in upload process.")
+		return err
 	}
 
 	mapReq := SdfsRequest{LocalFName: "", RemoteFName: req.RemoteFName, IPAddr: req.IPAddr, Type: AddReq}
@@ -122,38 +104,6 @@ func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) e
 	client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
 	*reply = mapRes
 
-	return nil
-}
-
-func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
-	//TODO: sleep for a bit to ensure all failures quiesce before doing this?
-
-	failedIP := node.Member.membershipList[memberID].IPaddr
-
-	// iterate over fileMap and find files that this member stores
-	for filename, ipList := range node.Master.fileMap {
-		if failedIndex := checkMember(failedIP, ipList); failedIndex != -1 {
-			//remove failedIP from fileMap
-			node.Master.fileMap[filename] = append(ipList[:failedIndex], ipList[failedIndex+1:]...)
-
-			// find an alive IP that doesn't already contain file
-			newIP := findNewReplicaIP(node.Member.membershipList, filename, failedIP, ipList)
-			if newIP == nil {
-				return errors.New("No available IP to upload to for " + filename)
-			}
-			// choose alive IP containing the file that will upload to newIP
-			var chosenIP net.IP
-			for _, aliveIP := range ipList {
-				if !aliveIP.Equal(failedIP) {
-					chosenIP = aliveIP
-					break
-				}
-			}
-			// request chosenIP to upload file to newIP and add IP to fileMap
-			sendUploadCommand(chosenIP, newIP, filename)
-		}
-
-	}
 	return nil
 }
 
