@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"net/rpc"
 	"os"
 	"time"
 )
@@ -70,7 +71,10 @@ func (node *SdfsNode) MemberListen() {
 				node.Election()
 			}
 			if node.isMaster {
-				node.handleReplicationOnFailure(id)
+				err := node.handleReplicationOnFailure(id)
+				if err != nil {
+					fmt.Println(err)
+				}
 			}
 			continue
 		}
@@ -272,4 +276,21 @@ func (node *SdfsNode) pickRandomNodes(minReplicas int) []net.IP {
 	// shuffle and choose first few
 	rand.Shuffle(len(iplist), func(i, j int) { iplist[i], iplist[j] = iplist[j], iplist[i] })
 	return iplist[:minReplicas]
+}
+
+func sendUploadCommand(aliveIP net.IP, newIP net.IP, filename string) error {
+	client, err := rpc.DialHTTP("tcp", aliveIP.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
+	if err != nil {
+		fmt.Println("Delete connection error: ", err)
+	}
+
+	var req SdfsRequest
+	var res SdfsResponse
+
+	req.LocalFName = filename
+	req.RemoteFName = filename
+	req.IPAddr = newIP
+	req.Type = UploadReq
+
+	return client.Call("SdfsNode.UploadAndModifyMap", req, &res)
 }

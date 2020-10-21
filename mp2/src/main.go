@@ -285,9 +285,11 @@ func main() {
 							}
 						}
 
-						mapReq := SdfsRequest{LocalFName: "", RemoteFName: inputFields[2], IPAddr: ipAddr, Type: AddReq}
-						var mapRes SdfsResponse
-						client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
+						// mapReq := SdfsRequest{LocalFName: "", RemoteFName: inputFields[2], IPAddr: ipAddr, Type: AddReq}
+						// var mapRes SdfsResponse
+						// client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
+						var uploadRes SdfsResponse
+						sdfs.UploadAndModifyMap(SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], IPAddr: ipAddr, Type: UploadReq}, &uploadRes)
 					}
 
 					// update alive nodes in case there's not enough anymore
@@ -361,7 +363,7 @@ func main() {
 				if err != nil {
 					fmt.Println("Failed ls. ", err)
 				} else {
-					fmt.Print(fileName, " =>   ")
+					fmt.Print(inputFields[1], " =>   ")
 					for _, ip := range res.IPList {
 						fmt.Print(ip.String(), ", ")
 					}
