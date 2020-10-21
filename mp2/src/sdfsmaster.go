@@ -69,7 +69,9 @@ func (node *SdfsNode) MemberListen() {
 			if id == node.MasterId {
 				node.Election()
 			}
-			node.handleReplicationOnFailure(id)
+			if node.isMaster {
+				node.handleReplicationOnFailure(id)
+			}
 			continue
 		}
 	}
