@@ -284,6 +284,10 @@ func main() {
 								}
 							}
 						}
+
+						mapReq := SdfsRequest{LocalFName: "", RemoteFName: inputFields[2], IPAddr: ipAddr, Type: AddReq}
+						var mapRes SdfsResponse
+						client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
 					}
 
 					// update alive nodes in case there's not enough anymore

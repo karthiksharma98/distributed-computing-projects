@@ -11,6 +11,7 @@ import (
 type SdfsRequest struct {
 	LocalFName  string
 	RemoteFName string
+	IPAddr      net.IP
 	Type        ReqType
 }
 
@@ -31,6 +32,7 @@ const (
 	DelReq
 	LsReq
 	AddReq
+	UploadReq
 )
 
 func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) error {
@@ -89,6 +91,88 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 	return node.GetRandomNodes(req, reply)
 }
 
+// check if ip is in iplist
+func checkMember(ip net.IP, iplist []net.IP) bool {
+	for _, val := range iplist {
+		if ip.Equal(val) {
+			return true
+		}
+	}
+	return false
+}
+
+func findNewReplicaIP(membershipList map[uint8]membershipListEntry, filename string, failedIP net.IP, replicas []net.IP) net.IP {
+	for _, listEntry := range membershipList {
+		if !listEntry.IPaddr.Equal(failedIP) && listEntry.Health == Alive && !checkMember(listEntry.IPaddr, replicas) {
+			return listEntry.IPaddr
+		}
+	}
+	return nil
+}
+
+func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) error {
+	if req.Type != UploadReq {
+		return errors.New("Error: Invalid request type for Upload Request")
+	}
+
+	err := Upload(req.IPAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.RemoteFName)
+
+	if err != nil {
+		fmt.Println("error in upload process.")
+	}
+
+	mapReq := SdfsRequest{LocalFName: "", RemoteFName: req.RemoteFName, IPAddr: req.IPAddr, Type: AddReq}
+	var mapRes SdfsResponse
+	client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
+	*reply = mapRes
+
+	return nil
+}
+
+func sendUploadCommand(aliveIP net.IP, newIP net.IP, filename string) error {
+	client, err := rpc.DialHTTP("tcp", aliveIP.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
+	if err != nil {
+		fmt.Println("Delete connection error: ", err)
+	}
+
+	var req SdfsRequest
+	var res SdfsResponse
+
+	req.LocalFName = ""
+	req.RemoteFName = filename
+	req.IPAddr = newIP
+	req.Type = UploadReq
+
+	return client.Call("SdfsNode.UploadAndModifyMap", req, &res)
+}
+
+func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) {
+	//TODO: sleep for a bit to ensure all failures quiesce before doing this?
+
+	failedIP := node.Member.membershipList[memberID].IPaddr
+
+	// iterate over fileMap and find files that this member stores
+	for filename, ipList := range node.Master.fileMap {
+		if checkMember(failedIP, ipList) {
+			// find an alive IP that doesn't already contain file
+			newIP := findNewReplicaIP(node.Member.membershipList, filename, failedIP, ipList)
+			if newIP == nil {
+				// TODO: throw error
+			} else {
+				// choose alive IP containing the file that will upload to newIP
+				var chosenIP net.IP
+				for _, aliveIP := range ipList {
+					if !aliveIP.Equal(failedIP) {
+						chosenIP = aliveIP
+					}
+				}
+				// request chosenIP to upload file to newIP and add IP to fileMap
+				sendUploadCommand(chosenIP, newIP, filename)
+			}
+		}
+	}
+}
+
 func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if node.isMaster == false && node.Master == nil {
 		return errors.New("Error: Master not initialized")
@@ -140,8 +224,7 @@ func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) 
 		return errors.New("Error: Master not initialized")
 	}
 
-	// req.LocalFName here is ip address
-	ipToModify := net.ParseIP(req.LocalFName)
+	ipToModify := req.IPAddr
 
 	if req.Type == AddReq {
 		ogList := node.Master.fileMap[req.RemoteFName]
