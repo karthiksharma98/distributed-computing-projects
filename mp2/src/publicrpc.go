@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/rpc"
+	"strconv"
 )
 
 type SdfsRequest struct {
@@ -33,6 +34,26 @@ const (
 	AddReq
 )
 
+func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) error {
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
+	}
+
+	// convert string -> ip.net
+	// req.LocalFName here is ip address, need the 27 for the method call to work
+	stringIp := req.LocalFName + "/27"
+	ipToModify, _, _ := net.ParseCIDR(stringIp)
+
+	if req.Type == AddReq {
+		ogList := node.Master.fileMap[req.RemoteFName]
+		ogList = append(ogList, ipToModify)
+		node.Master.fileMap[req.RemoteFName] = ogList
+
+	}
+
+	return nil
+}
+
 func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if node.isMaster == false && node.Master == nil {
 		return errors.New("Error: Master not initialized")
@@ -42,10 +63,16 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 		return errors.New("Error: Invalid request type for Put Request")
 	}
 
-	ipList := node.pickRandomNodes(int(Configuration.Settings.replicationFactor))
-
-	if ipList == nil {
-		return errors.New("Error: Could not find 3 alive nodes")
+	var ipList []net.IP
+	if val, ok := node.Master.fileMap[req.RemoteFName]; ok && len(val) != 0 {
+		// if file exists already, return those IPs
+		ipList = val
+	} else {
+		repFactor := int(Configuration.Settings.replicationFactor)
+		ipList = node.pickRandomNodes(repFactor)
+		if ipList == nil {
+			return errors.New("Error: Could not find " + strconv.Itoa(repFactor) + " alive nodes")
+		}
 	}
 
 	var resp SdfsResponse
@@ -89,6 +116,7 @@ func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
 	client, err := rpc.DialHTTP("tcp", ip.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
 	if err != nil {
 		fmt.Println("Delete connection error: ", err)
+		return err
 	}
 
 	var req SdfsRequest
@@ -98,26 +126,6 @@ func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
 	req.Type = DelReq
 
 	return client.Call("Member.DeleteFile", req, &res)
-}
-
-func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) error {
-	if node.isMaster == false && node.Master == nil {
-		return errors.New("Error: Master not initialized")
-	}
-
-	// convert string -> ip.net
-	// req.LocalFName here is ip address, need the 27 for the method call to work
-	stringIp := req.LocalFName + "/27"
-	ipToModify, _, _ := net.ParseCIDR(stringIp)
-
-	if req.Type == AddReq {
-		ogList := node.Master.fileMap[req.RemoteFName]
-		ogList = append(ogList, ipToModify)
-		node.Master.fileMap[req.RemoteFName] = ogList
-
-	}
-
-	return nil
 }
 
 func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) error {

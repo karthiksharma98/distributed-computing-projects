@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 var (
@@ -53,7 +54,12 @@ func InitializeServer(port string) {
 
 func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.UploadRequest) (*service.UploadReply, error) {
 	filePath := filepath.Join(dirName, filepath.Base(uploadReq.SdfsFileName))
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
+	fileFlags := os.O_CREATE | os.O_WRONLY
+	if uploadReq.IsMultipleChunks && !uploadReq.IsFirstChunk {
+		fileFlags = fileFlags | os.O_APPEND
+	}
+
+	file, err := os.OpenFile(filePath, fileFlags, 0777)
 	if err != nil {
 		return &service.UploadReply{Status: false}, err
 	}
@@ -94,15 +100,18 @@ func GetFileContents(localFileName string) []byte {
 	return content
 }
 
-func DialAndSend(conn *grpc.ClientConn, dest string, fileChunk []byte, sdfsFileName string) error {
+func DialAndSend(conn *grpc.ClientConn, dest string, fileChunk []byte,
+	sdfsFileName string, isMultChunks bool, isFirstChunk bool) error {
+
 	client := service.NewFileTransferClient(conn)
 	uploadReply, err2 := client.Upload(context.Background(), &service.UploadRequest{
-		FileContents: fileChunk,
-		SdfsFileName: sdfsFileName})
+		FileContents:     fileChunk,
+		SdfsFileName:     sdfsFileName,
+		IsMultipleChunks: isMultChunks,
+		IsFirstChunk:     isFirstChunk})
 	if err2 != nil {
-		errorMsg := "Error: Unable to upload file."
-		Warn.Println(errorMsg, err2)
-		return errors.New(errorMsg)
+		Warn.Println(err2)
+		return err2
 	}
 
 	if uploadReply.GetStatus() == true {
@@ -125,7 +134,13 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 
 	fileContents := GetFileContents(localFileName)
 	fileSize := len(fileContents)
-	chunkSize := 500000
+	chunkSize := 350000
+	isMultChunks := false
+	isFirstChunk := true
+	if fileSize >= chunkSize {
+		isMultChunks = true
+	}
+
 	for i := 0; i < fileSize; i += chunkSize {
 		lastIdx := i + chunkSize
 		if lastIdx > fileSize {
@@ -133,9 +148,18 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 		}
 
 		fileChunk := fileContents[i:lastIdx]
-		err := DialAndSend(conn, dest, fileChunk, sdfsFileName)
+		err := DialAndSend(conn, dest, fileChunk, sdfsFileName, isMultChunks, isFirstChunk)
 		if err != nil {
 			return err
+		}
+
+		if isFirstChunk {
+			isFirstChunk = false
+		}
+
+		// sleep so that other threads can wake up
+		if isMultChunks {
+			time.Sleep(4 * time.Millisecond)
 		}
 	}
 

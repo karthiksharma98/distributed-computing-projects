@@ -272,6 +272,9 @@ func main() {
 							}
 						}
 					}
+
+					// update alive nodes in case there's not enough anymore
+					numAlive = process.GetNumAlive()
 				}
 				sessionId = sdfs.RpcUnlock(sessionId, inputFields[2], SdfsLock)
 
