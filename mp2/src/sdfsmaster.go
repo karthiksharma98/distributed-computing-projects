@@ -355,7 +355,6 @@ func findNewReplicaIP(membershipList map[uint8]membershipListEntry, filename str
 
 func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 	//TODO: sleep for a bit to ensure all failures quiesce before doing this?
-	//TODO: if file already has three alive replicas then don't do anything
 
 	failedIP := node.Member.membershipList[memberID].IPaddr
 	failedIPList := []net.IP{failedIP}
@@ -365,6 +364,11 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 		if failedIndex := checkMember(failedIP, ipList); failedIndex != -1 {
 			//remove failedIP from fileMap
 			node.Master.fileMap[filename] = append(ipList[:failedIndex], ipList[failedIndex+1:]...)
+
+			if len(node.Master.fileMap[fileName]) == Configuration.Settings.replicationFactor {
+				// if file already has three alive replicas then don't do anything
+				continue
+			}
 
 			// find an alive IP that doesn't already contain file
 			newIP := findNewReplicaIP(node.Member.membershipList, filename, failedIPList, ipList)
