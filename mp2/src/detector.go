@@ -145,8 +145,11 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 	}
 
 	for id, rcvdEntry := range rcvdMemList {
-		// Dont let anybody else tell u ur a failure
+		// If somebody thinks you are a failure then quit :(
 		if id == mem.memberID {
+			if rcvdEntry.Health == Failed {
+				mem.joinRequest()
+			}
 			continue
 		}
 
@@ -161,7 +164,7 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 		}
 
 		// Only set if update is neccessary whatsoever or if new entry to add
-		if doUpdate && rcvdEntry.Health != Failed {
+		if doUpdate || rcvdEntry.Health == Failed {
 			mem.membershipList[id] = membershipListEntry{
 				rcvdEntry.MemberID,
 				rcvdEntry.IPaddr,
@@ -300,6 +303,9 @@ func (mem *Member) joinRequest() {
 func (mem *Member) joinResponse(membershipListBytes []byte) {
 	// First byte received corresponds to assigned memberID
 	mem.memberID = uint8(membershipListBytes[0])
+
+	// clear existing membership list
+	mem.membershipList = make(map[uint8]membershipListEntry)
 
 	// Decode the rest of the buffer to the membership list
 	b := bytes.NewBuffer(membershipListBytes[1:])
