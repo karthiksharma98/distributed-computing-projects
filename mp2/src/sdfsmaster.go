@@ -399,6 +399,7 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 						}
 					} else if err.ip.Equal(chosenIP) {
 						// can't connect to existing replica to upload, try another
+						failedIPList = append(failedIPList, chosenIP)
 						chosenIP := chooseIP(ipList, failedIPList)
 						if chosenIP == nil {
 							return errors.New("All replicas dead for " + filename)
