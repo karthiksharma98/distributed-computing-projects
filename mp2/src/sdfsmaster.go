@@ -386,7 +386,7 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 
 		errorLoop:
 			for {
-				fmt.Println(newIP, chosenIP)
+				fmt.Println("new, chosen= ", newIP, chosenIP)
 				switch err := err.(type) {
 				case nil:
 					break errorLoop
@@ -395,7 +395,7 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 						// can't connect to newIP and upload there, try another
 						failedIPList = append(failedIPList, newIP)
 						fmt.Println("failed IPS:", failedIPList)
-						newIP := findNewReplicaIP(node.Member.membershipList, filename, failedIPList, ipList)
+						newIP = findNewReplicaIP(node.Member.membershipList, filename, failedIPList, ipList)
 						if newIP == nil {
 							return errors.New("No available IP to upload to for " + filename)
 						}
@@ -403,7 +403,7 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 						// can't connect to existing replica to upload, try another
 						failedIPList = append(failedIPList, chosenIP)
 						fmt.Println("failed IPS:", failedIPList)
-						chosenIP := chooseIP(ipList, failedIPList)
+						chosenIP = chooseIP(ipList, failedIPList)
 						if chosenIP == nil {
 							return errors.New("All replicas dead for " + filename)
 						}
