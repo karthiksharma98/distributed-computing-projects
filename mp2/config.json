@@ -13,6 +13,6 @@
         "fail_timeout": 5,
         "cleanup_timeout": 24,
         "num_processes_to_gossip": 2,
-        "replication_factor": 3
+        "replication_factor": 4
     }
 }
