@@ -300,7 +300,7 @@ func (node *SdfsNode) pickRandomNodes(minReplicas int) []net.IP {
 func sendUploadCommand(aliveIP net.IP, newIP net.IP, filename string) error {
 	client, err := rpc.DialHTTP("tcp", aliveIP.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
 	if err != nil {
-		fmt.Println("sendUploadCommand error, aliveIP dead: ", aliveIP.String(), err)
+		// fmt.Println("sendUploadCommand error, aliveIP dead: ", aliveIP.String(), err)
 		return connectionError{ip: aliveIP}
 	}
 
@@ -314,7 +314,7 @@ func sendUploadCommand(aliveIP net.IP, newIP net.IP, filename string) error {
 
 	err = client.Call("SdfsNode.UploadAndModifyMap", req, &res)
 	if err != nil {
-		fmt.Println("sendUploadCommand error, chosenIP dead: ", newIP.String(), err)
+		// fmt.Println("sendUploadCommand error, chosenIP dead: ", newIP.String(), err)
 		return connectionError{ip: newIP}
 	}
 
@@ -358,6 +358,8 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 
 	failedIP := node.Member.membershipList[memberID].IPaddr
 	failedIPList := []net.IP{failedIP}
+
+	fmt.Println("I am handling failure")
 
 	// iterate over fileMap and find files that this member stores
 	for filename, ipList := range node.Master.fileMap {
