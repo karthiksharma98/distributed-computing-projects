@@ -24,9 +24,9 @@ type SdfsNode struct {
 
 type SdfsMaster struct {
 	fileMap map[string][]net.IP
+        lockMap map[string]*SdfsMutex
+        sessMap map[int32](chan bool)
 }
-
-// stores file metadata
 
 var (
 	electionFlag = false
@@ -54,6 +54,8 @@ func NewSdfsNode(mem *Member, setMaster bool) *SdfsNode {
 func NewSdfsMaster() *SdfsMaster {
 	master := &SdfsMaster{
 		make(map[string][]net.IP),
+                make(map[string]*SdfsMutex),
+                make(map[int32](chan bool)),
 	}
 	return master
 }
