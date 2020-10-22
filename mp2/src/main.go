@@ -52,9 +52,8 @@ func main() {
 	InitSdfsDirectory()
 
 	rpcInitialized := false
-
+	printOptions()
 	for {
-		printOptions()
 		// wait for input to query operations on node
 		consoleReader := bufio.NewReader(os.Stdin)
 		fmt.Print("> ")
@@ -430,6 +429,11 @@ func main() {
 		default:
 			fmt.Println("invalid command")
 
+		case "help":
+			printOptions()
+		default:
+			fmt.Println("invalid command")
+			printOptions()
 		}
 	}
 
