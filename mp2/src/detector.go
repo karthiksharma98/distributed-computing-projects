@@ -346,7 +346,7 @@ func (mem *Member) acceptMember(address net.IP) {
 
 func (mem *Member) GetNumAlive() int {
 	numAlive := 0
-	for _,entry := range mem.membershipList {
+	for _, entry := range mem.membershipList {
 		if entry.Health == Alive {
 			numAlive += 1
 		}

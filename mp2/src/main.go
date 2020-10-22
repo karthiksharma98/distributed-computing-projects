@@ -234,10 +234,11 @@ func main() {
 
 		case "put":
 			if len(inputFields) >= 3 && process != nil {
-				if client == nil {
+				if client == nil || sdfs == nil {
 					Warn.Println("Client not initialized.")
 					continue
 				}
+				sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[2], SdfsLock)
 				req := SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], Type: PutReq}
 
 				numAlive := process.GetNumAlive()
@@ -272,16 +273,18 @@ func main() {
 						}
 					}
 				}
+				sessionId = sdfs.RpcUnlock(sessionId, inputFields[2], SdfsLock)
 
 				fmt.Println("Finished put.")
 			}
 
 		case "get":
 			if len(inputFields) >= 3 {
-				if client == nil {
+				if client == nil || sdfs == nil {
 					Warn.Println("Client not initialized.")
 					continue
 				}
+				sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[1], SdfsRLock)
 				req := SdfsRequest{LocalFName: inputFields[2], RemoteFName: inputFields[1], Type: GetReq}
 				var res SdfsResponse
 
@@ -301,15 +304,17 @@ func main() {
 						}
 					}
 				}
+				sessionId = sdfs.RpcUnlock(sessionId, inputFields[1], SdfsRLock)
 
 			}
 
 		case "delete":
 			if len(inputFields) >= 2 {
-				if client == nil {
+				if client == nil || sdfs == nil {
 					Warn.Println("Client not initialized.")
 					continue
 				}
+				sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[1], SdfsLock)
 				req := SdfsRequest{LocalFName: "", RemoteFName: inputFields[1], Type: DelReq}
 				var res SdfsResponse
 
@@ -320,6 +325,7 @@ func main() {
 				} else {
 					fmt.Println("Deleted successfully:", req.RemoteFName)
 				}
+				sessionId = sdfs.RpcLock(sessionId, inputFields[1], SdfsLock)
 			}
 
 		case "ls":
@@ -369,56 +375,35 @@ func main() {
 			if sdfs != nil {
 				fmt.Println(sdfs.MasterId)
 			}
-                // Debug lock
-                case "lock":
-                        if sdfs == nil {
-                                return
-                        }
+		// Debug lock
+		case "lock":
+			if sdfs == nil {
+				return
+			}
 			if len(inputFields) == 3 {
-                                if inputFields[1] == "get" {
-                                        // Acquire read
-                                        lockReq := SdfsLockRequest{SessionId: int32(sdfs.Member.memberID), RemoteFname: inputFields[2], Type: SdfsRLock}
-                                        var lockRes SdfsLockResponse
-                                        err := client.Call("SdfsNode.AcquireLock", lockReq, &lockRes)
-                                        if err != nil {
-                                                fmt.Println(err)
-                                                break
-                                        }
-                                        fmt.Println("Lock (get) acquired! Test get for 10 seconds!")
+				if inputFields[1] == "get" {
+					// Acquire read
+					sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[2], SdfsRLock)
+					fmt.Println("Lock (get) acquired! Test get for 10 seconds!")
 
-                                        // Timeout
-                                        time.Sleep(10 * time.Second)
+					// Timeout
+					time.Sleep(10 * time.Second)
 
-                                        // Release read
-                                        lockReq = SdfsLockRequest{SessionId: lockRes.SessionId, RemoteFname: inputFields[2], Type: SdfsRLock}
-                                        err = client.Call("SdfsNode.ReleaseLock", lockReq, &lockRes)
-                                        if err != nil {
-                                                fmt.Println(err)
-                                        }
-                                        fmt.Println("Lock read released!")
-                                } else if inputFields[1] == "put" {
-                                        // Acquire write
-                                        lockReq := SdfsLockRequest{SessionId: int32(sdfs.Member.memberID), RemoteFname: inputFields[2], Type: SdfsLock}
-                                        var lockRes SdfsLockResponse
-                                        err := client.Call("SdfsNode.AcquireLock", lockReq, &lockRes)
-                                        if err != nil {
-                                                fmt.Println(err)
-                                                break
-                                        }
-                                        fmt.Println("Lock (write) acquired! Test put for 10 seconds!")
+					// Release read
+					sessionId = sdfs.RpcUnlock(sessionId, inputFields[2], SdfsRLock)
+					fmt.Println("Lock read released!")
+				} else if inputFields[1] == "put" {
+					// Acquire write
+					sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[2], SdfsLock)
+					fmt.Println("Lock (write) acquired! Test put for 10 seconds!")
 
-                                        // Timeout
-                                        time.Sleep(10 * time.Second)
+					// Timeout
+					time.Sleep(10 * time.Second)
 
-                                        // Release write
-                                        lockReq = SdfsLockRequest{SessionId: lockRes.SessionId, RemoteFname: inputFields[2], Type: SdfsLock}
-                                        err = client.Call("SdfsNode.ReleaseLock", lockReq, &lockRes)
-                                        if err != nil {
-                                                fmt.Println(err)
-                                        }
-                                        fmt.Println("Lock write released!")
-                                }
-                        }
+					// Release write
+					sessionId = sdfs.RpcUnlock(sessionId, inputFields[2], SdfsLock)
+				}
+			}
 		default:
 			fmt.Println("invalid command")
 
