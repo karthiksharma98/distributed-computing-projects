@@ -146,7 +146,7 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 
 	for id, rcvdEntry := range rcvdMemList {
 		// If somebody thinks you are a failure then quit :(
-		if id == mem.memberID {
+		if id == mem.memberID && !rcvdEntry.IPaddr.Equal(net.ParseIP(Configuration.Service.introducerIP)) {
 			if rcvdEntry.Health == Failed {
 				mem.joinRequest()
 			}
