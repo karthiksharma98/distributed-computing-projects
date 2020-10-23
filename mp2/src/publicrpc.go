@@ -72,6 +72,7 @@ func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) e
 		return errors.New("Error: Invalid request type for Upload Request")
 	}
 
+	fmt.Println("Uploading ", req.RemoteFName, " to ", req.IPAddr)
 	err := Upload(req.IPAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName)
 
 	if err != nil {

@@ -364,7 +364,7 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 	// iterate over fileMap and find files that this member stores
 	for filename, ipList := range node.Master.fileMap {
 		if failedIndex := checkMember(failedIP, ipList); failedIndex != -1 {
-			fmt.Println("Handling failure of ", fileName)
+			fmt.Println("Handling failure of ", filename)
 			//remove failedIP from fileMap
 			node.Master.fileMap[filename] = append(ipList[:failedIndex], ipList[failedIndex+1:]...)
 
