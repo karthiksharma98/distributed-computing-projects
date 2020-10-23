@@ -45,6 +45,20 @@ func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error
 	return nil
 }
 
+func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error {
+	repFactor := int(Configuration.Settings.replicationFactor)
+	ipList := node.pickRandomNodes(repFactor)
+	if ipList == nil {
+		return errors.New("Error: Could not find " + strconv.Itoa(repFactor) + " alive nodes")
+	}
+
+	var resp SdfsResponse
+	resp.IPList = ipList
+	*reply = resp
+
+	return nil
+}
+
 func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if node.isMaster == false && node.Master == nil {
 		return errors.New("Error: Master not initialized")
@@ -65,26 +79,6 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 	}
 
 	return node.GetRandomNodes(req, reply)
-}
-
-func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) error {
-	if req.Type != UploadReq {
-		return errors.New("Error: Invalid request type for Upload Request")
-	}
-
-	err := Upload(req.IPAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName)
-
-	if err != nil {
-		fmt.Println("error in upload process.")
-		return err
-	}
-
-	mapReq := SdfsRequest{LocalFName: "", RemoteFName: req.RemoteFName, IPAddr: req.IPAddr, Type: AddReq}
-	var mapRes SdfsResponse
-	client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
-	*reply = mapRes
-
-	return nil
 }
 
 func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error {

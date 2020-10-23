@@ -306,7 +306,7 @@ func main() {
 						err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.LocalFName)
 
 						if err != nil {
-							fmt.Println("Error downloading " + req.RemoteFName + " from " + ipAddr.String())
+							fmt.Println("error in download process.", err)
 						} else {
 							// successful download
 							break
@@ -314,7 +314,7 @@ func main() {
 					}
 				}
 				sessionId = sdfs.RpcUnlock(sessionId, inputFields[1], SdfsRLock)
-
+				fmt.Println("Finished get.")
 			}
 
 		case "delete":
@@ -374,11 +374,14 @@ func main() {
 			}
 
 		case "download":
-			if len(inputFields) == 3 {
-				Download(fmt.Sprint(Configuration.Service.introducerIP),
+			if len(inputFields) == 4 {
+				err := Download(fmt.Sprint(inputFields[1]),
 					fmt.Sprint(Configuration.Service.port),
-					inputFields[1],
-					inputFields[2])
+					inputFields[2],
+					inputFields[3])
+				if err != nil {
+					fmt.Println(err)
+				}
 			}
 
 		case "master":

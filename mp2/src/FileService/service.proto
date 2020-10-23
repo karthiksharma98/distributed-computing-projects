@@ -24,10 +24,13 @@ message UploadReply {
 }
 
 message DownloadRequest {
-	string sdfsFileName = 1;
+    string sdfsFileName = 1;
+    int32 chunkNum = 2;
 }
 
 message DownloadReply {
 	bool doesFileExist = 1;
 	bytes fileContents = 2;
+    bool isMultipleChunks = 3;
+    bool isLastChunk = 4;
 }
