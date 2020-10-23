@@ -164,7 +164,7 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 		}
 
 		// Only set if update is neccessary whatsoever or if new entry to add
-		if doUpdate || rcvdEntry.Health == Failed {
+		if doUpdate || (rcvdEntry.Health == Failed && mem.membershipList[id].Health != Failed) {
 			mem.membershipList[id] = membershipListEntry{
 				rcvdEntry.MemberID,
 				rcvdEntry.IPaddr,
