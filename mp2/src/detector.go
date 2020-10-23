@@ -145,10 +145,18 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 	}
 
 	for id, rcvdEntry := range rcvdMemList {
-		// If somebody thinks you are a failure then quit :(
+		// If somebody thinks you are a failure then quit and rejoin :(
 		if id == mem.memberID {
 			if rcvdEntry.Health == Failed && !rcvdEntry.IPaddr.Equal(net.ParseIP(Configuration.Service.introducerIP)) {
 				mem.joinRequest()
+			} else if rcvdEntry.Health == Failed && rcvdEntry.IPaddr.Equal(net.ParseIP(Configuration.Service.introducerIP)) {
+				// if introducer is falsely detected as failed then don't rejoin, just give new ID
+				newID := getMaxID()
+				newEntry := mem.membershipList[mem.memberID]
+				newEntry.MemberID = newID
+				delete(mem.membershipList, mem.memberID)
+				mem.membershipList[newID] = newEntry
+				mem.memberID = newID
 			}
 			continue
 		}
