@@ -307,7 +307,7 @@ func sendUploadCommand(aliveIP net.IP, newIP net.IP, filename string) error {
 	var req SdfsRequest
 	var res SdfsResponse
 
-	req.LocalFName = filename
+	req.LocalFName = dirName + "/" + filename
 	req.RemoteFName = filename
 	req.IPAddr = newIP
 	req.Type = UploadReq
