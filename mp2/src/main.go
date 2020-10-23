@@ -211,10 +211,19 @@ func main() {
 						for _, ipAddr := range res.IPList {
 							if _, exists := ipsAttempted[ipAddr.String()]; !exists {
 								ipsAttempted[ipAddr.String()] = true
-								var uploadRes SdfsResponse
-								err = sdfs.UploadAndModifyMap(SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], IPAddr: ipAddr, Type: UploadReq}, &uploadRes)
-								if err == nil {
+								err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName)
+
+								if err != nil {
+									fmt.Println("error in upload process.", err)
+								} else {
 									numSuccessful += 1
+									// succesfull upload -> add to master's file map
+									mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: inputFields[2], Type: AddReq}
+									var mapRes SdfsResponse
+									mapErr := client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
+									if mapErr != nil {
+										fmt.Println(mapErr)
+									}
 								}
 							}
 						}
@@ -246,7 +255,7 @@ func main() {
 						err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.LocalFName)
 
 						if err != nil {
-							fmt.Println("Error downloading " + req.RemoteFName + " from " + ipAddr.String())
+							fmt.Println("error in download process.", err)
 						} else {
 							// successful download
 							break
@@ -254,7 +263,7 @@ func main() {
 					}
 				}
 				sessionId = sdfs.RpcUnlock(sessionId, inputFields[1], SdfsRLock)
-
+				fmt.Println("Finished get.")
 			}
 
 		case "delete":
@@ -287,17 +296,20 @@ func main() {
 		case "upload":
 			if len(inputFields) == 4 {
 				Upload(fmt.Sprint(inputFields[1]),
-					fmt.Sprint(Configuration.Service.port),
+					fmt.Sprint(Configuration.Service.filePort),
 					inputFields[2],
 					inputFields[3])
 			}
 
 		case "download":
-			if len(inputFields) == 3 {
-				Download(fmt.Sprint(Configuration.Service.introducerIP),
-					fmt.Sprint(Configuration.Service.port),
-					inputFields[1],
-					inputFields[2])
+			if len(inputFields) == 4 {
+				err := Download(fmt.Sprint(inputFields[1]),
+					fmt.Sprint(Configuration.Service.filePort),
+					inputFields[2],
+					inputFields[3])
+				if err != nil {
+					fmt.Println(err)
+				}
 			}
 
 		case "master":

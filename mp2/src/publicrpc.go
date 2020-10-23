@@ -107,26 +107,6 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 	return node.GetRandomNodes(req, reply)
 }
 
-func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) error {
-	if req.Type != UploadReq {
-		return errors.New("Error: Invalid request type for Upload Request")
-	}
-
-	err := Upload(req.IPAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName)
-
-	if err != nil {
-		fmt.Println("error in upload process.")
-		return err
-	}
-
-	mapReq := SdfsRequest{LocalFName: "", RemoteFName: req.RemoteFName, IPAddr: req.IPAddr, Type: AddReq}
-	var mapRes SdfsResponse
-	client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
-	*reply = mapRes
-
-	return nil
-}
-
 func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if node.isMaster == false && node.Master == nil {
 		return errors.New("Error: Master not initialized")
@@ -176,7 +156,10 @@ func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) 
 		return errors.New("Error: Master not initialized")
 	}
 
-	ipToModify := req.IPAddr
+	// convert string -> ip.net
+	// req.LocalFName here is ip address, need the 27 for the method call to work
+	stringIp := req.LocalFName + "/27"
+	ipToModify, _, _ := net.ParseCIDR(stringIp)
 
 	if req.Type == AddReq {
 		ogList := node.Master.fileMap[req.RemoteFName]
