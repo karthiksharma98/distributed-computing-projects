@@ -52,9 +52,8 @@ func main() {
 	InitSdfsDirectory()
 
 	rpcInitialized := false
-
+	printOptions()
 	for {
-		printOptions()
 		// wait for input to query operations on node
 		consoleReader := bufio.NewReader(os.Stdin)
 		fmt.Print("> ")
@@ -82,16 +81,20 @@ func main() {
 				}
 
 				process.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
+				// initialize heartbeat listener
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
-				go InitializeServer(fmt.Sprint(Configuration.Service.port))
+				// initialize file transfer server
+				go InitializeServer(fmt.Sprint(Configuration.Service.filePort))
 				Info.Println("You are now the introducer.")
 
 				if rpcInitialized == false {
 					// Initialize SDFS node
 					sdfs = NewSdfsNode(process, true)
-					// start RPC Server
+					// start RPC Server for handling requests get/put/delete/ls
 					sdfs.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
+					// start SDFS listener
 					go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.masterPort))
+
 					sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.masterPort))
 					rpcInitialized = true
 				}
@@ -103,8 +106,10 @@ func main() {
 					isGossip = false
 				}
 
+				// initialize heartbeat listener
 				go process.Listen(fmt.Sprint(Configuration.Service.port))
-				go InitializeServer(fmt.Sprint(Configuration.Service.port))
+				// initialize file transfer server
+				go InitializeServer(fmt.Sprint(Configuration.Service.filePort))
 				time.Sleep(100 * time.Millisecond) // Sleep a tiny bit so listener can start
 				process.joinRequest()
 				// Wait for response
@@ -120,8 +125,10 @@ func main() {
 				if rpcInitialized == false {
 					// Initialize SDFS node
 					sdfs = NewSdfsNode(process, false)
+					// start RPC Server for handling requests
+					sdfs.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
+					// start SDFS listener
 					go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.masterPort))
-
 					// establish connection to master
 					sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.masterPort))
 					rpcInitialized = true
@@ -232,6 +239,7 @@ func main() {
 				process.SendAll(TestMsg, []byte{})
 			}
 
+		// SDFS
 		case "put":
 			if len(inputFields) >= 3 && process != nil {
 				if client == nil || sdfs == nil {
@@ -263,16 +271,10 @@ func main() {
 						for _, ipAddr := range res.IPList {
 							if _, exists := ipsAttempted[ipAddr.String()]; !exists {
 								ipsAttempted[ipAddr.String()] = true
-								err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.port), req.LocalFName, req.RemoteFName)
-
-								if err != nil {
-									fmt.Println("error in upload process.", err)
-								} else {
+								var uploadRes SdfsResponse
+								err = sdfs.UploadAndModifyMap(SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], IPAddr: ipAddr, Type: UploadReq}, &uploadRes)
+								if err == nil {
 									numSuccessful += 1
-									// succesfull upload -> add to master's file map
-									mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: inputFields[2], Type: AddReq}
-									var mapRes SdfsResponse
-									client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
 								}
 							}
 						}
@@ -297,15 +299,14 @@ func main() {
 				var res SdfsResponse
 
 				err := client.Call("SdfsNode.HandleGetRequest", req, &res)
-
 				if err != nil {
 					fmt.Println(err)
 				} else {
 					for _, ipAddr := range res.IPList {
-						err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.port), req.RemoteFName, req.LocalFName)
+						err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.LocalFName)
 
 						if err != nil {
-							fmt.Println("error in download process.")
+							fmt.Println("Error downloading " + req.RemoteFName + " from " + ipAddr.String())
 						} else {
 							// successful download
 							break
@@ -331,28 +332,29 @@ func main() {
 				if err != nil {
 					fmt.Println(err)
 				} else {
-					fmt.Println("Deleted successfully:", req.RemoteFName)
+					fmt.Println("Deleted successfully: ", req.RemoteFName)
 				}
 				sessionId = sdfs.RpcLock(sessionId, inputFields[1], SdfsLock)
 			}
 
 		case "ls":
-			if client == nil {
-				Warn.Println("Client not initialized.")
-				continue
-			}
-			req := SdfsRequest{LocalFName: "", RemoteFName: "", Type: LsReq}
-			var res SdfsResponse
+			if len(inputFields) >= 2 {
+				if client == nil {
+					Warn.Println("Client not initialized.")
+					continue
+				}
+				req := SdfsRequest{LocalFName: "", RemoteFName: inputFields[1], Type: GetReq}
+				var res SdfsResponse
 
-			err := client.Call("SdfsNode.HandleLsRequest", req, &res)
-			if err != nil {
-				fmt.Println("Failed ls. ", err)
-			} else {
-				for fileName, ipList := range res.fileMap {
-					fmt.Println(fileName, " =>")
-					for _, ip := range ipList {
-						fmt.Println("	", ip)
+				err := client.Call("SdfsNode.HandleGetRequest", req, &res)
+				if err != nil {
+					fmt.Println("Failed ls. ", err)
+				} else {
+					fmt.Print(inputFields[1], " =>   ")
+					for _, ip := range res.IPList {
+						fmt.Print(ip.String(), ", ")
 					}
+					fmt.Println()
 				}
 			}
 
@@ -412,9 +414,12 @@ func main() {
 					sessionId = sdfs.RpcUnlock(sessionId, inputFields[2], SdfsLock)
 				}
 			}
+
+		case "help":
+			printOptions()
 		default:
 			fmt.Println("invalid command")
-
+			printOptions()
 		}
 	}
 

@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 )
@@ -31,6 +32,12 @@ func InitSdfsDirectory() {
 
 	if os.IsNotExist(err) {
 		os.MkdirAll(dirName, 0755)
+	} else {
+		// clear contents when starting up
+		dir, _ := ioutil.ReadDir(dirName)
+		for _, d := range dir {
+			os.RemoveAll(path.Join([]string{dirName, d.Name()}...))
+		}
 	}
 }
 

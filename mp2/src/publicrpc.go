@@ -5,23 +5,19 @@ import (
 	"fmt"
 	"net"
 	"net/rpc"
+	"os"
 	"strconv"
 )
 
 type SdfsRequest struct {
 	LocalFName  string
 	RemoteFName string
+	IPAddr      net.IP
 	Type        ReqType
 }
 
-type UploadAck struct {
-	RemoteFname string
-	IPaddr      net.IP
-}
-
 type SdfsResponse struct {
-	IPList  []net.IP
-	fileMap map[string][]string
+	IPList []net.IP
 }
 
 type ReqType int
@@ -32,27 +28,8 @@ const (
 	DelReq
 	LsReq
 	AddReq
+	UploadReq
 )
-
-func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) error {
-	if node.isMaster == false && node.Master == nil {
-		return errors.New("Error: Master not initialized")
-	}
-
-	// convert string -> ip.net
-	// req.LocalFName here is ip address, need the 27 for the method call to work
-	stringIp := req.LocalFName + "/27"
-	ipToModify, _, _ := net.ParseCIDR(stringIp)
-
-	if req.Type == AddReq {
-		ogList := node.Master.fileMap[req.RemoteFName]
-		ogList = append(ogList, ipToModify)
-		node.Master.fileMap[req.RemoteFName] = ogList
-
-	}
-
-	return nil
-}
 
 func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error {
 	repFactor := int(Configuration.Settings.replicationFactor)
@@ -90,6 +67,26 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 	return node.GetRandomNodes(req, reply)
 }
 
+func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) error {
+	if req.Type != UploadReq {
+		return errors.New("Error: Invalid request type for Upload Request")
+	}
+
+	err := Upload(req.IPAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName)
+
+	if err != nil {
+		fmt.Println("error in upload process.")
+		return err
+	}
+
+	mapReq := SdfsRequest{LocalFName: "", RemoteFName: req.RemoteFName, IPAddr: req.IPAddr, Type: AddReq}
+	var mapRes SdfsResponse
+	client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
+	*reply = mapRes
+
+	return nil
+}
+
 func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if node.isMaster == false && node.Master == nil {
 		return errors.New("Error: Master not initialized")
@@ -111,8 +108,7 @@ func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) err
 }
 
 func (node *SdfsNode) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
-	// TODO: delete the local file before returning nil, else return error
-	return nil
+	return os.Remove("./" + dirName + "/" + req.RemoteFName)
 }
 
 func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
@@ -132,7 +128,23 @@ func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
 	req.RemoteFName = RemoteFName
 	req.Type = DelReq
 
-	return client.Call("Member.DeleteFile", req, &res)
+	return client.Call("SdfsNode.DeleteFile", req, &res)
+}
+
+func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) error {
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
+	}
+
+	ipToModify := req.IPAddr
+
+	if req.Type == AddReq {
+		ogList := node.Master.fileMap[req.RemoteFName]
+		ogList = append(ogList, ipToModify)
+		node.Master.fileMap[req.RemoteFName] = ogList
+	}
+
+	return nil
 }
 
 func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) error {
@@ -153,7 +165,6 @@ func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) 
 		if len(failedIndices) == 0 {
 			delete(node.Master.fileMap, req.RemoteFName)
 			return nil
-
 		} else {
 			// make list of failed IPs
 			failedIps := make([]net.IP, 0)
@@ -171,26 +182,5 @@ func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) 
 			return errors.New("Failed deleting files")
 		}
 	}
-	return nil
-}
-
-func (node *SdfsNode) HandleLsRequest(req SdfsRequest, reply *SdfsResponse) error {
-	if req.Type != LsReq {
-		return errors.New("Error: Invalid request type for Ls Request")
-	}
-
-	var resp SdfsResponse
-	mapCopy := make(map[string][]string)
-	for fileName, ipList := range node.Master.fileMap {
-		listCopy := make([]string, 0)
-		for _, ipAddr := range ipList {
-			listCopy = append(listCopy, ipAddr.String())
-		}
-		mapCopy[fileName] = listCopy
-	}
-
-	resp.fileMap = mapCopy
-	*reply = resp
-
 	return nil
 }

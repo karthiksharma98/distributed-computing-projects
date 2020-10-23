@@ -20,6 +20,7 @@ type Service struct {
 	port         float64 `json:"port"`
 	masterIP     string  `json:"initial_master_ip"`
 	masterPort   float64 `json:"master_port"`
+	filePort     float64 `json:"file_port"`
 }
 
 // Settings struct
@@ -54,6 +55,7 @@ func ReadConfig() Config {
 	masterPort := serviceJSON["master_port"].(float64)
 	masterIP := serviceJSON["initial_master_ip"].(string)
 	port := serviceJSON["port"].(float64)
+	filePort := serviceJSON["file_port"].(float64)
 
 	service := Service{
 		detectorType: detectType,
@@ -61,6 +63,7 @@ func ReadConfig() Config {
 		port:         port,
 		masterIP:     masterIP,
 		masterPort:   masterPort,
+		filePort:     filePort,
 	}
 
 	// Create settings struct

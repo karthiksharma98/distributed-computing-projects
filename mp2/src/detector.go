@@ -38,7 +38,7 @@ const (
 var (
 	joinAck      = make(chan bool)
 	disableHeart = make(chan bool)
-	failCh       = make(chan uint8)
+	failCh       = make(chan uint8, 10)
 	ticker       *time.Ticker
 	enabledHeart = false
 	isGossip     = true
@@ -145,8 +145,19 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 	}
 
 	for id, rcvdEntry := range rcvdMemList {
-		// Dont let anybody else tell u ur a failure
+		// If somebody thinks you are a failure then quit and rejoin :(
 		if id == mem.memberID {
+			if rcvdEntry.Health == Failed && !rcvdEntry.IPaddr.Equal(net.ParseIP(Configuration.Service.introducerIP)) {
+				mem.joinRequest()
+			} else if rcvdEntry.Health == Failed && rcvdEntry.IPaddr.Equal(net.ParseIP(Configuration.Service.introducerIP)) {
+				// if introducer is falsely detected as failed then don't rejoin, just give new ID
+				newID := getMaxID()
+				newEntry := mem.membershipList[mem.memberID]
+				newEntry.MemberID = newID
+				delete(mem.membershipList, mem.memberID)
+				mem.membershipList[newID] = newEntry
+				mem.memberID = newID
+			}
 			continue
 		}
 
@@ -158,10 +169,19 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 			if rcvdEntry.HeartbeatCount <= currEntry.HeartbeatCount && rcvdEntry.Health != Left {
 				doUpdate = false
 			}
+			// don't update a failed entry
+			if rcvdEntry.Health == Failed && mem.membershipList[id].Health == Failed {
+				doUpdate = false
+			}
+		} else {
+			// don't add new failed entries
+			if rcvdEntry.Health == Failed {
+				doUpdate = false
+			}
 		}
 
 		// Only set if update is neccessary whatsoever or if new entry to add
-		if doUpdate && rcvdEntry.Health != Failed {
+		if doUpdate {
 			mem.membershipList[id] = membershipListEntry{
 				rcvdEntry.MemberID,
 				rcvdEntry.IPaddr,
@@ -300,6 +320,9 @@ func (mem *Member) joinRequest() {
 func (mem *Member) joinResponse(membershipListBytes []byte) {
 	// First byte received corresponds to assigned memberID
 	mem.memberID = uint8(membershipListBytes[0])
+
+	// clear existing membership list
+	mem.membershipList = make(map[uint8]membershipListEntry)
 
 	// Decode the rest of the buffer to the membership list
 	b := bytes.NewBuffer(membershipListBytes[1:])
