@@ -271,12 +271,16 @@ func main() {
 						for _, ipAddr := range res.IPList {
 							if _, exists := ipsAttempted[ipAddr.String()]; !exists {
 								ipsAttempted[ipAddr.String()] = true
-								mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: inputFields[2], Type: AddReq}
-								var mapRes SdfsResponse
-								mapErr := client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
-								//err = sdfs.UploadAndModifyMap(SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], IPAddr: ipAddr, Type: UploadReq}, &uploadRes)
-								if mapErr == nil {
+								err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName)
+
+								if err != nil {
+									fmt.Println("error in upload process.", err)
+								} else {
 									numSuccessful += 1
+									// succesfull upload -> add to master's file map
+									mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: inputFields[2], Type: AddReq}
+									var mapRes SdfsResponse
+									client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
 								}
 							}
 						}
@@ -370,7 +374,7 @@ func main() {
 		case "upload":
 			if len(inputFields) == 4 {
 				Upload(fmt.Sprint(inputFields[1]),
-					fmt.Sprint(Configuration.Service.port),
+					fmt.Sprint(Configuration.Service.filePort),
 					inputFields[2],
 					inputFields[3])
 			}
@@ -378,7 +382,7 @@ func main() {
 		case "download":
 			if len(inputFields) == 4 {
 				err := Download(fmt.Sprint(inputFields[1]),
-					fmt.Sprint(Configuration.Service.port),
+					fmt.Sprint(Configuration.Service.filePort),
 					inputFields[2],
 					inputFields[3])
 				if err != nil {
