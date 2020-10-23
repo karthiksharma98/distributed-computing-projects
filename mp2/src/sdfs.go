@@ -16,10 +16,11 @@ import (
 var (
 	// 1346378950 is the size of wiki corpus + some more for fun lol
 	dialSize       = 1346378950 + 2048
-	clientDialOpts = [4]grpc.DialOption{grpc.WithInsecure(),
-		grpc.WithBlock(),
+	clientDialOpts = [4]grpc.DialOption{
+		grpc.WithInsecure(),
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(dialSize)),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(dialSize))}
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(dialSize)),
+		grpc.WithReturnConnectionError()}
 	serverDialOpts        = [2]grpc.ServerOption{grpc.MaxRecvMsgSize(dialSize), grpc.MaxSendMsgSize(dialSize)}
 	dirName        string = "SDFS"
 )
@@ -100,7 +101,7 @@ func GetFileContents(localFileName string) []byte {
 	return content
 }
 
-func DialAndSend(conn *grpc.ClientConn, dest string, fileChunk []byte,
+func UploadFile(conn *grpc.ClientConn, dest string, fileChunk []byte,
 	sdfsFileName string, isMultChunks bool, isFirstChunk bool) error {
 
 	client := service.NewFileTransferClient(conn)
@@ -126,9 +127,26 @@ func DialAndSend(conn *grpc.ClientConn, dest string, fileChunk []byte,
 
 func Upload(ipAddr string, port string, localFileName string, sdfsFileName string) error {
 	dest := ipAddr + ":" + port
-	conn, err := grpc.Dial(dest, clientDialOpts[0:4]...)
-	if err != nil {
-		panic(err)
+
+	connectChan := make(chan bool, 1)
+	var conn *grpc.ClientConn
+	var connErr error
+	go func() {
+		conn, connErr = grpc.Dial(dest, clientDialOpts[0:4]...)
+		connectChan <- true
+	}()
+
+	select {
+	case <-connectChan:
+		Info.Println("Connected to ", ipAddr, " to upload.")
+	case <-time.After(time.Duration(Configuration.Settings.failTimeout) * time.Second):
+		errorMsg := "Time to connect has surpassed deadline."
+		Warn.Println(errorMsg)
+		return errors.New(errorMsg)
+	}
+
+	if connErr != nil {
+		panic(connErr)
 	}
 	defer conn.Close()
 
@@ -147,8 +165,7 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 			lastIdx = fileSize
 		}
 
-		fileChunk := fileContents[i:lastIdx]
-		err := DialAndSend(conn, dest, fileChunk, sdfsFileName, isMultChunks, isFirstChunk)
+		err := UploadFile(conn, dest, fileContents[i:lastIdx], sdfsFileName, isMultChunks, isFirstChunk)
 		if err != nil {
 			return err
 		}

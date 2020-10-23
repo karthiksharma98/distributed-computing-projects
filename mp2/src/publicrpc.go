@@ -54,6 +54,20 @@ func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) 
 	return nil
 }
 
+func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error {
+	repFactor := int(Configuration.Settings.replicationFactor)
+	ipList := node.pickRandomNodes(repFactor)
+	if ipList == nil {
+		return errors.New("Error: Could not find " + strconv.Itoa(repFactor) + " alive nodes")
+	}
+
+	var resp SdfsResponse
+	resp.IPList = ipList
+	*reply = resp
+
+	return nil
+}
+
 func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if node.isMaster == false && node.Master == nil {
 		return errors.New("Error: Master not initialized")
@@ -63,24 +77,17 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 		return errors.New("Error: Invalid request type for Put Request")
 	}
 
-	var ipList []net.IP
 	if val, ok := node.Master.fileMap[req.RemoteFName]; ok && len(val) != 0 {
 		// if file exists already, return those IPs
-		ipList = val
-	} else {
-		repFactor := int(Configuration.Settings.replicationFactor)
-		ipList = node.pickRandomNodes(repFactor)
-		if ipList == nil {
-			return errors.New("Error: Could not find " + strconv.Itoa(repFactor) + " alive nodes")
-		}
+		ipList := val
+		var resp SdfsResponse
+		resp.IPList = ipList
+		*reply = resp
+
+		return nil
 	}
 
-	var resp SdfsResponse
-	resp.IPList = ipList
-	*reply = resp
-
-	return nil
-
+	return node.GetRandomNodes(req, reply)
 }
 
 func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error {

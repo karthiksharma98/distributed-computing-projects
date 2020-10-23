@@ -86,6 +86,7 @@ func (node *SdfsNode) AcquireLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 	go func() {
 		select {
 		case <-node.Master.sessMap[sessId]:
+			node.Master.Unlock(req.RemoteFname, req.Type)
 			Info.Println("Lock released session confirm", sessId)
 			return
 		case <-time.After(30 * time.Second):
@@ -109,7 +110,6 @@ func (node *SdfsNode) ReleaseLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 	}
 
 	Info.Println("Releasing lock")
-	node.Master.Unlock(req.RemoteFname, req.Type)
 	node.Master.sessMap[req.SessionId] <- true
 	Info.Println("Lock released")
 
