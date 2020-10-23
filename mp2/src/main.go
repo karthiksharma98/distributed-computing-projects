@@ -271,9 +271,11 @@ func main() {
 						for _, ipAddr := range res.IPList {
 							if _, exists := ipsAttempted[ipAddr.String()]; !exists {
 								ipsAttempted[ipAddr.String()] = true
-								var uploadRes SdfsResponse
-								err = sdfs.UploadAndModifyMap(SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], IPAddr: ipAddr, Type: UploadReq}, &uploadRes)
-								if err == nil {
+								mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: inputFields[2], Type: AddReq}
+								var mapRes SdfsResponse
+								mapErr := client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
+								//err = sdfs.UploadAndModifyMap(SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], IPAddr: ipAddr, Type: UploadReq}, &uploadRes)
+								if mapErr == nil {
 									numSuccessful += 1
 								}
 							}

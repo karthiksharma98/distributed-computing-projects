@@ -45,20 +45,6 @@ func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error
 	return nil
 }
 
-func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error {
-	repFactor := int(Configuration.Settings.replicationFactor)
-	ipList := node.pickRandomNodes(repFactor)
-	if ipList == nil {
-		return errors.New("Error: Could not find " + strconv.Itoa(repFactor) + " alive nodes")
-	}
-
-	var resp SdfsResponse
-	resp.IPList = ipList
-	*reply = resp
-
-	return nil
-}
-
 func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if node.isMaster == false && node.Master == nil {
 		return errors.New("Error: Master not initialized")
