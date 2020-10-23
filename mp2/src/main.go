@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"net"
 	"net/rpc"
 	"os"
 	"strconv"
@@ -50,8 +49,6 @@ func main() {
 	Configuration = ReadConfig()
 	Configuration.Print()
 	InitSdfsDirectory()
-
-	rpcInitialized := false
 	printOptions()
 	for {
 		// wait for input to query operations on node
@@ -68,71 +65,24 @@ func main() {
 
 		switch inputFields[0] {
 		case "join":
-			if process != nil {
+			if process != nil && sdfs != nil {
 				Warn.Println("You have already joined!")
 				continue
 			}
 
+
 			if len(inputFields) == 2 && inputFields[1] == "introducer" {
-				process = NewMember(true)
-
-				if Configuration.Service.detectorType == "alltoall" {
-					isGossip = false
-				}
-
-				process.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
-				// initialize heartbeat listener
-				go process.Listen(fmt.Sprint(Configuration.Service.port))
+                                process = InitMembership(true)
+                                sdfs = InitSdfs(process, true)
 				// initialize file transfer server
 				go InitializeServer(fmt.Sprint(Configuration.Service.filePort))
-				Info.Println("You are now the introducer.")
 
-				if rpcInitialized == false {
-					// Initialize SDFS node
-					sdfs = NewSdfsNode(process, true)
-					// start RPC Server for handling requests get/put/delete/ls
-					sdfs.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
-					// start SDFS listener
-					go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.masterPort))
-
-					sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.masterPort))
-					rpcInitialized = true
-				}
 
 			} else {
 				// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
-				process = NewMember(false)
-				if Configuration.Service.detectorType == "alltoall" {
-					isGossip = false
-				}
-
-				// initialize heartbeat listener
-				go process.Listen(fmt.Sprint(Configuration.Service.port))
-				// initialize file transfer server
+                                process = InitMembership(false)
+                                sdfs = InitSdfs(process, false)
 				go InitializeServer(fmt.Sprint(Configuration.Service.filePort))
-				time.Sleep(100 * time.Millisecond) // Sleep a tiny bit so listener can start
-				process.joinRequest()
-				// Wait for response
-				select {
-				case _ = <-joinAck:
-					fmt.Println("Node has joined the group.")
-				case <-time.After(2 * time.Second):
-					fmt.Println("Timeout join. Please retry again.")
-					listener.Close()
-					process = nil
-				}
-
-				if rpcInitialized == false {
-					// Initialize SDFS node
-					sdfs = NewSdfsNode(process, false)
-					// start RPC Server for handling requests
-					sdfs.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
-					// start SDFS listener
-					go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.masterPort))
-					// establish connection to master
-					sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.masterPort))
-					rpcInitialized = true
-				}
 			}
 
 			// start gossip
@@ -202,19 +152,9 @@ func main() {
 
 		case "switch":
 			if len(inputFields) >= 2 && inputFields[1] == "gossip" {
-				if isGossip {
-					Warn.Println("You are already running Gossip")
-					continue
-				}
-
 				SetHeartbeating(true)
 				process.SendAll(SwitchMsg, []byte{1})
 			} else if len(inputFields) >= 2 && inputFields[1] == "alltoall" {
-				if !isGossip {
-					Warn.Println("You are already running All to All")
-					continue
-				}
-
 				SetHeartbeating(false)
 				process.SendAll(SwitchMsg, []byte{0})
 			}

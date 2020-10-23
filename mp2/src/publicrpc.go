@@ -31,6 +31,16 @@ const (
 	UploadReq
 )
 
+func InitSdfs(mem *Member, setMaster bool) *SdfsNode {
+        sdfs := NewSdfsNode(mem, setMaster)
+        // start SDFS listener
+        go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.masterPort))
+        // start RPC Server for handling requests get/put/delete/ls
+        sdfs.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
+        sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.masterPort))
+        return sdfs
+}
+
 func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error {
 	repFactor := int(Configuration.Settings.replicationFactor)
 	ipList := node.pickRandomNodes(repFactor)
