@@ -359,12 +359,11 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 	failedIP := node.Member.membershipList[memberID].IPaddr
 	failedIPList := []net.IP{failedIP}
 
-	fmt.Println("I am handling failure of ", memberID, failedIP)
+	fmt.Println("Handling failure of ", memberID, failedIP)
 
 	// iterate over fileMap and find files that this member stores
 	for filename, ipList := range node.Master.fileMap {
 		if failedIndex := checkMember(failedIP, ipList); failedIndex != -1 {
-			fmt.Println("Handling failure of ", filename)
 			//remove failedIP from fileMap
 			node.Master.fileMap[filename] = append(ipList[:failedIndex], ipList[failedIndex+1:]...)
 
@@ -384,8 +383,6 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 				return errors.New("All replicas dead for " + filename)
 			}
 
-			fmt.Println("new = ", newIP, "chosen = ", chosenIP)
-
 			// request chosenIP to upload file to newIP and add IP to fileMap
 			err := sendUploadCommand(chosenIP, newIP, filename)
 
@@ -395,7 +392,6 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 				case nil:
 					break errorLoop
 				case connectionError:
-					fmt.Println("new = ", newIP, "chosen = ", chosenIP)
 					if err.ip.Equal(newIP) {
 						// can't connect to newIP and upload there, try another
 						failedIPList = append(failedIPList, newIP)
