@@ -31,26 +31,6 @@ const (
 	UploadReq
 )
 
-func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) error {
-	if node.isMaster == false && node.Master == nil {
-		return errors.New("Error: Master not initialized")
-	}
-
-	// convert string -> ip.net
-	// req.LocalFName here is ip address, need the 27 for the method call to work
-	stringIp := req.LocalFName + "/27"
-	ipToModify, _, _ := net.ParseCIDR(stringIp)
-
-	if req.Type == AddReq {
-		ogList := node.Master.fileMap[req.RemoteFName]
-		ogList = append(ogList, ipToModify)
-		node.Master.fileMap[req.RemoteFName] = ogList
-
-	}
-
-	return nil
-}
-
 func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error {
 	repFactor := int(Configuration.Settings.replicationFactor)
 	ipList := node.pickRandomNodes(repFactor)

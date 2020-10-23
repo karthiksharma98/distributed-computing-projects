@@ -271,25 +271,13 @@ func main() {
 						for _, ipAddr := range res.IPList {
 							if _, exists := ipsAttempted[ipAddr.String()]; !exists {
 								ipsAttempted[ipAddr.String()] = true
-								err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.port), req.LocalFName, req.RemoteFName)
-
-								if err != nil {
-									fmt.Println("error in upload process.", err)
-								} else {
+								var uploadRes SdfsResponse
+								err = sdfs.UploadAndModifyMap(SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], IPAddr: ipAddr, Type: UploadReq}, &uploadRes)
+								if err == nil {
 									numSuccessful += 1
-									// succesfull upload -> add to master's file map
-									mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: inputFields[2], Type: AddReq}
-									var mapRes SdfsResponse
-									client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
 								}
 							}
 						}
-
-						// mapReq := SdfsRequest{LocalFName: "", RemoteFName: inputFields[2], IPAddr: ipAddr, Type: AddReq}
-						// var mapRes SdfsResponse
-						// client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
-						var uploadRes SdfsResponse
-						sdfs.UploadAndModifyMap(SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], IPAddr: ipAddr, Type: UploadReq}, &uploadRes)
 					}
 
 					// update alive nodes in case there's not enough anymore
@@ -426,8 +414,6 @@ func main() {
 					sessionId = sdfs.RpcUnlock(sessionId, inputFields[2], SdfsLock)
 				}
 			}
-		default:
-			fmt.Println("invalid command")
 
 		case "help":
 			printOptions()
