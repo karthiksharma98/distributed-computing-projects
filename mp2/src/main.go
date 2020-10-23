@@ -246,9 +246,14 @@ func main() {
 				ipsAttempted := make(map[string]bool)
 				// attempt to get as many replications needed, until you've attempted all the IPs
 				for numSuccessful < int(Configuration.Settings.replicationFactor) &&
-					len(ipsAttempted) < numAlive {
+					len(ipsAttempted) <= numAlive {
 					var res SdfsResponse
-					err := client.Call("SdfsNode.HandlePutRequest", req, &res)
+					var err error
+					if len(ipsAttempted) == 0 {
+						err = client.Call("SdfsNode.HandlePutRequest", req, &res)
+					} else {
+						err = client.Call("SdfsNode.GetRandomNodes", req, &res)
+					}
 
 					if err != nil {
 						fmt.Println("Put failed", err)
