@@ -230,10 +230,10 @@ func (mem *Member) Tick() {
 			// Gossip or AllToAll
 			if isGossip {
 				for i := 0.0; i < Configuration.Settings.numProcessesToGossip; i++ {
-					mem.Gossip()
+					go mem.Gossip()
 				}
 			} else {
-				mem.AllToAll()
+				go mem.AllToAll()
 			}
 		}
 	}
