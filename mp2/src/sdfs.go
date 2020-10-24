@@ -73,6 +73,7 @@ func (s *FileTransferServer) Upload(stream service.FileTransfer_UploadServer) er
                 req, err := stream.Recv()
                 if err != nil {
                         if err == io.EOF {
+                                fmt.Println("Received. EOF")
                                 return stream.SendAndClose(&service.UploadReply{Status: true})
                         }
                 }
