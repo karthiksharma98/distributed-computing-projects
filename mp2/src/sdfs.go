@@ -9,14 +9,17 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 )
 
 var (
 	// 1346378950 is the size of wiki corpus + some more for fun lol
-	dialSize       = 1346378950 + 2048
-	clientDialOpts = [4]grpc.DialOption{
+	dialSize          = 1346378950 + 2048
+	uploadChunkSize   = 350000
+	downloadChunkSize = 10000000
+	clientDialOpts    = [4]grpc.DialOption{
 		grpc.WithInsecure(),
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(dialSize)),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(dialSize)),
@@ -31,6 +34,12 @@ func InitSdfsDirectory() {
 
 	if os.IsNotExist(err) {
 		os.MkdirAll(dirName, 0755)
+	} else {
+		// clear contents when starting up
+		dir, _ := ioutil.ReadDir(dirName)
+		for _, d := range dir {
+			os.RemoveAll(path.Join([]string{dirName, d.Name()}...))
+		}
 	}
 }
 
@@ -75,20 +84,88 @@ func (s *FileTransferServer) Download(ctx context.Context, downloadReq *service.
 	file, err := os.Open(filepath.Join(dirName, filepath.Base(downloadReq.GetSdfsFileName())))
 	defer file.Close()
 	if err != nil {
-		return &service.DownloadReply{DoesFileExist: false, FileContents: []byte(err.Error())}, nil
+		return &service.DownloadReply{
+			DoesFileExist:    false,
+			FileContents:     []byte(err.Error()),
+			IsMultipleChunks: false,
+			IsLastChunk:      true}, nil
 	}
 
 	fileStat, err2 := file.Stat()
 	if err2 != nil {
-		return &service.DownloadReply{DoesFileExist: false, FileContents: []byte(err2.Error())}, nil
+		return &service.DownloadReply{
+			DoesFileExist:    false,
+			FileContents:     []byte(err.Error()),
+			IsMultipleChunks: false,
+			IsLastChunk:      true}, nil
 	}
 
-	buf := make([]byte, fileStat.Size())
+	fileSize := fileStat.Size()
+	isMultChunks := false
+	if fileSize >= int64(downloadChunkSize) {
+		isMultChunks = true
+	}
+
+	isLastChunk := true
+	// + 1 to know how many are about to be sent
+	if fileSize > (int64(downloadReq.ChunkNum+1) * int64(downloadChunkSize)) {
+		isLastChunk = false
+	}
+
+	// move to position you want to read from
+	startIdx := int64(downloadReq.ChunkNum) * int64(downloadChunkSize)
+	readSize := int64(downloadChunkSize)
+	if isLastChunk {
+		readSize = fileSize - startIdx
+	}
+
+	buf := make([]byte, readSize)
+
+	var whence int = 0
+	_, seekErr := file.Seek(startIdx, whence)
+	if seekErr != nil {
+		return &service.DownloadReply{
+			DoesFileExist:    false,
+			FileContents:     []byte(err.Error()),
+			IsMultipleChunks: false,
+			IsLastChunk:      true}, nil
+	}
+
 	file.Read(buf)
-	return &service.DownloadReply{DoesFileExist: true, FileContents: buf}, nil
+
+	return &service.DownloadReply{
+		DoesFileExist:    true,
+		FileContents:     buf,
+		IsMultipleChunks: isMultChunks,
+		IsLastChunk:      isLastChunk}, nil
 }
 
 // Client Methods
+
+func DialServer(dest string) (*grpc.ClientConn, error) {
+	connectChan := make(chan bool, 1)
+	var conn *grpc.ClientConn
+	var connErr error
+	go func() {
+		conn, connErr = grpc.Dial(dest, clientDialOpts[0:4]...)
+		connectChan <- true
+	}()
+
+	select {
+	case <-connectChan:
+		Info.Println("Connected to ", dest, " to upload.")
+	case <-time.After(time.Duration(Configuration.Settings.failTimeout) * time.Second):
+		errorMsg := "Time to connect has surpassed deadline."
+		Warn.Println(errorMsg)
+		return nil, errors.New(errorMsg)
+	}
+
+	if connErr != nil {
+		panic(connErr)
+	}
+
+	return conn, connErr
+}
 
 func GetFileContents(localFileName string) []byte {
 	content, err := ioutil.ReadFile(localFileName)
@@ -127,40 +204,22 @@ func UploadFile(conn *grpc.ClientConn, dest string, fileChunk []byte,
 
 func Upload(ipAddr string, port string, localFileName string, sdfsFileName string) error {
 	dest := ipAddr + ":" + port
-
-	connectChan := make(chan bool, 1)
-	var conn *grpc.ClientConn
-	var connErr error
-	go func() {
-		conn, connErr = grpc.Dial(dest, clientDialOpts[0:4]...)
-		connectChan <- true
-	}()
-
-	select {
-	case <-connectChan:
-		Info.Println("Connected to ", ipAddr, " to upload.")
-	case <-time.After(time.Duration(Configuration.Settings.failTimeout) * time.Second):
-		errorMsg := "Time to connect has surpassed deadline."
-		Warn.Println(errorMsg)
-		return errors.New(errorMsg)
-	}
-
+	conn, connErr := DialServer(dest)
 	if connErr != nil {
-		panic(connErr)
+		return connErr
 	}
 	defer conn.Close()
 
 	fileContents := GetFileContents(localFileName)
 	fileSize := len(fileContents)
-	chunkSize := 350000
 	isMultChunks := false
 	isFirstChunk := true
-	if fileSize >= chunkSize {
+	if fileSize >= uploadChunkSize {
 		isMultChunks = true
 	}
 
-	for i := 0; i < fileSize; i += chunkSize {
-		lastIdx := i + chunkSize
+	for i := 0; i < fileSize; i += uploadChunkSize {
+		lastIdx := i + uploadChunkSize
 		if lastIdx > fileSize {
 			lastIdx = fileSize
 		}
@@ -183,34 +242,73 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 	return nil
 }
 
-func Download(ipAddr string, port string, sdfsFileName string, localFileName string) error {
-	dest := ipAddr + ":" + port
-	conn, err := grpc.Dial(dest, clientDialOpts[0:4]...)
+func DownloadFile(filePath string, fileChunk []byte, fileFlags int) error {
+	file, err := os.OpenFile(filePath, fileFlags, 0777)
 	if err != nil {
-		panic(err)
+		errorMsg := "Failed to create file."
+		Warn.Println(errorMsg, err)
+		return errors.New(errorMsg)
+	}
+	defer file.Close()
+
+	file.Write(fileChunk)
+
+	return nil
+}
+
+func Download(ipAddr string, port string, sdfsFileName string, localFileName string) error {
+	// establish connection with server
+	dest := ipAddr + ":" + port
+	conn, connErr := DialServer(dest)
+	if connErr != nil {
+		return connErr
 	}
 	defer conn.Close()
 
 	client := service.NewFileTransferClient(conn)
 
+	// get first chunk
+	chunkNum := 0
 	downloadReply, err2 := client.Download(context.Background(),
-		&service.DownloadRequest{SdfsFileName: sdfsFileName})
+		&service.DownloadRequest{SdfsFileName: sdfsFileName, ChunkNum: int32(chunkNum)})
 
-	if !downloadReply.DoesFileExist {
+	if err2 != nil || !downloadReply.DoesFileExist {
 		errorMsg := "Error: Unable to download file " + sdfsFileName + ". File does not exist."
 		Warn.Println(errorMsg, err2)
 		return errors.New(errorMsg)
 	}
 
-	file, err2 := os.Create(localFileName)
-	if err2 != nil {
-		errorMsg := "Failed to create file."
-		Warn.Println(errorMsg, err2)
-		return errors.New(errorMsg)
-	}
-	defer file.Close()
+	fileFlags := os.O_CREATE | os.O_WRONLY
 
-	file.Write(downloadReply.FileContents)
+	for {
+		// save reply contents to file path
+		dlErr := DownloadFile(localFileName, downloadReply.FileContents, fileFlags)
+		if dlErr != nil {
+			return dlErr
+		}
+
+		if downloadReply.IsLastChunk {
+			break
+		}
+
+		// if here, we're gonna append to the file
+		fileFlags = fileFlags | os.O_APPEND
+
+		// sleep before requesting next chunk so that other threads can run lol
+		time.Sleep(4 * time.Millisecond)
+
+		// get next chunk
+		chunkNum += 1
+		downloadReply, err2 = client.Download(context.Background(),
+			&service.DownloadRequest{SdfsFileName: sdfsFileName, ChunkNum: int32(chunkNum)})
+
+		if err2 != nil {
+			Warn.Println("Error in download process.")
+			return err2
+		}
+	}
+
 	Info.Println("Successfully downloaded file: [", sdfsFileName, "]")
 	return nil
 }
+
