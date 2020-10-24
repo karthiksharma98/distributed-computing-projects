@@ -87,6 +87,7 @@ func (s *FileTransferServer) Upload(stream service.FileTransfer_UploadServer) er
                 }
 
 	        file.Write(req.FileContents)
+                time.Sleep(10*time.Millisecond)
         }
 	return nil
 }
@@ -239,7 +240,7 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 
 		// sleep so that other threads can wake up
 		if isMultChunks {
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 		}
 	}
 
