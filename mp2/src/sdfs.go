@@ -206,6 +206,8 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
                 return err
         }
 
+        time.Sleep(5 * time.Second)
+
 	fileContents := GetFileContents(localFileName)
 	fileSize := len(fileContents)
 	isMultChunks := false
@@ -241,9 +243,10 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 		}
 
 		// sleep so that other threads can wake up
+                /*
 		if isMultChunks {
 			time.Sleep(10 * time.Millisecond)
-		}
+		}*/
 	}
 
 	return nil
