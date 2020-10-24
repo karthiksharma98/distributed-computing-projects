@@ -20,7 +20,7 @@ var (
         KB = 1024
 	// 1346378950 is the size of wiki corpus + some more for fun lol
 	dialSize          = 1346378950 + 2048
-	uploadChunkSize   = 64 * KB
+	uploadChunkSize   = 16 * KB
 	downloadChunkSize = 10000000
 	clientDialOpts    = [4]grpc.DialOption{
 		grpc.WithInsecure(),
