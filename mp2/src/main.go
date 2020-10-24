@@ -280,7 +280,10 @@ func main() {
 									// succesfull upload -> add to master's file map
 									mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: inputFields[2], Type: AddReq}
 									var mapRes SdfsResponse
-									client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
+									mapErr := client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
+									if mapErr != nil {
+										fmt.Println(mapErr)
+									}
 								}
 							}
 						}
