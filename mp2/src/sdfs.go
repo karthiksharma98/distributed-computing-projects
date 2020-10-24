@@ -226,7 +226,10 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
                 err := stream.Send(req)
 
 		if err != nil {
-			return err
+                        if err == io.EOF {
+                                fmt.Println("EOF reached")
+                                return nil
+                        }
 		}
 
 		if isFirstChunk {
