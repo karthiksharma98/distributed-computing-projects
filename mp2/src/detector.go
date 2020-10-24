@@ -144,6 +144,8 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 		panic(err)
 	}
 
+        fmt.Println("Heartbeat received")
+
 	for id, rcvdEntry := range rcvdMemList {
 		// If somebody thinks you are a failure then quit and rejoin :(
 		if id == mem.memberID {
