@@ -230,6 +230,7 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 
 		if err != nil {
                         if err == io.EOF {
+                                Info.Println("File sent")
                                 fmt.Println("EOF reached")
                                 return nil
                         }
