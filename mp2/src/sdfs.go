@@ -12,12 +12,14 @@ import (
 	"path"
 	"path/filepath"
 	"time"
+        "io"
 )
 
 var (
+        KB = 1024
 	// 1346378950 is the size of wiki corpus + some more for fun lol
 	dialSize          = 1346378950 + 2048
-	uploadChunkSize   = 350000
+	uploadChunkSize   = 64 * KB
 	downloadChunkSize = 10000000
 	clientDialOpts    = [4]grpc.DialOption{
 		grpc.WithInsecure(),
@@ -62,22 +64,30 @@ func InitializeServer(port string) {
 	}
 }
 
-func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.UploadRequest) (*service.UploadReply, error) {
-	filePath := filepath.Join(dirName, filepath.Base(uploadReq.SdfsFileName))
-	fileFlags := os.O_CREATE | os.O_WRONLY
-	if uploadReq.IsMultipleChunks && !uploadReq.IsFirstChunk {
-		fileFlags = fileFlags | os.O_APPEND
-	}
+func (s *FileTransferServer) Upload(stream service.FileTransfer_UploadServer) error {
+        filePath := ""
+        var file *os.File
 
-	file, err := os.OpenFile(filePath, fileFlags, 0777)
-	if err != nil {
-		return &service.UploadReply{Status: false}, err
-	}
-	defer file.Close()
+        for {
+                req, err := stream.Recv()
+                if err != nil {
+                        if err == io.EOF {
+                                return stream.SendAndClose(&service.UploadReply{Status: true})
+                        }
+                }
+                if filePath == "" {
+                        filePath := filepath.Join(dirName, filepath.Base(req.SdfsFileName))
+                        fileFlags := os.O_CREATE | os.O_WRONLY
+                        file, err = os.OpenFile(filePath, fileFlags, 0777)
+                        if err != nil {
+                                return stream.SendAndClose(&service.UploadReply{Status: false})
+                        }
+                        defer file.Close()
+                }
 
-	file.Write(uploadReq.FileContents)
-
-	return &service.UploadReply{Status: true}, nil
+	        file.Write(req.FileContents)
+        }
+	return nil
 }
 
 func (s *FileTransferServer) Download(ctx context.Context, downloadReq *service.DownloadRequest) (*service.DownloadReply, error) {
@@ -178,30 +188,6 @@ func GetFileContents(localFileName string) []byte {
 	return content
 }
 
-func UploadFile(conn *grpc.ClientConn, dest string, fileChunk []byte,
-	sdfsFileName string, isMultChunks bool, isFirstChunk bool) error {
-
-	client := service.NewFileTransferClient(conn)
-	uploadReply, err2 := client.Upload(context.Background(), &service.UploadRequest{
-		FileContents:     fileChunk,
-		SdfsFileName:     sdfsFileName,
-		IsMultipleChunks: isMultChunks,
-		IsFirstChunk:     isFirstChunk})
-	if err2 != nil {
-		Warn.Println(err2)
-		return err2
-	}
-
-	if uploadReply.GetStatus() == true {
-		Info.Println("Successfully uploaded chunk: [", sdfsFileName, "] at addr ", dest)
-		return nil
-	}
-
-	errorMsg := "Error: Bad reply status."
-	Warn.Println(errorMsg)
-	return errors.New(errorMsg)
-}
-
 func Upload(ipAddr string, port string, localFileName string, sdfsFileName string) error {
 	dest := ipAddr + ":" + port
 	conn, connErr := DialServer(dest)
@@ -209,6 +195,13 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 		return connErr
 	}
 	defer conn.Close()
+
+	client := service.NewFileTransferClient(conn)
+
+        stream, err := client.Upload(context.Background())
+        if err != nil {
+                return err
+        }
 
 	fileContents := GetFileContents(localFileName)
 	fileSize := len(fileContents)
@@ -224,7 +217,14 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 			lastIdx = fileSize
 		}
 
-		err := UploadFile(conn, dest, fileContents[i:lastIdx], sdfsFileName, isMultChunks, isFirstChunk)
+                req := &service.UploadRequest{
+                        FileContents:     fileContents[i:lastIdx],
+                        SdfsFileName:     sdfsFileName,
+                        IsMultipleChunks: isMultChunks,
+                        IsFirstChunk:     isFirstChunk}
+
+                err := stream.Send(req)
+
 		if err != nil {
 			return err
 		}
