@@ -264,17 +264,8 @@ func main() {
 					continue
 				}
 				sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[1], SdfsLock)
-				req := SdfsRequest{LocalFName: "", RemoteFName: inputFields[1], Type: DelReq}
-				var res SdfsResponse
-
-				err := client.Call("SdfsNode.HandleDeleteRequest", req, &res)
-
-				if err != nil {
-					fmt.Println(err)
-				} else {
-					fmt.Println("Deleted successfully: ", req.RemoteFName)
-				}
-				sessionId = sdfs.RpcLock(sessionId, inputFields[1], SdfsLock)
+                                sdfs.RpcDelete(inputFields[1])
+				sessionId = sdfs.RpcUnlock(sessionId, inputFields[1], SdfsLock)
 			}
 
 		case "ls":
@@ -283,19 +274,7 @@ func main() {
 					Warn.Println("Client not initialized.")
 					continue
 				}
-				req := SdfsRequest{LocalFName: "", RemoteFName: inputFields[1], Type: GetReq}
-				var res SdfsResponse
-
-				err := client.Call("SdfsNode.HandleGetRequest", req, &res)
-				if err != nil {
-					fmt.Println("Failed ls. ", err)
-				} else {
-					fmt.Print(inputFields[1], " =>   ")
-					for _, ip := range res.IPList {
-						fmt.Print(ip.String(), ", ")
-					}
-					fmt.Println()
-				}
+                                sdfs.RpcListIPs(inputFields[1])
 			}
 
 		case "store":

@@ -55,6 +55,36 @@ func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error
 	return nil
 }
 
+// Rpc wrapper for ls
+func (node *SdfsNode) RpcListIPs(fname string) {
+        var res SdfsResponse
+        req := SdfsRequest{LocalFName: "", RemoteFName: fname, Type: GetReq}
+
+        err := client.Call("SdfsNode.HandleGetRequest", req, &res)
+        if err != nil {
+                fmt.Println("Failed ls. ", err)
+        } else {
+                fmt.Print(fname, " =>   ")
+                for _, ip := range res.IPList {
+                        fmt.Print(ip.String(), ", ")
+                }
+                fmt.Println()
+        }
+}
+
+// Rpc wrapper for delete
+func (node *SdfsNode) RpcDelete(fname string) {
+        var res SdfsResponse
+        req := SdfsRequest{LocalFName: "", RemoteFName: fname, Type: DelReq}
+
+        err := client.Call("SdfsNode.HandleDeleteRequest", req, &res)
+
+        if err != nil {
+                fmt.Println(err)
+        }
+        fmt.Println("Deleted successfully: ", req.RemoteFName)
+}
+
 func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if node.isMaster == false && node.Master == nil {
 		return errors.New("Error: Master not initialized")
