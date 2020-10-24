@@ -20,7 +20,7 @@ var (
         KB = 1024
 	// 1346378950 is the size of wiki corpus + some more for fun lol
 	dialSize          = 1346378950 + 2048
-	uploadChunkSize   = 1 * KB
+	uploadChunkSize   = 8 * KB
 	downloadChunkSize = 10000000
 	clientDialOpts    = [4]grpc.DialOption{
 		grpc.WithInsecure(),
@@ -239,7 +239,7 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 
 		// sleep so that other threads can wake up
 		if isMultChunks {
-			time.Sleep(4 * time.Millisecond)
+			time.Sleep(50 * time.Millisecond)
 		}
 	}
 
