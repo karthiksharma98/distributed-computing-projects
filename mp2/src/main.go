@@ -285,6 +285,7 @@ func main() {
 										fmt.Println(mapErr)
 									}
 								}
+                                                                time.Sleep(time.Second * 4)
 							}
 						}
 					}
