@@ -14,18 +14,23 @@ import (
 	"time"
 )
 
-var (
+const (
+	KB = 1 << 10
+	MB = 1 << 20
 	// 1346378950 is the size of wiki corpus + some more for fun lol
-	dialSize          = 1346378950 + 2048
-	uploadChunkSize   = 350000
-	downloadChunkSize = 10000000
-	clientDialOpts    = [4]grpc.DialOption{
+	dialSize                 = 1400 * MB
+	uploadChunkSize          = 64 * KB
+	downloadChunkSize        = 64 * KB
+	dirName           string = "SDFS"
+)
+
+var (
+	clientDialOpts = [4]grpc.DialOption{
 		grpc.WithInsecure(),
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(dialSize)),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(dialSize)),
 		grpc.WithReturnConnectionError()}
-	serverDialOpts        = [2]grpc.ServerOption{grpc.MaxRecvMsgSize(dialSize), grpc.MaxSendMsgSize(dialSize)}
-	dirName        string = "SDFS"
+	serverDialOpts = [2]grpc.ServerOption{grpc.MaxRecvMsgSize(dialSize), grpc.MaxSendMsgSize(dialSize)}
 )
 
 // Init
@@ -202,7 +207,7 @@ func UploadFile(conn *grpc.ClientConn, dest string, fileChunk []byte,
 	return errors.New(errorMsg)
 }
 
-func Upload(ipAddr string, port string, localFileName string, sdfsFileName string) error {
+func Upload(ipAddr string, port string, localFileName string, sdfsFileName string, fileContents []byte) error {
 	dest := ipAddr + ":" + port
 	conn, connErr := DialServer(dest)
 	if connErr != nil {
@@ -210,7 +215,6 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 	}
 	defer conn.Close()
 
-	fileContents := GetFileContents(localFileName)
 	fileSize := len(fileContents)
 	isMultChunks := false
 	isFirstChunk := true
@@ -233,10 +237,6 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 			isFirstChunk = false
 		}
 
-		// sleep so that other threads can wake up
-		if isMultChunks {
-			time.Sleep(4 * time.Millisecond)
-		}
 	}
 
 	return nil
