@@ -162,6 +162,10 @@ func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) 
 	ipToModify, _, _ := net.ParseCIDR(stringIp)
 
 	if req.Type == AddReq {
+                // Don't add duplicate IP
+                if val, ok := node.Master.fileMap[req.RemoteFName]; ok && checkMember(ipToModify, val) != -1 {
+                        return nil
+                }
 		ogList := node.Master.fileMap[req.RemoteFName]
 		ogList = append(ogList, ipToModify)
 		node.Master.fileMap[req.RemoteFName] = ogList
