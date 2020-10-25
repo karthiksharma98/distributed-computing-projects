@@ -254,7 +254,7 @@ func main() {
 						err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.LocalFName)
 
 						if err != nil {
-							fmt.Println("error in download process.", err)
+							fmt.Println("error in download process at ", ipAddr, ": ", err)
 						} else {
 							// successful download
 							break

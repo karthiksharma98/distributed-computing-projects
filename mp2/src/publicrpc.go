@@ -170,6 +170,25 @@ func (node *SdfsNode) ModifyMasterFileMap(req SdfsRequest, reply *SdfsResponse) 
 	return nil
 }
 
+func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) error {
+	fileContents := GetFileContents(req.LocalFName)
+	err := Upload(req.IPAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName, fileContents)
+
+	if err != nil {
+		return err
+	} else {
+		// succesfull upload -> add to master's file map
+		mapReq := SdfsRequest{LocalFName: req.IPAddr.String(), RemoteFName: req.RemoteFName, Type: AddReq}
+		var mapRes SdfsResponse
+		mapErr := client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
+		if mapErr != nil {
+			return mapErr
+		}
+	}
+
+	return nil
+}
+
 func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if req.Type != DelReq {
 		return errors.New("Error: Invalid request type for Delete Request")
