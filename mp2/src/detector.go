@@ -48,30 +48,30 @@ var (
 
 // Initialize membership protocol
 func InitMembership(setIntroducer bool) *Member {
-        mem := NewMember(setIntroducer)
-        if Configuration.Service.detectorType == "alltoall" {
-                isGossip = false
-        }
+	mem := NewMember(setIntroducer)
+	if Configuration.Service.detectorType == "alltoall" {
+		isGossip = false
+	}
 
-        // initialize heartbeat listener
-        go mem.Listen(fmt.Sprint(Configuration.Service.port))
-        if setIntroducer {
-                mem.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
-                Info.Println("You are now the introducer.")
-                return mem
-        }
-        time.Sleep(100 * time.Millisecond) // Sleep a tiny bit so listener can start
-        mem.joinRequest()
-        // Wait for response
-        select {
-        case _ = <-joinAck:
-                fmt.Println("Node has joined the group.")
-        case <-time.After(2 * time.Second):
-                fmt.Println("Timeout join. Please retry again.")
-                listener.Close()
-                mem = nil
-        }
-        return mem
+	// initialize heartbeat listener
+	go mem.Listen(fmt.Sprint(Configuration.Service.port))
+	if setIntroducer {
+		mem.membershipList[0] = NewMembershipListEntry(0, net.ParseIP(Configuration.Service.introducerIP))
+		Info.Println("You are now the introducer.")
+		return mem
+	}
+	time.Sleep(100 * time.Millisecond) // Sleep a tiny bit so listener can start
+	mem.joinRequest()
+	// Wait for response
+	select {
+	case _ = <-joinAck:
+		fmt.Println("Node has joined the group.")
+	case <-time.After(2 * time.Second):
+		fmt.Println("Timeout join. Please retry again.")
+		listener.Close()
+		mem = nil
+	}
+	return mem
 }
 
 // Member constructor
@@ -283,14 +283,14 @@ func SetHeartbeating(flag bool) {
 		setTicker()
 	}
 
-        if isGossip == flag {
-                if isGossip {
-                        Warn.Println("You are already running Gossip")
-                } else {
-                        Warn.Println("You are already running All to All")
-                }
-                return
-        }
+	if isGossip == flag {
+		if isGossip {
+			Warn.Println("You are already running Gossip")
+		} else {
+			Warn.Println("You are already running All to All")
+		}
+		return
+	}
 
 	isGossip = flag
 	interval := time.Millisecond

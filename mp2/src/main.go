@@ -70,18 +70,16 @@ func main() {
 				continue
 			}
 
-
 			if len(inputFields) == 2 && inputFields[1] == "introducer" {
-                                process = InitMembership(true)
-                                sdfs = InitSdfs(process, true)
+				process = InitMembership(true)
+				sdfs = InitSdfs(process, true)
 				// initialize file transfer server
 				go InitializeServer(fmt.Sprint(Configuration.Service.filePort))
 
-
 			} else {
 				// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
-                                process = InitMembership(false)
-                                sdfs = InitSdfs(process, false)
+				process = InitMembership(false)
+				sdfs = InitSdfs(process, false)
 				go InitializeServer(fmt.Sprint(Configuration.Service.filePort))
 			}
 
@@ -273,7 +271,7 @@ func main() {
 					continue
 				}
 				sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[1], SdfsLock)
-                                sdfs.RpcDelete(inputFields[1])
+				sdfs.RpcDelete(inputFields[1])
 				sessionId = sdfs.RpcUnlock(sessionId, inputFields[1], SdfsLock)
 			}
 
@@ -283,7 +281,7 @@ func main() {
 					Warn.Println("Client not initialized.")
 					continue
 				}
-                                sdfs.RpcListIPs(inputFields[1])
+				sdfs.RpcListIPs(inputFields[1])
 			}
 
 		case "store":
