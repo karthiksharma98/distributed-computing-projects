@@ -14,10 +14,6 @@ import (
 
 type SdfsNode struct {
 	*Member
-	NumFiles  int
-	DiskSpace int
-	FileList  []string
-
 	// Master metadata
 	MasterId uint8
 	isMaster bool
@@ -49,9 +45,6 @@ var (
 func NewSdfsNode(mem *Member, setMaster bool) *SdfsNode {
 	node := &SdfsNode{
 		mem,
-		0,
-		0,
-		make([]string, 0),
 		0,
 		setMaster,
 		nil,
@@ -155,7 +148,7 @@ func (node *SdfsNode) handleCoordinator(id uint8) {
 	// Encode file list
 	b := new(bytes.Buffer)
 	e := gob.NewEncoder(b)
-	err := e.Encode(node.FileList)
+	err := e.Encode(node.GetLocalFiles())
 	if err != nil {
 		panic(err)
 	}
@@ -216,7 +209,7 @@ func (node *SdfsNode) deleteFile(localFilename string) bool {
 
 // Cleanup files, file lists, etc
 func (node *SdfsNode) cleanupLocal() {
-	for _, fname := range node.FileList {
+	for _, fname := range node.GetLocalFiles() {
 		node.deleteFile(fname)
 	}
 }
@@ -251,17 +244,22 @@ func (node *SdfsNode) cleanupNode(id uint8) {
 }
 
 // List set of file names replicated on process
-func (node *SdfsNode) Store() error {
+func (node *SdfsNode) Store() {
+	fmt.Println(node.GetLocalFiles())
+}
+
+// Get all local files
+func (node *SdfsNode) GetLocalFiles() []string {
 	file, err := os.Open("./SDFS/")
 	if err != nil {
-		return err
+		panic(err)
 	}
 	names, err := file.Readdirnames(0)
 	if err != nil {
-		return err
+		panic(err)
 	}
-	fmt.Println(names)
-	return nil
+	return names
+
 }
 
 // Add IPList to file map
