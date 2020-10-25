@@ -1,7 +1,9 @@
 package main
 
+/*
 import _ "net/http/pprof"
 import "net/http"
+*/
 
 import (
 	"bufio"
@@ -185,9 +187,11 @@ func main() {
 		// SDFS
 		case "put":
 			if len(inputFields) >= 3 && process != nil {
+                                /*
                                 go func() {
                                         Info.Println(http.ListenAndServe("localhost:6060", nil))
                                 }()
+                                */
 				if client == nil || sdfs == nil {
 					Warn.Println("Client not initialized.")
 					continue
