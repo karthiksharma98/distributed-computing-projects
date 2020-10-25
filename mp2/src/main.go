@@ -1,5 +1,8 @@
 package main
 
+import _ "net/http/pprof"
+import "net/http"
+
 import (
 	"bufio"
 	"fmt"
@@ -8,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-        _ "net/http/pprof"
 )
 
 var (
