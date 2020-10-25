@@ -90,7 +90,7 @@ func (s *FileTransferServer) Upload(stream service.FileTransfer_UploadServer) er
 	        file.Write(req.FileContents)
                 time.Sleep(10*time.Millisecond)
         }
-	return nil
+	return stream.SendAndClose(&service.UploadReply{Status: true})
 }
 
 func (s *FileTransferServer) Download(ctx context.Context, downloadReq *service.DownloadRequest) (*service.DownloadReply, error) {
@@ -191,7 +191,7 @@ func GetFileContents(localFileName string) []byte {
 	return content
 }
 
-func Upload(ipAddr string, port string, localFileName string, sdfsFileName string) error {
+func Upload(ipAddr string, port string, localFileName string, sdfsFileName string, fileContents []byte) error {
 	dest := ipAddr + ":" + port
 	conn, connErr := DialServer(dest)
 	if connErr != nil {
@@ -206,9 +206,7 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
                 return err
         }
 
-        time.Sleep(5 * time.Second)
-
-	fileContents := GetFileContents(localFileName)
+	//fileContents := GetFileContents(localFileName)
 	fileSize := len(fileContents)
 	isMultChunks := false
 	isFirstChunk := true

@@ -252,6 +252,7 @@ func main() {
 				numAlive := process.GetNumAlive()
 				numSuccessful := 0
 				ipsAttempted := make(map[string]bool)
+                                fileContents := GetFileContents(req.LocalFName)
 				// attempt to get as many replications needed, until you've attempted all the IPs
 				for numSuccessful < int(Configuration.Settings.replicationFactor) &&
 					len(ipsAttempted) <= numAlive {
@@ -271,7 +272,7 @@ func main() {
 						for _, ipAddr := range res.IPList {
 							if _, exists := ipsAttempted[ipAddr.String()]; !exists {
 								ipsAttempted[ipAddr.String()] = true
-								err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName)
+								err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName, fileContents)
 
 								if err != nil {
 									fmt.Println("error in upload process.", err)
@@ -377,10 +378,12 @@ func main() {
 
 		case "upload":
 			if len(inputFields) == 4 {
+                                fileContents := GetFileContents(inputFields[2])
 				Upload(fmt.Sprint(inputFields[1]),
 					fmt.Sprint(Configuration.Service.filePort),
 					inputFields[2],
-					inputFields[3])
+					inputFields[3],
+                                        fileContents)
 			}
 
 		case "download":
