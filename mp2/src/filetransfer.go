@@ -73,8 +73,8 @@ func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.Uplo
 	if uploadReq.IsMultipleChunks && !uploadReq.IsFirstChunk {
 		fileFlags = fileFlags | os.O_APPEND
 	} else {
-                Info.Println("Receiving upload for file", uploadReq.SdfsFileName)
-        }
+		Info.Println("Receiving upload for file", uploadReq.SdfsFileName)
+	}
 
 	file, err := os.OpenFile(filePath, fileFlags, 0777)
 	if err != nil {
@@ -123,7 +123,7 @@ func (s *FileTransferServer) Download(ctx context.Context, downloadReq *service.
 	startIdx := int64(downloadReq.ChunkNum) * int64(downloadChunkSize)
 	readSize := int64(downloadChunkSize)
 	if isLastChunk {
-                Info.Println("Download sent")
+		Info.Println("Download sent")
 		readSize = fileSize - startIdx
 	}
 
@@ -224,7 +224,7 @@ func Upload(ipAddr string, port string, localFileName string, sdfsFileName strin
 		isMultChunks = true
 	}
 
-        Info.Println("Uploading", localFileName,"to", ipAddr)
+	Info.Println("Uploading", localFileName, "to", ipAddr)
 
 	for i := 0; i < fileSize; i += uploadChunkSize {
 		lastIdx := i + uploadChunkSize

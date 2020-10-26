@@ -79,72 +79,72 @@ func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error
 
 func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 
-        req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: PutReq}
+	req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: PutReq}
 
-        numAlive := process.GetNumAlive()
-        numSuccessful := 0
-        ipsAttempted := make(map[string]bool)
-        fileContents := GetFileContents(req.LocalFName)
-        // attempt to get as many replications needed, until you've attempted all the IPs
-        for numSuccessful < int(Configuration.Settings.replicationFactor) &&
-                len(ipsAttempted) <= numAlive {
-                var res SdfsResponse
-                var err error
-                if len(ipsAttempted) == 0 {
-                        err = client.Call("SdfsNode.HandlePutRequest", req, &res)
-                } else {
-                        err = client.Call("SdfsNode.GetRandomNodes", req, &res)
-                }
+	numAlive := process.GetNumAlive()
+	numSuccessful := 0
+	ipsAttempted := make(map[string]bool)
+	fileContents := GetFileContents(req.LocalFName)
+	// attempt to get as many replications needed, until you've attempted all the IPs
+	for numSuccessful < int(Configuration.Settings.replicationFactor) &&
+		len(ipsAttempted) <= numAlive {
+		var res SdfsResponse
+		var err error
+		if len(ipsAttempted) == 0 {
+			err = client.Call("SdfsNode.HandlePutRequest", req, &res)
+		} else {
+			err = client.Call("SdfsNode.GetRandomNodes", req, &res)
+		}
 
-                if err != nil {
-                        fmt.Println("Put failed", err)
-                        return
-                }
-                // attempt upload each file
-                for _, ipAddr := range res.IPList {
-                        if _, exists := ipsAttempted[ipAddr.String()]; !exists {
-                                ipsAttempted[ipAddr.String()] = true
-                                err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName, fileContents)
+		if err != nil {
+			fmt.Println("Put failed", err)
+			return
+		}
+		// attempt upload each file
+		for _, ipAddr := range res.IPList {
+			if _, exists := ipsAttempted[ipAddr.String()]; !exists {
+				ipsAttempted[ipAddr.String()] = true
+				err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName, fileContents)
 
-                                if err != nil {
-                                        fmt.Println("error in upload process.", err)
-                                } else {
-                                        numSuccessful += 1
-                                        // succesfull upload -> add to master's file map
-                                        mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: remoteFname, Type: AddReq}
-                                        var mapRes SdfsResponse
-                                        mapErr := client.Call("SdfsNode.AddToFileMap", mapReq, &mapRes)
-                                        if mapErr != nil {
-                                                fmt.Println(mapErr)
-                                        }
-                                }
-                        }
-                }
+				if err != nil {
+					fmt.Println("error in upload process.", err)
+				} else {
+					numSuccessful += 1
+					// succesfull upload -> add to master's file map
+					mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: remoteFname, Type: AddReq}
+					var mapRes SdfsResponse
+					mapErr := client.Call("SdfsNode.AddToFileMap", mapReq, &mapRes)
+					if mapErr != nil {
+						fmt.Println(mapErr)
+					}
+				}
+			}
+		}
 
-                // update alive nodes in case there's not enough anymore
-                numAlive = process.GetNumAlive()
-        }
+		// update alive nodes in case there's not enough anymore
+		numAlive = process.GetNumAlive()
+	}
 }
 
 func (node *SdfsNode) RpcGet(remoteFname string, localFname string) {
-        req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: GetReq}
-        var res SdfsResponse
+	req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: GetReq}
+	var res SdfsResponse
 
-        err := client.Call("SdfsNode.HandleGetRequest", req, &res)
-        if err != nil {
-                fmt.Println(err)
-        } else {
-                for _, ipAddr := range res.IPList {
-                        err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.LocalFName)
+	err := client.Call("SdfsNode.HandleGetRequest", req, &res)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		for _, ipAddr := range res.IPList {
+			err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.LocalFName)
 
-                        if err != nil {
-                                fmt.Println("error in download process at ", ipAddr, ": ", err)
-                        } else {
-                                // successful download
-                                return
-                        }
-                }
-        }
+			if err != nil {
+				fmt.Println("error in download process at ", ipAddr, ": ", err)
+			} else {
+				// successful download
+				return
+			}
+		}
+	}
 }
 
 // Rpc wrapper for ls
@@ -254,10 +254,10 @@ func (node *SdfsNode) AddToFileMap(req SdfsRequest, reply *SdfsResponse) error {
 	ipToModify, _, _ := net.ParseCIDR(stringIp)
 
 	if req.Type == AddReq {
-                // Don't add duplicate IP
-                if val, ok := node.Master.fileMap[req.RemoteFName]; ok && checkMember(ipToModify, val) != -1 {
-                        return nil
-                }
+		// Don't add duplicate IP
+		if val, ok := node.Master.fileMap[req.RemoteFName]; ok && checkMember(ipToModify, val) != -1 {
+			return nil
+		}
 		ogList := node.Master.fileMap[req.RemoteFName]
 		ogList = append(ogList, ipToModify)
 		node.Master.fileMap[req.RemoteFName] = ogList

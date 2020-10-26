@@ -185,7 +185,7 @@ func main() {
 					continue
 				}
 				sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[2], SdfsLock)
-                                sdfs.RpcPut(inputFields[1], inputFields[2])
+				sdfs.RpcPut(inputFields[1], inputFields[2])
 				sessionId = sdfs.RpcUnlock(sessionId, inputFields[2], SdfsLock)
 
 				fmt.Println("Finished put.")
@@ -198,7 +198,7 @@ func main() {
 					continue
 				}
 				sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[1], SdfsRLock)
-                                sdfs.RpcGet(inputFields[1], inputFields[2])
+				sdfs.RpcGet(inputFields[1], inputFields[2])
 				sessionId = sdfs.RpcUnlock(sessionId, inputFields[1], SdfsRLock)
 				fmt.Println("Finished get.")
 			}
@@ -254,35 +254,6 @@ func main() {
 		case "master":
 			if sdfs != nil {
 				fmt.Println(sdfs.MasterId)
-			}
-		// Debug lock
-		case "lock":
-			if sdfs == nil {
-				return
-			}
-			if len(inputFields) == 3 {
-				if inputFields[1] == "get" {
-					// Acquire read
-					sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[2], SdfsRLock)
-					fmt.Println("Lock (get) acquired! Test get for 10 seconds!")
-
-					// Timeout
-					time.Sleep(10 * time.Second)
-
-					// Release read
-					sessionId = sdfs.RpcUnlock(sessionId, inputFields[2], SdfsRLock)
-					fmt.Println("Lock read released!")
-				} else if inputFields[1] == "put" {
-					// Acquire write
-					sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[2], SdfsLock)
-					fmt.Println("Lock (write) acquired! Test put for 10 seconds!")
-
-					// Timeout
-					time.Sleep(10 * time.Second)
-
-					// Release write
-					sessionId = sdfs.RpcUnlock(sessionId, inputFields[2], SdfsLock)
-				}
 			}
 
 		case "help":
