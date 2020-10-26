@@ -1,0 +1,7 @@
+[INFO] 2020/10/26 00:16:59 Detector: gossip
+[INFO] 2020/10/26 00:16:59 Introducer: 172.22.156.42 on port 9090
+[INFO] 2020/10/26 00:16:59 Gossip interval: 1
+[INFO] 2020/10/26 00:16:59 All-to-All interval: 3
+[INFO] 2020/10/26 00:16:59 Failure timeout: 5
+[INFO] 2020/10/26 00:16:59 Cleanup timeout: 24
+[WARN] 2020/10/26 00:17:02 main.go:105: Killing process. Bye bye.

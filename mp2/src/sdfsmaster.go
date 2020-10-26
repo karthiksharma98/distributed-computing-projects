@@ -12,14 +12,6 @@ import (
 	"time"
 )
 
-type SdfsNode struct {
-	*Member
-	// Master metadata
-	MasterId uint8
-	isMaster bool
-	Master   *SdfsMaster
-}
-
 type SdfsMaster struct {
 	fileMap map[string][]net.IP
 	lockMap map[string]*SdfsMutex
@@ -41,20 +33,6 @@ var (
 	okAck        chan bool
 	sdfsListener *net.UDPConn
 )
-
-func NewSdfsNode(mem *Member, setMaster bool) *SdfsNode {
-	node := &SdfsNode{
-		mem,
-		0,
-		setMaster,
-		nil,
-	}
-
-	if setMaster {
-		node.Master = NewSdfsMaster()
-	}
-	return node
-}
 
 func NewSdfsMaster() *SdfsMaster {
 	master := &SdfsMaster{
@@ -194,52 +172,6 @@ func (node *SdfsNode) handleRecoverMaster(senderAddr net.IP, fileListBytes []byt
 		} else {
 			node.Master.fileMap[fname] = []net.IP{senderAddr}
 		}
-	}
-}
-
-// Delete file local
-func (node *SdfsNode) deleteFile(localFilename string) bool {
-	// delete file given file name
-	err := os.Remove(localFilename)
-	if err != nil {
-		return false
-	}
-	return true
-}
-
-// Cleanup files, file lists, etc
-func (node *SdfsNode) cleanupLocal() {
-	for _, fname := range node.GetLocalFiles() {
-		node.deleteFile(fname)
-	}
-}
-
-// Remove ip from iplist
-func (node *SdfsMaster) deleteIP(fname string, ipAddr string) {
-	ipList, ok := node.fileMap[fname]
-	if !ok {
-		return
-	}
-
-	for idx, ip := range ipList {
-		if ip.String() != ipAddr {
-			continue
-		}
-		ipList[idx] = ipList[len(ipList)-1]
-		node.fileMap[fname] = ipList[:len(ipList)-1]
-	}
-}
-
-// Cleanup node
-func (node *SdfsNode) cleanupNode(id uint8) {
-	if node.Master != nil {
-		return
-	}
-	// get ip of node to cleanup
-	ipAddr := node.Member.membershipList[id].IPaddr.String()
-	// read fileMap, remove ip from list if matches node
-	for fname, _ := range node.Master.fileMap {
-		node.Master.deleteIP(fname, ipAddr)
 	}
 }
 

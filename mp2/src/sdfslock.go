@@ -32,6 +32,10 @@ type SdfsMutex struct {
 	RCount int
 }
 
+const (
+	lockTimeout = 60
+)
+
 var (
 	sessionIdCt = new(int32)
 )
@@ -89,7 +93,7 @@ func (node *SdfsNode) AcquireLock(req SdfsLockRequest, reply *SdfsLockResponse) 
 			node.Master.Unlock(req.RemoteFname, req.Type)
 			Info.Println("Lock released session confirm", sessId)
 			return
-		case <-time.After(30 * time.Second):
+		case <-time.After(lockTimeout * time.Second):
 			Info.Println("Lock", sessId, "timed out after 30s")
 			node.Master.Unlock(req.RemoteFname, req.Type)
 			return
