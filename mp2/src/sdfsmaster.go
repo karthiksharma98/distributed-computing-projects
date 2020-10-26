@@ -12,14 +12,6 @@ import (
 	"time"
 )
 
-type SdfsNode struct {
-	*Member
-	// Master metadata
-	MasterId uint8
-	isMaster bool
-	Master   *SdfsMaster
-}
-
 type SdfsMaster struct {
 	fileMap map[string][]net.IP
 	lockMap map[string]*SdfsMutex
@@ -41,20 +33,6 @@ var (
 	okAck        chan bool
 	sdfsListener *net.UDPConn
 )
-
-func NewSdfsNode(mem *Member, setMaster bool) *SdfsNode {
-	node := &SdfsNode{
-		mem,
-		0,
-		setMaster,
-		nil,
-	}
-
-	if setMaster {
-		node.Master = NewSdfsMaster()
-	}
-	return node
-}
 
 func NewSdfsMaster() *SdfsMaster {
 	master := &SdfsMaster{

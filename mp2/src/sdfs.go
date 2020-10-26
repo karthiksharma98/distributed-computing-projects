@@ -2,312 +2,323 @@ package main
 
 import (
 	"errors"
-	"gitlab.com/CS425_MPs/FileService" // go mod init "gitlab.com/CS425_MPs"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc" // go get -u google.golang.org/grpc
-	"google.golang.org/grpc/reflection"
-	"io/ioutil"
+	"fmt"
 	"net"
+	"net/rpc"
 	"os"
-	"path"
-	"path/filepath"
-	"time"
+	"strconv"
 )
+
+type SdfsNode struct {
+	*Member
+	// Master metadata
+	MasterId uint8
+	isMaster bool
+	Master   *SdfsMaster
+}
+
+type SdfsRequest struct {
+	LocalFName  string
+	RemoteFName string
+	IPAddr      net.IP
+	Type        ReqType
+}
+
+type SdfsResponse struct {
+	IPList []net.IP
+}
+
+type ReqType int
 
 const (
-	KB = 1 << 10
-	MB = 1 << 20
-	// 1346378950 is the size of wiki corpus + some more for fun lol
-	dialSize                 = 1400 * MB
-	uploadChunkSize          = 64 * KB
-	downloadChunkSize        = 64 * KB
-	dirName           string = "SDFS"
+	PutReq ReqType = iota
+	GetReq
+	DelReq
+	LsReq
+	AddReq
+	UploadReq
 )
 
-var (
-	clientDialOpts = [4]grpc.DialOption{
-		grpc.WithInsecure(),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(dialSize)),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(dialSize)),
-		grpc.WithReturnConnectionError()}
-	serverDialOpts = [2]grpc.ServerOption{grpc.MaxRecvMsgSize(dialSize), grpc.MaxSendMsgSize(dialSize)}
-)
+func InitSdfs(mem *Member, setMaster bool) *SdfsNode {
+	sdfs := NewSdfsNode(mem, setMaster)
+	// start SDFS listener
+	go sdfs.ListenSdfs(fmt.Sprint(Configuration.Service.masterPort))
+	// start RPC Server for handling requests get/put/delete/ls
+	sdfs.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
+	sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.masterPort))
+	return sdfs
+}
 
-// Init
-func InitSdfsDirectory() {
-	_, err := os.Stat(dirName)
+func NewSdfsNode(mem *Member, setMaster bool) *SdfsNode {
+	node := &SdfsNode{
+		mem,
+		0,
+		setMaster,
+		nil,
+	}
 
-	if os.IsNotExist(err) {
-		os.MkdirAll(dirName, 0755)
+	if setMaster {
+		node.Master = NewSdfsMaster()
+	}
+	return node
+}
+
+func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error {
+	repFactor := int(Configuration.Settings.replicationFactor)
+	ipList := node.pickRandomNodes(repFactor)
+	if ipList == nil {
+		return errors.New("Error: Could not find " + strconv.Itoa(repFactor) + " alive nodes")
+	}
+
+	var resp SdfsResponse
+	resp.IPList = ipList
+	*reply = resp
+
+	return nil
+}
+
+func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
+
+        req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: PutReq}
+
+        numAlive := process.GetNumAlive()
+        numSuccessful := 0
+        ipsAttempted := make(map[string]bool)
+        fileContents := GetFileContents(req.LocalFName)
+        // attempt to get as many replications needed, until you've attempted all the IPs
+        for numSuccessful < int(Configuration.Settings.replicationFactor) &&
+                len(ipsAttempted) <= numAlive {
+                var res SdfsResponse
+                var err error
+                if len(ipsAttempted) == 0 {
+                        err = client.Call("SdfsNode.HandlePutRequest", req, &res)
+                } else {
+                        err = client.Call("SdfsNode.GetRandomNodes", req, &res)
+                }
+
+                if err != nil {
+                        fmt.Println("Put failed", err)
+                        return
+                }
+                // attempt upload each file
+                for _, ipAddr := range res.IPList {
+                        if _, exists := ipsAttempted[ipAddr.String()]; !exists {
+                                ipsAttempted[ipAddr.String()] = true
+                                err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName, fileContents)
+
+                                if err != nil {
+                                        fmt.Println("error in upload process.", err)
+                                } else {
+                                        numSuccessful += 1
+                                        // succesfull upload -> add to master's file map
+                                        mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: remoteFname, Type: AddReq}
+                                        var mapRes SdfsResponse
+                                        mapErr := client.Call("SdfsNode.AddToFileMap", mapReq, &mapRes)
+                                        if mapErr != nil {
+                                                fmt.Println(mapErr)
+                                        }
+                                }
+                        }
+                }
+
+                // update alive nodes in case there's not enough anymore
+                numAlive = process.GetNumAlive()
+        }
+}
+
+func (node *SdfsNode) RpcGet(remoteFname string, localFname string) {
+        req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: GetReq}
+        var res SdfsResponse
+
+        err := client.Call("SdfsNode.HandleGetRequest", req, &res)
+        if err != nil {
+                fmt.Println(err)
+        } else {
+                for _, ipAddr := range res.IPList {
+                        err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.LocalFName)
+
+                        if err != nil {
+                                fmt.Println("error in download process at ", ipAddr, ": ", err)
+                        } else {
+                                // successful download
+                                return
+                        }
+                }
+        }
+}
+
+// Rpc wrapper for ls
+func (node *SdfsNode) RpcListIPs(fname string) {
+	var res SdfsResponse
+	req := SdfsRequest{LocalFName: "", RemoteFName: fname, Type: GetReq}
+
+	err := client.Call("SdfsNode.HandleGetRequest", req, &res)
+	if err != nil {
+		fmt.Println("Failed ls. ", err)
 	} else {
-		// clear contents when starting up
-		dir, _ := ioutil.ReadDir(dirName)
-		for _, d := range dir {
-			os.RemoveAll(path.Join([]string{dirName, d.Name()}...))
+		fmt.Print(fname, " =>   ")
+		for _, ip := range res.IPList {
+			fmt.Print(ip.String(), ", ")
 		}
+		fmt.Println()
 	}
 }
 
-// Server methods
+// Rpc wrapper for delete
+func (node *SdfsNode) RpcDelete(fname string) {
+	var res SdfsResponse
+	req := SdfsRequest{LocalFName: "", RemoteFName: fname, Type: DelReq}
 
-type FileTransferServer struct{}
+	err := client.Call("SdfsNode.HandleDeleteRequest", req, &res)
 
-func InitializeServer(port string) {
-	serverListener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
-
-	grpcServer := grpc.NewServer(serverDialOpts[0:2]...)
-	service.RegisterFileTransferServer(grpcServer, &FileTransferServer{})
-	reflection.Register(grpcServer)
-
-	if err2 := grpcServer.Serve(serverListener); err2 != nil {
-		panic(err2)
-	}
+	fmt.Println("Deleted successfully: ", req.RemoteFName)
 }
 
-func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.UploadRequest) (*service.UploadReply, error) {
-	filePath := filepath.Join(dirName, filepath.Base(uploadReq.SdfsFileName))
-	fileFlags := os.O_CREATE | os.O_WRONLY
-	if uploadReq.IsMultipleChunks && !uploadReq.IsFirstChunk {
-		fileFlags = fileFlags | os.O_APPEND
+func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) error {
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
 	}
 
-	file, err := os.OpenFile(filePath, fileFlags, 0777)
-	if err != nil {
-		return &service.UploadReply{Status: false}, err
-	}
-	defer file.Close()
-
-	file.Write(uploadReq.FileContents)
-
-	return &service.UploadReply{Status: true}, nil
-}
-
-func (s *FileTransferServer) Download(ctx context.Context, downloadReq *service.DownloadRequest) (*service.DownloadReply, error) {
-	file, err := os.Open(filepath.Join(dirName, filepath.Base(downloadReq.GetSdfsFileName())))
-	defer file.Close()
-	if err != nil {
-		return &service.DownloadReply{
-			DoesFileExist:    false,
-			FileContents:     []byte(err.Error()),
-			IsMultipleChunks: false,
-			IsLastChunk:      true}, nil
+	if req.Type != PutReq {
+		return errors.New("Error: Invalid request type for Put Request")
 	}
 
-	fileStat, err2 := file.Stat()
-	if err2 != nil {
-		return &service.DownloadReply{
-			DoesFileExist:    false,
-			FileContents:     []byte(err.Error()),
-			IsMultipleChunks: false,
-			IsLastChunk:      true}, nil
-	}
+	if val, ok := node.Master.fileMap[req.RemoteFName]; ok && len(val) != 0 {
+		// if file exists already, return those IPs
+		ipList := val
+		var resp SdfsResponse
+		resp.IPList = ipList
+		*reply = resp
 
-	fileSize := fileStat.Size()
-	isMultChunks := false
-	if fileSize >= int64(downloadChunkSize) {
-		isMultChunks = true
-	}
-
-	isLastChunk := true
-	// + 1 to know how many are about to be sent
-	if fileSize > (int64(downloadReq.ChunkNum+1) * int64(downloadChunkSize)) {
-		isLastChunk = false
-	}
-
-	// move to position you want to read from
-	startIdx := int64(downloadReq.ChunkNum) * int64(downloadChunkSize)
-	readSize := int64(downloadChunkSize)
-	if isLastChunk {
-		readSize = fileSize - startIdx
-	}
-
-	buf := make([]byte, readSize)
-
-	var whence int = 0
-	_, seekErr := file.Seek(startIdx, whence)
-	if seekErr != nil {
-		return &service.DownloadReply{
-			DoesFileExist:    false,
-			FileContents:     []byte(err.Error()),
-			IsMultipleChunks: false,
-			IsLastChunk:      true}, nil
-	}
-
-	file.Read(buf)
-
-	return &service.DownloadReply{
-		DoesFileExist:    true,
-		FileContents:     buf,
-		IsMultipleChunks: isMultChunks,
-		IsLastChunk:      isLastChunk}, nil
-}
-
-// Client Methods
-
-func DialServer(dest string) (*grpc.ClientConn, error) {
-	connectChan := make(chan bool, 1)
-	var conn *grpc.ClientConn
-	var connErr error
-	go func() {
-		conn, connErr = grpc.Dial(dest, clientDialOpts[0:4]...)
-		connectChan <- true
-	}()
-
-	select {
-	case <-connectChan:
-		Info.Println("Connected to ", dest, " to upload.")
-	case <-time.After(time.Duration(Configuration.Settings.failTimeout) * time.Second):
-		errorMsg := "Time to connect has surpassed deadline."
-		Warn.Println(errorMsg)
-		return nil, errors.New(errorMsg)
-	}
-
-	if connErr != nil {
-		panic(connErr)
-	}
-
-	return conn, connErr
-}
-
-func GetFileContents(localFileName string) []byte {
-	content, err := ioutil.ReadFile(localFileName)
-	if err != nil {
-		Warn.Println("Unable to read file.")
-		return []byte{}
-	}
-
-	// Convert []byte to string
-	return content
-}
-
-func UploadFile(conn *grpc.ClientConn, dest string, fileChunk []byte,
-	sdfsFileName string, isMultChunks bool, isFirstChunk bool) error {
-
-	client := service.NewFileTransferClient(conn)
-	uploadReply, err2 := client.Upload(context.Background(), &service.UploadRequest{
-		FileContents:     fileChunk,
-		SdfsFileName:     sdfsFileName,
-		IsMultipleChunks: isMultChunks,
-		IsFirstChunk:     isFirstChunk})
-	if err2 != nil {
-		Warn.Println(err2)
-		return err2
-	}
-
-	if uploadReply.GetStatus() == true {
-		Info.Println("Successfully uploaded chunk: [", sdfsFileName, "] at addr ", dest)
 		return nil
 	}
 
-	errorMsg := "Error: Bad reply status."
-	Warn.Println(errorMsg)
-	return errors.New(errorMsg)
+	return node.GetRandomNodes(req, reply)
 }
 
-func Upload(ipAddr string, port string, localFileName string, sdfsFileName string, fileContents []byte) error {
-	dest := ipAddr + ":" + port
-	conn, connErr := DialServer(dest)
-	if connErr != nil {
-		return connErr
-	}
-	defer conn.Close()
-
-	fileSize := len(fileContents)
-	isMultChunks := false
-	isFirstChunk := true
-	if fileSize >= uploadChunkSize {
-		isMultChunks = true
+func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error {
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
 	}
 
-	for i := 0; i < fileSize; i += uploadChunkSize {
-		lastIdx := i + uploadChunkSize
-		if lastIdx > fileSize {
-			lastIdx = fileSize
-		}
-
-		err := UploadFile(conn, dest, fileContents[i:lastIdx], sdfsFileName, isMultChunks, isFirstChunk)
-		if err != nil {
-			return err
-		}
-
-		if isFirstChunk {
-			isFirstChunk = false
-		}
-
+	if req.Type != GetReq {
+		return errors.New("Error: Invalid request type for Get Request")
 	}
 
-	return nil
+	var response SdfsResponse
+
+	if val, ok := node.Master.fileMap[req.RemoteFName]; ok && len(val) != 0 {
+		response.IPList = val
+		*reply = response
+		return nil
+	}
+
+	return errors.New("Error: File not found")
 }
 
-func DownloadFile(filePath string, fileChunk []byte, fileFlags int) error {
-	file, err := os.OpenFile(filePath, fileFlags, 0777)
+func (node *SdfsNode) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
+	return os.Remove("./" + dirName + "/" + req.RemoteFName)
+}
+
+func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
+	}
+
+	client, err := rpc.DialHTTP("tcp", ip.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
 	if err != nil {
-		errorMsg := "Failed to create file."
-		Warn.Println(errorMsg, err)
-		return errors.New(errorMsg)
+		fmt.Println("Delete connection error: ", err)
+		return err
 	}
-	defer file.Close()
 
-	file.Write(fileChunk)
+	var req SdfsRequest
+	var res SdfsResponse
+
+	req.RemoteFName = RemoteFName
+	req.Type = DelReq
+
+	return client.Call("SdfsNode.DeleteFile", req, &res)
+}
+
+func (node *SdfsNode) AddToFileMap(req SdfsRequest, reply *SdfsResponse) error {
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
+	}
+
+	// convert string -> ip.net
+	// req.LocalFName here is ip address, need the 27 for the method call to work
+	stringIp := req.LocalFName + "/27"
+	ipToModify, _, _ := net.ParseCIDR(stringIp)
+
+	if req.Type == AddReq {
+                // Don't add duplicate IP
+                if val, ok := node.Master.fileMap[req.RemoteFName]; ok && checkMember(ipToModify, val) != -1 {
+                        return nil
+                }
+		ogList := node.Master.fileMap[req.RemoteFName]
+		ogList = append(ogList, ipToModify)
+		node.Master.fileMap[req.RemoteFName] = ogList
+	}
 
 	return nil
 }
 
-func Download(ipAddr string, port string, sdfsFileName string, localFileName string) error {
-	// establish connection with server
-	dest := ipAddr + ":" + port
-	conn, connErr := DialServer(dest)
-	if connErr != nil {
-		return connErr
-	}
-	defer conn.Close()
+func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) error {
+	fileContents := GetFileContents(req.LocalFName)
+	err := Upload(req.IPAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName, fileContents)
 
-	client := service.NewFileTransferClient(conn)
-
-	// get first chunk
-	chunkNum := 0
-	downloadReply, err2 := client.Download(context.Background(),
-		&service.DownloadRequest{SdfsFileName: sdfsFileName, ChunkNum: int32(chunkNum)})
-
-	if err2 != nil || !downloadReply.DoesFileExist {
-		errorMsg := "Error: Unable to download file " + sdfsFileName + ". File does not exist."
-		Warn.Println(errorMsg, err2)
-		return errors.New(errorMsg)
-	}
-
-	fileFlags := os.O_CREATE | os.O_WRONLY
-
-	for {
-		// save reply contents to file path
-		dlErr := DownloadFile(localFileName, downloadReply.FileContents, fileFlags)
-		if dlErr != nil {
-			return dlErr
-		}
-
-		if downloadReply.IsLastChunk {
-			break
-		}
-
-		// if here, we're gonna append to the file
-		fileFlags = fileFlags | os.O_APPEND
-
-		// sleep before requesting next chunk so that other threads can run lol
-		time.Sleep(4 * time.Millisecond)
-
-		// get next chunk
-		chunkNum += 1
-		downloadReply, err2 = client.Download(context.Background(),
-			&service.DownloadRequest{SdfsFileName: sdfsFileName, ChunkNum: int32(chunkNum)})
-
-		if err2 != nil {
-			Warn.Println("Error in download process.")
-			return err2
+	if err != nil {
+		return err
+	} else {
+		// succesfull upload -> add to master's file map
+		mapReq := SdfsRequest{LocalFName: req.IPAddr.String(), RemoteFName: req.RemoteFName, Type: AddReq}
+		var mapRes SdfsResponse
+		mapErr := client.Call("SdfsNode.AddToFileMap", mapReq, &mapRes)
+		if mapErr != nil {
+			return mapErr
 		}
 	}
 
-	Info.Println("Successfully downloaded file: [", sdfsFileName, "]")
+	return nil
+}
+
+func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) error {
+	if req.Type != DelReq {
+		return errors.New("Error: Invalid request type for Delete Request")
+	}
+
+	if val, ok := node.Master.fileMap[req.RemoteFName]; ok && len(val) != 0 {
+		failedIndices := make([]int, 0)
+
+		for index, ip := range val {
+			err := node.sendDeleteCommand(ip, req.RemoteFName)
+			if err != nil {
+				failedIndices = append(failedIndices, index)
+			}
+		}
+
+		if len(failedIndices) == 0 {
+			delete(node.Master.fileMap, req.RemoteFName)
+			return nil
+		} else {
+			// make list of failed IPs
+			failedIps := make([]net.IP, 0)
+			for _, i := range failedIndices {
+				failedIps = append(failedIps, node.Master.fileMap[req.RemoteFName][i])
+			}
+
+			// replace old list with this one
+			node.Master.fileMap[req.RemoteFName] = failedIps
+
+			// send list of failed deletes back to process, exit with error
+			var res SdfsResponse
+			res.IPList = failedIps
+			*reply = res
+			return errors.New("Failed deleting files")
+		}
+	}
 	return nil
 }

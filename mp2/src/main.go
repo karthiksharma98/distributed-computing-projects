@@ -74,13 +74,13 @@ func main() {
 				process = InitMembership(true)
 				sdfs = InitSdfs(process, true)
 				// initialize file transfer server
-				go InitializeServer(fmt.Sprint(Configuration.Service.filePort))
+				go InitFileTransferServer(fmt.Sprint(Configuration.Service.filePort))
 
 			} else {
 				// Temporarily, the memberID is 0, will be set to correct value when introducer adds it to group
 				process = InitMembership(false)
 				sdfs = InitSdfs(process, false)
-				go InitializeServer(fmt.Sprint(Configuration.Service.filePort))
+				go InitFileTransferServer(fmt.Sprint(Configuration.Service.filePort))
 			}
 
 			// start gossip
@@ -185,52 +185,7 @@ func main() {
 					continue
 				}
 				sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[2], SdfsLock)
-				req := SdfsRequest{LocalFName: inputFields[1], RemoteFName: inputFields[2], Type: PutReq}
-
-				numAlive := process.GetNumAlive()
-				numSuccessful := 0
-				ipsAttempted := make(map[string]bool)
-				fileContents := GetFileContents(req.LocalFName)
-				// attempt to get as many replications needed, until you've attempted all the IPs
-				for numSuccessful < int(Configuration.Settings.replicationFactor) &&
-					len(ipsAttempted) <= numAlive {
-					var res SdfsResponse
-					var err error
-					if len(ipsAttempted) == 0 {
-						err = client.Call("SdfsNode.HandlePutRequest", req, &res)
-					} else {
-						err = client.Call("SdfsNode.GetRandomNodes", req, &res)
-					}
-
-					if err != nil {
-						fmt.Println("Put failed", err)
-						break
-					} else {
-						// attempt upload each file
-						for _, ipAddr := range res.IPList {
-							if _, exists := ipsAttempted[ipAddr.String()]; !exists {
-								ipsAttempted[ipAddr.String()] = true
-								err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName, fileContents)
-
-								if err != nil {
-									fmt.Println("error in upload process.", err)
-								} else {
-									numSuccessful += 1
-									// succesfull upload -> add to master's file map
-									mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: inputFields[2], Type: AddReq}
-									var mapRes SdfsResponse
-									mapErr := client.Call("SdfsNode.ModifyMasterFileMap", mapReq, &mapRes)
-									if mapErr != nil {
-										fmt.Println(mapErr)
-									}
-								}
-							}
-						}
-					}
-
-					// update alive nodes in case there's not enough anymore
-					numAlive = process.GetNumAlive()
-				}
+                                sdfs.RpcPut(inputFields[1], inputFields[2])
 				sessionId = sdfs.RpcUnlock(sessionId, inputFields[2], SdfsLock)
 
 				fmt.Println("Finished put.")
@@ -243,24 +198,7 @@ func main() {
 					continue
 				}
 				sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[1], SdfsRLock)
-				req := SdfsRequest{LocalFName: inputFields[2], RemoteFName: inputFields[1], Type: GetReq}
-				var res SdfsResponse
-
-				err := client.Call("SdfsNode.HandleGetRequest", req, &res)
-				if err != nil {
-					fmt.Println(err)
-				} else {
-					for _, ipAddr := range res.IPList {
-						err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.LocalFName)
-
-						if err != nil {
-							fmt.Println("error in download process at ", ipAddr, ": ", err)
-						} else {
-							// successful download
-							break
-						}
-					}
-				}
+                                sdfs.RpcGet(inputFields[1], inputFields[2])
 				sessionId = sdfs.RpcUnlock(sessionId, inputFields[1], SdfsRLock)
 				fmt.Println("Finished get.")
 			}
