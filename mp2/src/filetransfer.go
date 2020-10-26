@@ -298,9 +298,6 @@ func Download(ipAddr string, port string, sdfsFileName string, localFileName str
 		// if here, we're gonna append to the file
 		fileFlags = fileFlags | os.O_APPEND
 
-		// sleep before requesting next chunk so that other threads can run lol
-		time.Sleep(4 * time.Millisecond)
-
 		// get next chunk
 		chunkNum += 1
 		downloadReply, err2 = client.Download(context.Background(),

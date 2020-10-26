@@ -203,9 +203,6 @@ func (node *SdfsMaster) AddIPToFileMap(fname string, ipList []net.IP) {
 
 // Chooses random set of nodes to replicate
 func (node *SdfsNode) pickRandomNodes(minReplicas int) []net.IP {
-
-	// TODO: should master store files? return minReplicas based on that (rn we return 3 replicas)
-
 	i := 0
 	iplist := make([]net.IP, 0)
 
@@ -284,8 +281,6 @@ func findNewReplicaIP(membershipList map[uint8]membershipListEntry, filename str
 }
 
 func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
-	//TODO: sleep for a bit to ensure all failures quiesce before doing this?
-
 	failedIP := node.Member.membershipList[memberID].IPaddr
 	failedIPList := []net.IP{failedIP}
 

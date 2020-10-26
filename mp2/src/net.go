@@ -73,7 +73,7 @@ func Send(address string, msgType MessageType, msg []byte) {
 	// MessageType uint8
 	// Message byte[]
 	// [0] - MessageType, [1, ...] - message
-	buffer := append([]byte{byte(msgType)}, msg...) // TODO: Converting to byte might not be neccessary
+	buffer := append([]byte{byte(msgType)}, msg...)
 
 	_, err = conn.Write(buffer)
 	if err != nil {
