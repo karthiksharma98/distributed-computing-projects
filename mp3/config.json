@@ -1,0 +1,19 @@
+{
+    "service": {
+        "failure_detector": "gossip",
+        "introducer_ip": "172.22.158.43",
+        "port": 9080,
+        "initial_master_ip": "172.22.158.43",
+        "master_port": 9081,
+        "file_port": 9082
+    },
+    "settings": {
+        "gossip_interval": 1,
+        "all_interval": 3,
+        "fail_timeout": 5,
+        "cleanup_timeout": 24,
+        "num_processes_to_gossip": 3,
+        "replication_factor": 4
+    }
+}
+
