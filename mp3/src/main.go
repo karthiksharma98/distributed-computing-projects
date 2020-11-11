@@ -42,17 +42,10 @@ func printOptions() {
 	}
 }
 
-func main() {
-	// Set up loggers and configs
-	InitLog()
-	InitMonitor()
-	Configuration = ReadConfig()
-	Configuration.Print()
-	InitSdfsDirectory()
-	printOptions()
+func InitCli() {
+        consoleReader := bufio.NewReader(os.Stdin)
 	for {
 		// wait for input to query operations on node
-		consoleReader := bufio.NewReader(os.Stdin)
 		fmt.Print("> ")
 		input, _ := consoleReader.ReadString('\n')
 		input = strings.ToLower(strings.TrimSuffix(input, "\n"))
@@ -263,5 +256,16 @@ func main() {
 			printOptions()
 		}
 	}
+}
+
+func main() {
+	// Set up loggers and configs
+	InitLog()
+	InitMonitor()
+	Configuration = ReadConfig()
+	Configuration.Print()
+	InitSdfsDirectory()
+	printOptions()
+        InitCli()
 
 }
