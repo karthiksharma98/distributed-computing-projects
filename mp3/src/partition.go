@@ -6,21 +6,22 @@ import (
 )
 
 // Hash or range partitioner
-func partitioner(keys []string, numJuices int, isRange bool) map[int]string {
-	partitions := make(map[int]string)
+func partitioner(keys []string, numJuices int, isRange bool) map[int][]string {
+	partitions := make(map[int][]string)
 	// If range partition, sort list of keys
 	if isRange {
 		numParts := len(keys) / numJuices
 		sort.Strings(keys)
 		for i, k := range keys {
-			partitions[(i/numParts)%numJuices] = k
+			partitions[(i/numParts)%numJuices] = append(partitions[(i/numParts)%numJuices], k)
 		}
 		return partitions
 	}
 
 	// If hash partition, enumerate list of keys and call getHashPartition
 	for _, k := range keys {
-		partitions[getHashPartition(k, numJuices)] = k
+		hash := getHashPartition(k, numJuices)
+		partitions[hash] = append(partitions[hash], k)
 	}
 	return partitions
 }
