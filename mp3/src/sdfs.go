@@ -49,6 +49,11 @@ func InitSdfs(mem *Member, setMaster bool) *SdfsNode {
 	// start RPC Server for handling requests get/put/delete/ls
 	sdfs.startRPCServer(fmt.Sprint(Configuration.Service.masterPort))
 	sdfs.startRPCClient(Configuration.Service.masterIP, fmt.Sprint(Configuration.Service.masterPort))
+
+	if setMaster {
+		go sdfs.ListenMapleJuice()
+	}
+
 	return sdfs
 }
 
@@ -308,7 +313,7 @@ func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) err
 }
 
 func (node *SdfsNode) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
-	return os.Remove("./" + dirName + "/" + req.RemoteFName + ".blk_" + fmt.Sprint(req.BlockID))
+	return os.Remove("./" + sdfsDirName + "/" + req.RemoteFName)
 }
 
 func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string, blockID int) error {
