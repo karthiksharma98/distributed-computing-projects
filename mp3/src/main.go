@@ -40,15 +40,15 @@ func printOptions() {
 		fmt.Println("-	ls")
 		fmt.Println("-	store")
 
-                fmt.Println("\nMapleJuice Commands:")
-                fmt.Println("-  maple [local file] [num of tasks] [sdfs file] [sdfs dir]")
-                fmt.Println("-  juice [local file] [num of tasks] [sdfs file] [sdfs dir]")
+		fmt.Println("\nMapleJuice Commands:")
+		fmt.Println("-  maple [local file] [num of tasks] [sdfs file] [sdfs dir]")
+		fmt.Println("-  juice [local file] [num of tasks] [sdfs file] [sdfs dir]")
 	}
 }
 
 func StartCli() {
 	printOptions()
-        consoleReader := bufio.NewReader(os.Stdin)
+	consoleReader := bufio.NewReader(os.Stdin)
 	for {
 		// wait for input to query operations on node
 		fmt.Print("> ")
@@ -254,14 +254,14 @@ func StartCli() {
 				fmt.Println(sdfs.MasterId)
 			}
 
-                case "maple":
-                        if len(inputFields) >= 5 {
-                                // TODO: maple stuff
-                        }
-                case "juice":
-                        if len(inputFields) >= 5 {
-                                // TODO: juice stuff
-                        }
+		case "maple":
+			if len(inputFields) >= 5 {
+				// TODO: maple stuff
+			}
+		case "juice":
+			if len(inputFields) >= 5 {
+				// TODO: juice stuff
+			}
 
 		case "help":
 			printOptions()
@@ -279,6 +279,6 @@ func main() {
 	Configuration = ReadConfig()
 	Configuration.Print()
 	InitSdfsDirectory()
-        StartCli()
+	StartCli()
 
 }
