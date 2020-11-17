@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"net/rpc"
 	"os"
@@ -22,6 +23,7 @@ type SdfsRequest struct {
 	RemoteFName string
 	IPAddr      net.IP
 	Type        ReqType
+	BlockID     int
 }
 
 type SdfsResponse struct {
@@ -77,52 +79,82 @@ func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error
 	return nil
 }
 
-func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
+// GetLogicalSplits returns indices of byte array containing '\n' closest to block boundaries
+func GetLogicalSplits(fileContents []byte) []int {
 
-	req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: PutReq}
+	var indices []int
+	for i := 0; i < len(fileContents); i += int(Configuration.Settings.blockSize) {
+		for j := i; j < int(math.Min(float64(i+int(Configuration.Settings.blockSize)), float64(len(fileContents)))); j++ {
+			if fileContents[j] == '\n' {
+				indices = append(indices, j)
+				break
+			}
+		}
+	}
+	return indices
+}
+
+func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 
 	numAlive := process.GetNumAlive()
 	numSuccessful := 0
-	ipsAttempted := make(map[string]bool)
-	fileContents := GetFileContents(req.LocalFName)
-	// attempt to get as many replications needed, until you've attempted all the IPs
-	for numSuccessful < int(Configuration.Settings.replicationFactor) &&
-		len(ipsAttempted) <= numAlive {
-		var res SdfsResponse
-		var err error
-		if len(ipsAttempted) == 0 {
-			err = client.Call("SdfsNode.HandlePutRequest", req, &res)
-		} else {
-			err = client.Call("SdfsNode.GetRandomNodes", req, &res)
-		}
 
-		if err != nil {
-			fmt.Println("Put failed", err)
-			return
-		}
-		// attempt upload each file
-		for _, ipAddr := range res.IPList {
-			if _, exists := ipsAttempted[ipAddr.String()]; !exists {
-				ipsAttempted[ipAddr.String()] = true
-				err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName, fileContents)
+	fileContents := GetFileContents(localFname)
+	logicalSplitBoundaries := GetLogicalSplits(fileContents)
+	numBlocks := len(logicalSplitBoundaries)
 
-				if err != nil {
-					fmt.Println("error in upload process.", err)
-				} else {
-					numSuccessful += 1
-					// succesfull upload -> add to master's file map
-					mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: remoteFname, Type: AddReq}
-					var mapRes SdfsResponse
-					mapErr := client.Call("SdfsNode.AddToFileMap", mapReq, &mapRes)
-					if mapErr != nil {
-						fmt.Println(mapErr)
+	for blockIdx, _ := range logicalSplitBoundaries {
+		var ipsAttempted map[string]bool
+		req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: PutReq, BlockID: blockIdx}
+		// attempt to get as many replications needed, until you've attempted all the IPs
+		for numSuccessful < int(Configuration.Settings.replicationFactor) && len(ipsAttempted) <= numAlive {
+			var res SdfsResponse
+			var err error
+			if len(ipsAttempted) == 0 {
+				err = client.Call("SdfsNode.HandlePutRequest", req, &res)
+			} else {
+				err = client.Call("SdfsNode.GetRandomNodes", req, &res)
+			}
+
+			if err != nil {
+				fmt.Println("Put failed", err)
+				return
+			}
+			// attempt upload each file
+			for _, ipAddr := range res.IPList {
+				if _, exists := ipsAttempted[ipAddr.String()]; !exists {
+					ipsAttempted[ipAddr.String()] = true
+
+					var blockStart int
+					var blockEnd int
+
+					if blockIdx == 0 {
+						blockStart = 0
+					} else {
+						blockStart = logicalSplitBoundaries[blockIdx-1] + 1
+					}
+					blockEnd = logicalSplitBoundaries[blockIdx] + 1
+
+					err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName+".blk_"+string(blockIdx), fileContents[blockStart:blockEnd])
+
+					if err != nil {
+						fmt.Println("error in upload process.", err)
+					} else {
+						numSuccessful += 1
+						// succesfull upload -> add to master's file map
+						mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: remoteFname, Type: AddReq, BlockID: blockIdx}
+						var mapRes SdfsResponse
+						mapErr := client.Call("SdfsNode.AddToFileMap", mapReq, &mapRes)
+						if mapErr != nil {
+							fmt.Println(mapErr)
+						}
 					}
 				}
 			}
-		}
 
-		// update alive nodes in case there's not enough anymore
-		numAlive = process.GetNumAlive()
+			// update alive nodes in case there's not enough anymore
+			numAlive = process.GetNumAlive()
+		}
 	}
 }
 
@@ -186,7 +218,7 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 		return errors.New("Error: Invalid request type for Put Request")
 	}
 
-	if val, ok := node.Master.fileMap[req.RemoteFName]; ok && len(val) != 0 {
+	if val, ok := node.Master.fileMap[req.RemoteFName][req.BlockID]; ok && len(val) != 0 {
 		// if file exists already, return those IPs
 		ipList := val
 		var resp SdfsResponse
@@ -249,18 +281,23 @@ func (node *SdfsNode) AddToFileMap(req SdfsRequest, reply *SdfsResponse) error {
 	}
 
 	// convert string -> ip.net
-	// req.LocalFName here is ip address, need the 27 for the method call to work
-	stringIp := req.LocalFName + "/27"
-	ipToModify, _, _ := net.ParseCIDR(stringIp)
+	stringIp := req.LocalFName
+	ipToModify := net.ParseIP(stringIp)
 
 	if req.Type == AddReq {
 		// Don't add duplicate IP
-		if val, ok := node.Master.fileMap[req.RemoteFName]; ok && checkMember(ipToModify, val) != -1 {
+		if val, ok := node.Master.fileMap[req.RemoteFName][req.BlockID]; ok && checkMember(ipToModify, val) != -1 {
 			return nil
 		}
-		ogList := node.Master.fileMap[req.RemoteFName]
+		if val, ok := node.Master.fileMap[req.RemoteFName][req.BlockID]; !ok {
+			node.Master.fileMap[req.RemoteFName] = make(map[int][]net.IP)
+		}
+		ogList := node.Master.fileMap[req.RemoteFName][req.BlockID]
 		ogList = append(ogList, ipToModify)
-		node.Master.fileMap[req.RemoteFName] = ogList
+		node.Master.fileMap[req.RemoteFName][req.BlockID] = ogList
+
+		if val, ok := node.Master.numBlocks
+		node.Master.numBlocks[req.RemoteFName] 
 	}
 
 	return nil

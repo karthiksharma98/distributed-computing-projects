@@ -186,6 +186,16 @@ func GetFileContents(localFileName string) []byte {
 	return content
 }
 
+func GetFileSize(filePath string) int64 {
+	fi, err := os.Stat(filePath)
+	if err != nil {
+		Warn.Println("Unable to read file.")
+		return 0
+	}
+	// get the size
+	return fi.Size()
+}
+
 func UploadFile(conn *grpc.ClientConn, dest string, fileChunk []byte,
 	sdfsFileName string, isMultChunks bool, isFirstChunk bool) error {
 
