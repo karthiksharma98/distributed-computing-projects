@@ -62,6 +62,9 @@ func (node *SdfsNode) MemberListen() {
 				if err != nil {
 					fmt.Println(err)
 				}
+
+				// reassign that machine's tasks to someone else
+				node.HandleTaskReassignments(id)
 			}
 			continue
 		}
@@ -141,6 +144,9 @@ func (node *SdfsNode) handleCoordinator(id uint8) {
 	// Redirect RPC connection to new IP when Master ready
 	node.closeRPCClient()
 	node.startRPCClient(node.Member.membershipList[id].IPaddr.String(), fmt.Sprint(Configuration.Service.masterPort))
+
+	// listen for maple commands
+	go sdfs.ListenMapleJuice()
 }
 
 // Handle election ok message
@@ -248,7 +254,7 @@ func sendUploadCommand(aliveIP net.IP, newIP net.IP, filename string, blockID in
 	var req SdfsRequest
 	var res SdfsResponse
 
-	req.LocalFName = dirName + "/" + filename
+	req.LocalFName = sdfsDirName + "/" + filename
 	req.RemoteFName = filename
 	req.IPAddr = newIP
 	req.Type = UploadReq

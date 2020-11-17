@@ -21,7 +21,8 @@ const (
 	dialSize                 = 1400 * MB
 	uploadChunkSize          = 64 * KB
 	downloadChunkSize        = 64 * KB
-	dirName           string = "SDFS"
+	sdfsDirName       string = "SDFS"
+	mapleJuiceDirName string = "MapleJuice"
 )
 
 var (
@@ -34,17 +35,23 @@ var (
 )
 
 // Init
-func InitSdfsDirectory() {
-	_, err := os.Stat(dirName)
+func InitDirectories() {
+	// create sdfs directory
+	_, err := os.Stat(sdfsDirName)
 
 	if os.IsNotExist(err) {
-		os.MkdirAll(dirName, 0755)
+		os.MkdirAll(sdfsDirName, 0755)
 	} else {
 		// clear contents when starting up
-		dir, _ := ioutil.ReadDir(dirName)
+		dir, _ := ioutil.ReadDir(sdfsDirName)
 		for _, d := range dir {
-			os.RemoveAll(path.Join([]string{dirName, d.Name()}...))
+			os.RemoveAll(path.Join([]string{sdfsDirName, d.Name()}...))
 		}
+	}
+
+	// create maplejuice directory
+	if _, err := os.Stat(mapleJuiceDirName); os.IsNotExist(err) {
+		os.Mkdir(mapleJuiceDirName, 0755)
 	}
 }
 
@@ -68,7 +75,7 @@ func InitFileTransferServer(port string) {
 }
 
 func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.UploadRequest) (*service.UploadReply, error) {
-	filePath := filepath.Join(dirName, filepath.Base(uploadReq.SdfsFileName))
+	filePath := filepath.Join(sdfsDirName, filepath.Base(uploadReq.SdfsFileName))
 	fileFlags := os.O_CREATE | os.O_WRONLY
 	if uploadReq.IsMultipleChunks && !uploadReq.IsFirstChunk {
 		fileFlags = fileFlags | os.O_APPEND
@@ -88,7 +95,7 @@ func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.Uplo
 }
 
 func (s *FileTransferServer) Download(ctx context.Context, downloadReq *service.DownloadRequest) (*service.DownloadReply, error) {
-	file, err := os.Open(filepath.Join(dirName, filepath.Base(downloadReq.GetSdfsFileName())))
+	file, err := os.Open(filepath.Join(sdfsDirName, filepath.Base(downloadReq.GetSdfsFileName())))
 	defer file.Close()
 	if err != nil {
 		return &service.DownloadReply{

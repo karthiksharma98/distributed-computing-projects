@@ -255,12 +255,44 @@ func StartCli() {
 			}
 
 		case "maple":
-			if len(inputFields) >= 5 {
-				// TODO: maple stuff
+			if process != nil && sdfs != nil && len(inputFields) >= 5 {
+				num, err := strconv.Atoi(inputFields[2])
+				if err != nil {
+					fmt.Println("Error: num_maples must be a number.")
+					continue
+				}
+
+				err = sdfs.QueueTask(MapleJuiceQueueRequest{IsMaple: true,
+					FileList:           GetFileNames(inputFields[4]),
+					ExeName:            inputFields[1],
+					NumTasks:           num,
+					IntermediatePrefix: inputFields[3]})
+				if err != nil {
+					fmt.Println("Error in queueing task: ", err)
+				}
 			}
+
 		case "juice":
-			if len(inputFields) >= 5 {
-				// TODO: juice stuff
+			if process != nil && len(inputFields) >= 6 {
+				tasks, err := strconv.Atoi(inputFields[2])
+				if err != nil {
+					fmt.Println("Error: num_juice must be a number.")
+				}
+
+				del := false
+				if inputFields[5] == "1" {
+					del = true
+				}
+
+				var dirName []string
+				dirName = append(dirName, inputFields[4])
+
+				sdfs.QueueTask(MapleJuiceQueueRequest{IsMaple: false,
+					ExeName:            inputFields[1],
+					NumTasks:           tasks,
+					IntermediatePrefix: inputFields[3],
+					FileList:           dirName,
+					DeleteInput:        del})
 			}
 
 		case "help":
@@ -278,7 +310,7 @@ func main() {
 	InitMonitor()
 	Configuration = ReadConfig()
 	Configuration.Print()
-	InitSdfsDirectory()
+	InitDirectories()
 	StartCli()
 
 }
