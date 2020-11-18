@@ -27,7 +27,8 @@ type SdfsRequest struct {
 }
 
 type SdfsResponse struct {
-	IPList []net.IP
+	IPList    []net.IP
+	NumBlocks int
 }
 
 type ReqType int
@@ -83,7 +84,7 @@ func (node *SdfsNode) GetRandomNodes(req SdfsRequest, reply *SdfsResponse) error
 func GetLogicalSplits(fileContents []byte) []int {
 
 	var indices []int
-	for i := 0; i < len(fileContents); i += int(Configuration.Settings.blockSize) {
+	for i := int(Configuration.Settings.blockSize); i < len(fileContents); i += int(Configuration.Settings.blockSize) {
 		for j := i; j < int(math.Min(float64(i+int(Configuration.Settings.blockSize)), float64(len(fileContents)))); j++ {
 			if fileContents[j] == '\n' {
 				indices = append(indices, j)
@@ -101,9 +102,8 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 
 	fileContents := GetFileContents(localFname)
 	logicalSplitBoundaries := GetLogicalSplits(fileContents)
-	numBlocks := len(logicalSplitBoundaries)
 
-	for blockIdx, _ := range logicalSplitBoundaries {
+	for blockIdx := range logicalSplitBoundaries {
 		var ipsAttempted map[string]bool
 		req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: PutReq, BlockID: blockIdx}
 		// attempt to get as many replications needed, until you've attempted all the IPs
@@ -141,7 +141,7 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 						fmt.Println("error in upload process.", err)
 					} else {
 						numSuccessful += 1
-						// succesfull upload -> add to master's file map
+						// successful upload -> add to master's file map
 						mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: remoteFname, Type: AddReq, BlockID: blockIdx}
 						var mapRes SdfsResponse
 						mapErr := client.Call("SdfsNode.AddToFileMap", mapReq, &mapRes)
@@ -162,19 +162,43 @@ func (node *SdfsNode) RpcGet(remoteFname string, localFname string) {
 	req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: GetReq}
 	var res SdfsResponse
 
-	err := client.Call("SdfsNode.HandleGetRequest", req, &res)
+	err := client.Call("SdfsNode.GetNumBlocks", req, &res)
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		for _, ipAddr := range res.IPList {
-			err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName, req.LocalFName)
-
+		// begin downloading blocks
+		numBlocks := res.NumBlocks
+		for i := 0; i < numBlocks; i++ {
+			req.BlockID = i
+			err := client.Call("SdfsNode.HandleGetRequest", req, &res)
 			if err != nil {
-				fmt.Println("error in download process at ", ipAddr, ": ", err)
+				fmt.Println(err)
 			} else {
-				// successful download
-				return
+				for _, ipAddr := range res.IPList {
+					err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName+".blk_"+string(req.BlockID), req.LocalFName+".blk_"+string(req.BlockID))
+
+					if err != nil {
+						fmt.Println("error in download process at ", ipAddr, ": ", err)
+					} else {
+						break
+					}
+				}
 			}
+		}
+
+		// once all blocks are downloaded, append them all to one file and remove ".blk_" files locally
+		fileFlags := os.O_CREATE | os.O_WRONLY | os.O_APPEND
+		file, err := os.OpenFile(req.LocalFName, fileFlags, 0777)
+		if err != nil {
+			fmt.Println("Error in creating local file")
+			return
+		}
+
+		defer file.Close()
+		for i := 0; i < numBlocks; i++ {
+			blockContents := GetFileContents(req.LocalFName + ".blk_" + string(i))
+			file.Write(blockContents)
+			os.Remove(req.LocalFName + ".blk_" + string(i))
 		}
 	}
 }
@@ -231,6 +255,26 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 	return node.GetRandomNodes(req, reply)
 }
 
+func (node *SdfsNode) GetNumBlocks(req SdfsRequest, reply *SdfsResponse) error {
+	if node.isMaster == false && node.Master == nil {
+		return errors.New("Error: Master not initialized")
+	}
+
+	if req.Type != GetReq {
+		return errors.New("Error: Invalid request type for Get Request")
+	}
+
+	var response SdfsResponse
+
+	if val, ok := node.Master.numBlocks[req.RemoteFName]; ok {
+		response.NumBlocks = val
+		*reply = response
+		return nil
+	}
+
+	return errors.New("Error: File not found")
+}
+
 func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) error {
 	if node.isMaster == false && node.Master == nil {
 		return errors.New("Error: Master not initialized")
@@ -242,7 +286,7 @@ func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) err
 
 	var response SdfsResponse
 
-	if val, ok := node.Master.fileMap[req.RemoteFName]; ok && len(val) != 0 {
+	if val, ok := node.Master.fileMap[req.RemoteFName][req.BlockID]; ok && len(val) != 0 {
 		response.IPList = val
 		*reply = response
 		return nil
@@ -252,10 +296,10 @@ func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) err
 }
 
 func (node *SdfsNode) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
-	return os.Remove("./" + dirName + "/" + req.RemoteFName)
+	return os.Remove("./" + dirName + "/" + req.RemoteFName + ".blk_" + string(req.BlockID))
 }
 
-func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
+func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string, blockID int) error {
 	if node.isMaster == false && node.Master == nil {
 		return errors.New("Error: Master not initialized")
 	}
@@ -271,6 +315,7 @@ func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string) error {
 
 	req.RemoteFName = RemoteFName
 	req.Type = DelReq
+	req.BlockID = blockID
 
 	return client.Call("SdfsNode.DeleteFile", req, &res)
 }
@@ -289,15 +334,13 @@ func (node *SdfsNode) AddToFileMap(req SdfsRequest, reply *SdfsResponse) error {
 		if val, ok := node.Master.fileMap[req.RemoteFName][req.BlockID]; ok && checkMember(ipToModify, val) != -1 {
 			return nil
 		}
-		if val, ok := node.Master.fileMap[req.RemoteFName][req.BlockID]; !ok {
+		if _, ok := node.Master.fileMap[req.RemoteFName]; !ok {
 			node.Master.fileMap[req.RemoteFName] = make(map[int][]net.IP)
 		}
 		ogList := node.Master.fileMap[req.RemoteFName][req.BlockID]
 		ogList = append(ogList, ipToModify)
 		node.Master.fileMap[req.RemoteFName][req.BlockID] = ogList
-
-		if val, ok := node.Master.numBlocks
-		node.Master.numBlocks[req.RemoteFName] 
+		node.Master.numBlocks[req.RemoteFName]++
 	}
 
 	return nil
@@ -305,13 +348,14 @@ func (node *SdfsNode) AddToFileMap(req SdfsRequest, reply *SdfsResponse) error {
 
 func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) error {
 	fileContents := GetFileContents(req.LocalFName)
-	err := Upload(req.IPAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName, fileContents)
+	err := Upload(req.IPAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName+".blk_"+string(req.BlockID), req.RemoteFName+".blk_"+string(req.BlockID), fileContents)
 
 	if err != nil {
 		return err
 	} else {
 		// succesfull upload -> add to master's file map
 		mapReq := SdfsRequest{LocalFName: req.IPAddr.String(), RemoteFName: req.RemoteFName, Type: AddReq}
+		mapReq.BlockID = req.BlockID
 		var mapRes SdfsResponse
 		mapErr := client.Call("SdfsNode.AddToFileMap", mapReq, &mapRes)
 		if mapErr != nil {
@@ -328,33 +372,37 @@ func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) 
 	}
 
 	if val, ok := node.Master.fileMap[req.RemoteFName]; ok && len(val) != 0 {
-		failedIndices := make([]int, 0)
+		numBlocks := node.Master.numBlocks[req.RemoteFName]
+		for blockIdx := 0; blockIdx < numBlocks; blockIdx++ {
+			failedIndices := make([]int, 0)
 
-		for index, ip := range val {
-			err := node.sendDeleteCommand(ip, req.RemoteFName)
-			if err != nil {
-				failedIndices = append(failedIndices, index)
-			}
-		}
-
-		if len(failedIndices) == 0 {
-			delete(node.Master.fileMap, req.RemoteFName)
-			return nil
-		} else {
-			// make list of failed IPs
-			failedIps := make([]net.IP, 0)
-			for _, i := range failedIndices {
-				failedIps = append(failedIps, node.Master.fileMap[req.RemoteFName][i])
+			for index, ip := range val[blockIdx] {
+				err := node.sendDeleteCommand(ip, req.RemoteFName, blockIdx)
+				if err != nil {
+					failedIndices = append(failedIndices, index)
+				}
 			}
 
-			// replace old list with this one
-			node.Master.fileMap[req.RemoteFName] = failedIps
+			if len(failedIndices) == 0 {
+				delete(node.Master.fileMap[req.RemoteFName], blockIdx)
+				continue
+			} else {
+				// make list of failed IPs
+				failedIps := make([]net.IP, 0)
+				for _, i := range failedIndices {
+					failedIps = append(failedIps, node.Master.fileMap[req.RemoteFName][blockIdx][i])
+				}
 
-			// send list of failed deletes back to process, exit with error
-			var res SdfsResponse
-			res.IPList = failedIps
-			*reply = res
-			return errors.New("Failed deleting files")
+				// replace old list with this one
+				node.Master.fileMap[req.RemoteFName][blockIdx] = failedIps
+
+				// send list of failed deletes back to process, exit with error
+				// TODO: modify this to handle block info too
+				var res SdfsResponse
+				res.IPList = failedIps
+				*reply = res
+				return errors.New("Failed deleting files")
+			}
 		}
 	}
 	return nil
