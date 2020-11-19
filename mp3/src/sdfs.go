@@ -103,7 +103,6 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 	fmt.Println(logicalSplitBoundaries)
 
 	for blockIdx := 0; blockIdx < len(logicalSplitBoundaries)+1; blockIdx++ {
-		fmt.Println("uploading block ", blockIdx)
 		ipsAttempted := make(map[string]bool)
 		numSuccessful := 0
 		req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: PutReq, BlockID: blockIdx}
@@ -116,7 +115,6 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 			} else {
 				err = client.Call("SdfsNode.GetRandomNodes", req, &res)
 			}
-			fmt.Println(blockIdx, ": ", res.IPList)
 
 			if err != nil {
 				fmt.Println("Put failed", err)
@@ -194,7 +192,7 @@ func (node *SdfsNode) RpcGet(remoteFname string, localFname string) {
 		}
 
 		// once all blocks are downloaded, append them all to one file and remove ".blk_" files locally
-		fileFlags := os.O_CREATE | os.O_WRONLY | os.O_APPEND
+		fileFlags := os.O_CREATE | os.O_WRONLY
 		file, err := os.OpenFile(req.LocalFName, fileFlags, 0777)
 		if err != nil {
 			fmt.Println("Error in creating local file")
@@ -206,6 +204,9 @@ func (node *SdfsNode) RpcGet(remoteFname string, localFname string) {
 			blockContents := GetFileContents(req.LocalFName + ".blk_" + fmt.Sprint(i))
 			file.Write(blockContents)
 			os.Remove(req.LocalFName + ".blk_" + fmt.Sprint(i))
+			if i == 0 {
+				fileFlags = fileFlags | os.O_APPEND
+			}
 		}
 	}
 }
