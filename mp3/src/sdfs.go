@@ -349,9 +349,12 @@ func (node *SdfsNode) AddToFileMap(req SdfsRequest, reply *SdfsResponse) error {
 			node.Master.fileMap[req.RemoteFName] = make(map[int][]net.IP)
 		}
 		ogList := node.Master.fileMap[req.RemoteFName][req.BlockID]
+		if len(ogList) == 0 {
+			node.Master.numBlocks[req.RemoteFName]++
+		}
 		ogList = append(ogList, ipToModify)
 		node.Master.fileMap[req.RemoteFName][req.BlockID] = ogList
-		node.Master.numBlocks[req.RemoteFName]++
+
 	}
 
 	return nil
