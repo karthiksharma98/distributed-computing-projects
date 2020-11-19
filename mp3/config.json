@@ -1,9 +1,9 @@
 {
     "service": {
         "failure_detector": "gossip",
-        "introducer_ip": "172.22.158.43",
+        "introducer_ip": "172.22.156.42",
         "port": 9070,
-        "initial_master_ip": "172.22.158.43",
+        "initial_master_ip": "172.22.156.42",
         "master_port": 9071,
         "file_port": 9072
     },
