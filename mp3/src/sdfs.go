@@ -208,16 +208,20 @@ func (node *SdfsNode) RpcGet(remoteFname string, localFname string) {
 func (node *SdfsNode) RpcListIPs(fname string) {
 	var res SdfsResponse
 	req := SdfsRequest{LocalFName: "", RemoteFName: fname, Type: GetReq}
+	err := client.Call("SdfsNode.GetNumBlocks", req, &res)
 
-	err := client.Call("SdfsNode.HandleGetRequest", req, &res)
-	if err != nil {
-		fmt.Println("Failed ls. ", err)
-	} else {
-		fmt.Print(fname, " =>   ")
-		for _, ip := range res.IPList {
-			fmt.Print(ip.String(), ", ")
+	for i := 0; i < res.NumBlocks; i++ {
+		req.BlockID = i
+		err = client.Call("SdfsNode.HandleGetRequest", req, &res)
+		if err != nil {
+			fmt.Println("Failed ls. ", err)
+		} else {
+			fmt.Print(fname, "(", i, ") =>   ")
+			for _, ip := range res.IPList {
+				fmt.Print(ip.String(), ", ")
+			}
+			fmt.Println()
 		}
-		fmt.Println()
 	}
 }
 
