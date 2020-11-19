@@ -137,7 +137,7 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 					}
 
 					if blockIdx == len(logicalSplitBoundaries) {
-						blockEnd = len(fileContents) + 1
+						blockEnd = len(fileContents)
 					} else {
 						blockEnd = logicalSplitBoundaries[blockIdx] + 1
 					}
