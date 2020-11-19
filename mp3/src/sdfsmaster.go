@@ -9,13 +9,16 @@ import (
 	"net"
 	"net/rpc"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
 type SdfsMaster struct {
-	fileMap map[string][]net.IP
-	lockMap map[string]*SdfsMutex
-	sessMap map[int32](chan bool)
+	fileMap   map[string]map[int][]net.IP
+	numBlocks map[string]int
+	lockMap   map[string]*SdfsMutex
+	sessMap   map[int32](chan bool)
 }
 
 type connectionError struct {
@@ -36,7 +39,8 @@ var (
 
 func NewSdfsMaster() *SdfsMaster {
 	master := &SdfsMaster{
-		make(map[string][]net.IP),
+		make(map[string]map[int][]net.IP),
+		make(map[string]int),
 		make(map[string]*SdfsMutex),
 		make(map[int32](chan bool)),
 	}
@@ -166,11 +170,21 @@ func (node *SdfsNode) handleRecoverMaster(senderAddr net.IP, fileListBytes []byt
 	}
 	// Read incoming filelist and set sender IP as map value
 	for _, fname := range newFileList {
-		if val, ok := node.Master.fileMap[fname]; ok {
+		blockID, err := strconv.Atoi(strings.Split(fname, ".blk_")[1])
+		if err != nil {
+			Info.Println("Cannot extract blockID")
+			return
+		}
+
+		if _, ok1 := node.Master.fileMap[fname]; !ok1 {
+			node.Master.fileMap[fname] = make(map[int][]net.IP)
+		}
+
+		if val, ok := node.Master.fileMap[fname][blockID]; ok {
 			ipList := append(val, senderAddr)
-			node.Master.AddIPToFileMap(fname, ipList)
+			node.Master.AddIPToFileMap(fname, blockID, ipList)
 		} else {
-			node.Master.fileMap[fname] = []net.IP{senderAddr}
+			node.Master.fileMap[fname][blockID] = []net.IP{senderAddr}
 		}
 	}
 }
@@ -195,9 +209,9 @@ func (node *SdfsNode) GetLocalFiles() []string {
 }
 
 // Add IPList to file map
-func (node *SdfsMaster) AddIPToFileMap(fname string, ipList []net.IP) {
+func (node *SdfsMaster) AddIPToFileMap(fname string, blockID int, ipList []net.IP) {
 	if ipList != nil {
-		node.fileMap[fname] = ipList
+		node.fileMap[fname][blockID] = ipList
 	}
 }
 
@@ -224,7 +238,7 @@ func (node *SdfsNode) pickRandomNodes(minReplicas int) []net.IP {
 }
 
 // asks aliveIP to upload filename to newIP
-func sendUploadCommand(aliveIP net.IP, newIP net.IP, filename string) error {
+func sendUploadCommand(aliveIP net.IP, newIP net.IP, filename string, blockID int) error {
 	client, err := rpc.DialHTTP("tcp", aliveIP.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
 	if err != nil {
 		// fmt.Println("sendUploadCommand error, aliveIP dead: ", aliveIP.String(), err)
@@ -238,6 +252,7 @@ func sendUploadCommand(aliveIP net.IP, newIP net.IP, filename string) error {
 	req.RemoteFName = filename
 	req.IPAddr = newIP
 	req.Type = UploadReq
+	req.BlockID = blockID
 
 	err = client.Call("SdfsNode.UploadAndModifyMap", req, &res)
 	if err != nil {
@@ -271,7 +286,7 @@ func checkMember(ip net.IP, iplist []net.IP) int {
 }
 
 // find an alive IP from membership list that is not in failedIPList and not in existing replicas
-func findNewReplicaIP(membershipList map[uint8]membershipListEntry, filename string, failedIPList []net.IP, replicas []net.IP) net.IP {
+func findNewReplicaIP(membershipList map[uint8]membershipListEntry, failedIPList []net.IP, replicas []net.IP) net.IP {
 	for _, listEntry := range membershipList {
 		if checkMember(listEntry.IPaddr, failedIPList) == -1 && listEntry.Health == Alive && checkMember(listEntry.IPaddr, replicas) == -1 {
 			return listEntry.IPaddr
@@ -286,56 +301,60 @@ func (node *SdfsNode) handleReplicationOnFailure(memberID uint8) error {
 
 	fmt.Println("Handling failure of ", memberID, failedIP)
 
-	// iterate over fileMap and find files that this member stores
-	for filename, ipList := range node.Master.fileMap {
-		if failedIndex := checkMember(failedIP, ipList); failedIndex != -1 {
-			//remove failedIP from fileMap
-			node.Master.fileMap[filename] = append(ipList[:failedIndex], ipList[failedIndex+1:]...)
+	// iterate over fileMap and find blocks that this member stores
+	for filename, val := range node.Master.fileMap {
+		// handle each block
+		for blockIdx := 0; blockIdx < node.Master.numBlocks[filename]; blockIdx++ {
+			ipList := val[blockIdx]
+			if failedIndex := checkMember(failedIP, ipList); failedIndex != -1 {
+				//remove failedIP from fileMap
+				node.Master.fileMap[filename][blockIdx] = append(ipList[:failedIndex], ipList[failedIndex+1:]...)
 
-			if len(node.Master.fileMap[fileName]) == int(Configuration.Settings.replicationFactor) {
-				// if file already has three alive replicas then don't do anything
-				continue
-			}
-
-			// find an alive IP that doesn't already contain file
-			newIP := findNewReplicaIP(node.Member.membershipList, filename, failedIPList, ipList)
-			if newIP == nil {
-				return errors.New("No available IP to upload to for " + filename)
-			}
-			// choose alive IP containing the file that will upload to newIP
-			chosenIP := chooseIP(ipList, failedIPList)
-			if chosenIP == nil {
-				return errors.New("All replicas dead for " + filename)
-			}
-
-			// request chosenIP to upload file to newIP and add IP to fileMap
-			err := sendUploadCommand(chosenIP, newIP, filename)
-
-		errorLoop:
-			for {
-				switch err := err.(type) {
-				case nil:
-					break errorLoop
-				case connectionError:
-					if err.ip.Equal(newIP) {
-						// can't connect to newIP and upload there, try another
-						failedIPList = append(failedIPList, newIP)
-						newIP = findNewReplicaIP(node.Member.membershipList, filename, failedIPList, ipList)
-						if newIP == nil {
-							return errors.New("No available IP to upload to for " + filename)
-						}
-					} else if err.ip.Equal(chosenIP) {
-						// can't connect to existing replica to upload, try another
-						failedIPList = append(failedIPList, chosenIP)
-						chosenIP = chooseIP(ipList, failedIPList)
-						if chosenIP == nil {
-							return errors.New("All replicas dead for " + filename)
-						}
-					}
-				default:
-					break errorLoop
+				if len(node.Master.fileMap[fileName][blockIdx]) == int(Configuration.Settings.replicationFactor) {
+					// if file already has three alive replicas then don't do anything
+					continue
 				}
-				err = sendUploadCommand(chosenIP, newIP, filename)
+
+				// find an alive IP that doesn't already contain file
+				newIP := findNewReplicaIP(node.Member.membershipList, failedIPList, ipList)
+				if newIP == nil {
+					return errors.New("No available IP to upload to for " + filename)
+				}
+				// choose alive IP containing the file that will upload to newIP
+				chosenIP := chooseIP(ipList, failedIPList)
+				if chosenIP == nil {
+					return errors.New("All replicas dead for " + filename)
+				}
+
+				// request chosenIP to upload file to newIP and add IP to fileMap
+				err := sendUploadCommand(chosenIP, newIP, filename, blockIdx)
+
+			errorLoop:
+				for {
+					switch err := err.(type) {
+					case nil:
+						break errorLoop
+					case connectionError:
+						if err.ip.Equal(newIP) {
+							// can't connect to newIP and upload there, try another
+							failedIPList = append(failedIPList, newIP)
+							newIP = findNewReplicaIP(node.Member.membershipList, failedIPList, ipList)
+							if newIP == nil {
+								return errors.New("No available IP to upload to for " + filename)
+							}
+						} else if err.ip.Equal(chosenIP) {
+							// can't connect to existing replica to upload, try another
+							failedIPList = append(failedIPList, chosenIP)
+							chosenIP = chooseIP(ipList, failedIPList)
+							if chosenIP == nil {
+								return errors.New("All replicas dead for " + filename)
+							}
+						}
+					default:
+						break errorLoop
+					}
+					err = sendUploadCommand(chosenIP, newIP, filename, blockIdx)
+				}
 			}
 		}
 	}
