@@ -102,7 +102,7 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 	logicalSplitBoundaries := GetLogicalSplits(fileContents)
 	fmt.Println(logicalSplitBoundaries)
 
-	for blockIdx := 0; blockIdx < len(logicalSplitBoundaries); blockIdx++ {
+	for blockIdx := 0; blockIdx < len(logicalSplitBoundaries)+1; blockIdx++ {
 		fmt.Println("uploading block ", blockIdx)
 		ipsAttempted := make(map[string]bool)
 		numSuccessful := 0
@@ -135,7 +135,12 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 					} else {
 						blockStart = logicalSplitBoundaries[blockIdx-1] + 1
 					}
-					blockEnd = logicalSplitBoundaries[blockIdx] + 1
+
+					if blockIdx == len(logicalSplitBoundaries) {
+						blockEnd = len(fileContents) + 1
+					} else {
+						blockEnd = logicalSplitBoundaries[blockIdx] + 1
+					}
 
 					err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName+".blk_"+fmt.Sprint(blockIdx), fileContents[blockStart:blockEnd])
 
