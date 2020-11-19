@@ -102,6 +102,7 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 
 	fileContents := GetFileContents(localFname)
 	logicalSplitBoundaries := GetLogicalSplits(fileContents)
+	fmt.Println(logicalSplitBoundaries)
 
 	for blockIdx := 0; blockIdx < len(logicalSplitBoundaries); blockIdx++ {
 		ipsAttempted := make(map[string]bool)
@@ -135,7 +136,7 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 					}
 					blockEnd = logicalSplitBoundaries[blockIdx] + 1
 
-					err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName+".blk_"+string(blockIdx), fileContents[blockStart:blockEnd])
+					err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName+".blk_"+fmt.Sprint(blockIdx), fileContents[blockStart:blockEnd])
 
 					if err != nil {
 						fmt.Println("error in upload process.", err)
@@ -175,7 +176,7 @@ func (node *SdfsNode) RpcGet(remoteFname string, localFname string) {
 				fmt.Println(err)
 			} else {
 				for _, ipAddr := range res.IPList {
-					err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName+".blk_"+string(req.BlockID), req.LocalFName+".blk_"+string(req.BlockID))
+					err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName+".blk_"+fmt.Sprint(req.BlockID), req.LocalFName+".blk_"+fmt.Sprint(req.BlockID))
 
 					if err != nil {
 						fmt.Println("error in download process at ", ipAddr, ": ", err)
@@ -196,9 +197,9 @@ func (node *SdfsNode) RpcGet(remoteFname string, localFname string) {
 
 		defer file.Close()
 		for i := 0; i < numBlocks; i++ {
-			blockContents := GetFileContents(req.LocalFName + ".blk_" + string(i))
+			blockContents := GetFileContents(req.LocalFName + ".blk_" + fmt.Sprint(i))
 			file.Write(blockContents)
-			os.Remove(req.LocalFName + ".blk_" + string(i))
+			os.Remove(req.LocalFName + ".blk_" + fmt.Sprint(i))
 		}
 	}
 }
@@ -296,7 +297,7 @@ func (node *SdfsNode) HandleGetRequest(req SdfsRequest, reply *SdfsResponse) err
 }
 
 func (node *SdfsNode) DeleteFile(req SdfsRequest, reply *SdfsResponse) error {
-	return os.Remove("./" + dirName + "/" + req.RemoteFName + ".blk_" + string(req.BlockID))
+	return os.Remove("./" + dirName + "/" + req.RemoteFName + ".blk_" + fmt.Sprint(req.BlockID))
 }
 
 func (node *SdfsNode) sendDeleteCommand(ip net.IP, RemoteFName string, blockID int) error {
