@@ -105,6 +105,7 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 	fmt.Println(logicalSplitBoundaries)
 
 	for blockIdx := 0; blockIdx < len(logicalSplitBoundaries); blockIdx++ {
+		fmt.Println("uploading block ", blockIdx)
 		ipsAttempted := make(map[string]bool)
 		req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: PutReq, BlockID: blockIdx}
 		// attempt to get as many replications needed, until you've attempted all the IPs
@@ -116,6 +117,7 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 			} else {
 				err = client.Call("SdfsNode.GetRandomNodes", req, &res)
 			}
+			fmt.Println(blockIdx, ": ", res.IPList)
 
 			if err != nil {
 				fmt.Println("Put failed", err)
@@ -141,7 +143,7 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 					if err != nil {
 						fmt.Println("error in upload process.", err)
 					} else {
-						numSuccessful += 1
+						numSuccessful++
 						// successful upload -> add to master's file map
 						mapReq := SdfsRequest{LocalFName: ipAddr.String(), RemoteFName: remoteFname, Type: AddReq, BlockID: blockIdx}
 						var mapRes SdfsResponse
