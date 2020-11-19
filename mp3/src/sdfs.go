@@ -103,7 +103,7 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 	fileContents := GetFileContents(localFname)
 	logicalSplitBoundaries := GetLogicalSplits(fileContents)
 
-	for blockIdx := range logicalSplitBoundaries {
+	for blockIdx := 0; blockIdx < len(logicalSplitBoundaries); blockIdx++ {
 		var ipsAttempted map[string]bool
 		req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: PutReq, BlockID: blockIdx}
 		// attempt to get as many replications needed, until you've attempted all the IPs
