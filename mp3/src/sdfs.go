@@ -98,8 +98,6 @@ func GetLogicalSplits(fileContents []byte) []int {
 func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 
 	numAlive := process.GetNumAlive()
-	numSuccessful := 0
-
 	fileContents := GetFileContents(localFname)
 	logicalSplitBoundaries := GetLogicalSplits(fileContents)
 	fmt.Println(logicalSplitBoundaries)
@@ -107,6 +105,7 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 	for blockIdx := 0; blockIdx < len(logicalSplitBoundaries); blockIdx++ {
 		fmt.Println("uploading block ", blockIdx)
 		ipsAttempted := make(map[string]bool)
+		numSuccessful := 0
 		req := SdfsRequest{LocalFName: localFname, RemoteFName: remoteFname, Type: PutReq, BlockID: blockIdx}
 		// attempt to get as many replications needed, until you've attempted all the IPs
 		for numSuccessful < int(Configuration.Settings.replicationFactor) && len(ipsAttempted) <= numAlive {
