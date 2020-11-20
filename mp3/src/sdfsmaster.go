@@ -20,6 +20,7 @@ type SdfsMaster struct {
 	numBlocks    map[string]int
 	lockMap      map[string]*SdfsMutex
 	sessMap      map[int32](chan bool)
+	keyLocations map[string][]net.IP
 }
 
 type connectionError struct {
@@ -45,6 +46,7 @@ func NewSdfsMaster() *SdfsMaster {
 		make(map[string]int),
 		make(map[string]*SdfsMutex),
 		make(map[int32](chan bool)),
+		make(map[string][]net.IP),
 	}
 	return master
 }

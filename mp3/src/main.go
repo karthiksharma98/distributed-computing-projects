@@ -298,6 +298,10 @@ func StartCli() {
 					FileList:           dirName,
 					DeleteInput:        del})
 			}
+		case "printKeyLocations":
+			if process != nil && process.memberID == sdfs.MasterId {
+				fmt.Println(sdfs.Master.keyLocations)
+			}
 
 		case "help":
 			printOptions()

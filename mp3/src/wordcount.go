@@ -1,0 +1,31 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"os"
+)
+
+type wordCount struct {
+}
+
+func (wc wordCount) Maple(inputFilePath string) error {
+	file, err := os.Open(inputFilePath)
+	if err != nil {
+		log.Fatal(err)
+		log.Println("Error opening file")
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text(), 1)
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+		log.Println("Error scanning tokens")
+	}
+
+	return err
+}

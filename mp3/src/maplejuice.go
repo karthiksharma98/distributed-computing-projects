@@ -31,6 +31,7 @@ type MapleRequest struct {
 
 type MapleJuiceReply struct {
 	Completed bool
+	KeyList   []string
 }
 
 type Task struct {
@@ -39,6 +40,10 @@ type Task struct {
 }
 
 type Status int
+
+type Mapler interface {
+	Maple(inputFilePath string) error //takes location of inputFile as input and writes to stdout
+}
 
 const (
 	None Status = iota
@@ -155,7 +160,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 				// start with calling maple on the first ip
 				ips := blockMap[i]
 				chosenIp := ips[0]
-				go node.RequestMapleOnBlock(chosenIp.String(), req)
+				go node.RequestMapleOnBlock(chosenIp, req)
 
 				currTasks[req.fileName] = Task{req, ips}
 			}
@@ -165,8 +170,8 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 }
 
 // (master) makes rpc call to worker machine to run maple on a specified file block
-func (node *SdfsNode) RequestMapleOnBlock(chosenIp string, req MapleRequest) {
-	mapleClient, err := rpc.DialHTTP("tcp", chosenIp+":"+fmt.Sprint(Configuration.Service.masterPort))
+func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) {
+	mapleClient, err := rpc.DialHTTP("tcp", chosenIp.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
 	if err != nil {
 		fmt.Println("Error in connecting to maple client ", err)
 		node.RescheduleTask(req.fileName)
@@ -179,6 +184,9 @@ func (node *SdfsNode) RequestMapleOnBlock(chosenIp string, req MapleRequest) {
 		node.RescheduleTask(req.fileName)
 	} else {
 		node.MarkCompleted(req.fileName)
+		for _, key := range res.KeyList {
+			node.Master.keyLocations[key] = append(node.Master.keyLocations[key], chosenIp)
+		}
 	}
 }
 
@@ -247,7 +255,7 @@ func (node *SdfsNode) RescheduleTask(fileName string) {
 			replicas = replicas[1:]
 			currTasks[fileName] = Task{task.Request, replicas}
 
-			node.RequestMapleOnBlock(replicas[0].String(), currTasks[fileName].Request)
+			node.RequestMapleOnBlock(replicas[0], currTasks[fileName].Request)
 		}
 	}
 
@@ -271,7 +279,7 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 		fmt.Println("Error in executing maple.")
 		response.Completed = false
 	} else {
-		response.Completed = WriteMapleKeys(string(output), req.IntermediatePrefix)
+		response = WriteMapleKeys(string(output), req.IntermediatePrefix)
 	}
 
 	*reply = response
@@ -279,9 +287,10 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 }
 
 // (worker) Scan output of maple in the format [key,key's value] and store to intermediate files by key
-func WriteMapleKeys(output string, prefix string) bool {
+func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 	// read output one line at a time
 	scanner := bufio.NewScanner(strings.NewReader(output))
+	keySet := make(map[string]bool)
 	for scanner.Scan() {
 		keyVal := strings.Split(scanner.Text(), ",")
 		if len(keyVal) < 2 {
@@ -307,9 +316,13 @@ func WriteMapleKeys(output string, prefix string) bool {
 		if _, err := f.WriteString(val + "\n"); err != nil {
 			fmt.Println("Error writing val [", val, "] to ", filePath, ". Error: ", err)
 		}
+		keySet[keyString] = true
 	}
-
-	return true
+	keyList := make([]string, 0, len(keySet))
+	for k := range keySet {
+		keyList = append(keyList, k)
+	}
+	return MapleJuiceReply{Completed: true, KeyList: keyList}
 }
 
 // locally grab files in the directory
