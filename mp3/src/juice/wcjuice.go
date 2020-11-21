@@ -1,13 +1,16 @@
 package main
 
-func (j* IJuice) Juice(key string, value string) {
-        return
+import (
+        "strconv"
+)
+
+func (j* Juice) Juice(key string, values []string) {
+        count := 0
+        for _, v := range values {
+                if s, err := strconv.Atoi(v); err == nil {
+                        count += s
+                }
+        }
+        j.Emit(key, strconv.Itoa(count))
 }
 
-/*
-func main() {
-        // Listen to IPC or stdin for juice data
-        // Shuffle 
-        return
-}
-*/

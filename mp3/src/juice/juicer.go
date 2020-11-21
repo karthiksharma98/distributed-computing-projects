@@ -7,23 +7,29 @@ import (
         //"io"
         "io/ioutil"
         "bytes"
+        "strings"
 )
+
+// Interace for Juice
+type IJuice interface {
+        Juice(key string, values []string)
+}
 
 // run partitioner on keys
 // start maple tasks for each key
-type IJuice struct {
+type Juice struct {
         keys []string
         values []string
 }
 
 // Emit a key/value to juicer
-func (j *IJuice) Emit(key string, value string) {
+func (j *Juice) Emit(key string, value string) {
         j.keys = append(j.keys, key)
         j.values = append(j.values, value)
 }
 
 // Generate a new file from keys and values emitted
-func (j *IJuice) GenerateFile() map[string]string {
+func (j *Juice) GenerateFile() map[string]string {
         filesGen := make(map[string]string)
         // for every key in list of keys
         for i, key := range j.keys {
@@ -38,7 +44,7 @@ func (j *IJuice) GenerateFile() map[string]string {
 }
 
 // Save string to file
-func (j *IJuice) SaveToFile(fname string, value string) {
+func (j *Juice) SaveToFile(fname string, value string) {
         fileFlags := os.O_CREATE | os.O_WRONLY
         file, err := os.OpenFile(fname, fileFlags, 0777)
         if err != nil {
@@ -52,7 +58,7 @@ func (j *IJuice) SaveToFile(fname string, value string) {
 }
 
 // Save to files based on key
-func (j *IJuice) Save(prefix string) {
+func (j *Juice) Save(prefix string) {
         // Parse keys and values into a single string
         // Every key is mapped to a string with new value
         newData := j.GenerateFile()
@@ -62,7 +68,7 @@ func (j *IJuice) Save(prefix string) {
 }
 
 // Save all keys to one file
-func (j *IJuice) SaveAllOutput(outputFname string) {
+func (j *Juice) SaveAllOutput(outputFname string) {
         newData := j.GenerateFile()
         out := ""
         for k, v := range newData {
@@ -71,36 +77,29 @@ func (j *IJuice) SaveAllOutput(outputFname string) {
         j.SaveToFile(outputFname, out)
 }
 
-func (j *IJuice) ReadIn() *bytes.Buffer {
+// Read stdin for some fruits to juice
+func (j *Juice) ReadIn() *bytes.Buffer {
         stdinReader := bufio.NewReader(os.Stdin)
-        data := bytes.NewBuffer(make([]byte, 0))
-        /*
-        // Open pipe file
-        buf := make([]byte, 4 << 10)
-        fmt.Println("Start read")
-        for {
-                n, err := stdinReader.Read(buf[:cap(buf)])
-
-                if err == io.EOF {
-                        fmt.Println("EOF reached")
-                        break
-                }
-                if err != nil {
-                        fmt.Println(err)
-                        os.Exit(0)
-                }
-                data.Write(buf[:n])
-        }*/
+        fruit := bytes.NewBuffer(make([]byte, 0))
         bytes, _ := ioutil.ReadAll(stdinReader)
-        data.Write(bytes)
-        return data
+        fruit.Write(bytes)
+        return fruit
 }
 
 func main() {
         // Listen to IPC or stdin for juice data
-        juicerObj := IJuice{keys: make([]string,0), values: make([]string,0)}
+        var juicer IJuice
+        juicerObj := Juice{keys: make([]string,0), values: make([]string,0)}
 
-        dat := juicerObj.ReadIn()
-        juicerObj.SaveToFile("testout.txt", dat.String())
+        juicer = &juicerObj
+        fruits := juicerObj.ReadIn()
+        // Split string by new line
+        key := "placeholder"
+        vals := strings.Split(fruits.String(), "\n")
+        // Run Juice function
+        juicer.Juice(key, vals)
+        //pref := "placeholder_pref"
+        //juicerObj.Save(pref)
+        juicerObj.SaveToFile("testout.txt", fruits.String())
         return
 }
