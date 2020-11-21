@@ -25,7 +25,7 @@ func MockFile() []byte {
 }
 
 // Pull data and shuffle/sort into a single value
-func ShuffleSort(key string, prefix string) string {
+func ShuffleSort(prefix string, key string) string {
         // Get ips of file
         filePath := path.Join([]string{mapleJuiceDirName, prefix + "_" + key}...)
 
@@ -60,8 +60,8 @@ func RpcJuice(req JuiceRequest, reply *JuiceReply) {
         for _, key := range keys {
                 // Run shuffler
                 sortedFruits := ShuffleSort(key, pref)
-                // Execute juicer
-                ExecuteJuice(exeName, []byte(sortedFruits))
+                // Execute juicer on key
+                ExecuteJuice(exeName, pref, key, []byte(sortedFruits))
         }
         return
 }
@@ -85,19 +85,35 @@ func Juice(mapleQueueReq MapleJuiceQueueRequest) {
                 go RequestJuiceTask(chosenIp, req)
                 // Add task to runqueue
         }
+        // TODO: After all tasks complete, create a new file for output by combining all juice outputs
+        // TODO: Download juice output from corresponding SDFS file (JuiceCollector)
+        // TODO: Open juice output files
+        // TODO: Join and append together
+        // TODO: Upload file to SDFS
         return
 }
 
 func RequestJuiceTask(chosenIp string, req JuiceRequest) {
         // DialHTTP
+        mapleClient, err := rpc.DialHTTP("tcp", chosenIp+":"+fmt.Sprint(Configuration.Service.masterPort))
         // Call RpcMaple at chosen IP
+        if err != nil {
+                fmt.Println(err)
+        }
+
+        var res MapleJuiceReply
+        err = mapleClient.Call("SdfsNOde.RpcJuice", req, &res)
+        if err != nil || !res.Completed {
+                fmt.Println(err)
+        }
+
         return
 }
 
 // Execute Juice executable
-func ExecuteJuice(exeName string, fname string, fruits []byte) {
+func ExecuteJuice(exeName string, prefix string, key string, fruits []byte) {
         fmt.Println("Executing juice")
-        juiceCmd := exec.Command(exeName, fname)
+        juiceCmd := exec.Command(exeName, prefix, key)
         juiceIn, _ := juiceCmd.StdinPipe()
         juiceCmd.Start()
         juiceIn.Write(fruits)
