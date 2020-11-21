@@ -25,7 +25,6 @@ func MockFile() []byte {
         return sl
 }
 
-
 // Pull data and shuffle/sort into a single value
 func ShuffleSort(key string, prefix string) string {
         // Get ips of file
@@ -70,7 +69,7 @@ func Juice(mapleQueueReq MapleJuiceQueueRequest) {
 
         // RequestJuiceTask
         for k, list := range partitions {
-                // Go to ip list, choose node with key id % numNodes
+                // Get ip list, choose node with key id % numNodes
                 var req JuiceRequest
                 req.ExeName = mapleQueueReq.ExeName
                 req.IntermediatePrefix = mapleQueueReq.IntermediatePrefix
@@ -91,9 +90,9 @@ func RequestJuiceTask(chosenIp string, req JuiceRequest) {
 }
 
 // Execute Juice executable
-func ExecuteJuice(exeName string, fruits []byte) {
+func ExecuteJuice(exeName string, fname string, fruits []byte) {
         fmt.Println("Executing juice")
-        juiceCmd := exec.Command(exeName)
+        juiceCmd := exec.Command(exeName, fname)
         juiceIn, _ := juiceCmd.StdinPipe()
         juiceCmd.Start()
         juiceIn.Write(fruits)
@@ -107,5 +106,5 @@ func main() {
         fmt.Println("Fruits created")
         fmt.Println(string(fruits[:10]))
         exeName := "juice"
-        ExecuteJuice("./" + exeName, fruits)
+        ExecuteJuice("./" + exeName, "temp", fruits)
 }
