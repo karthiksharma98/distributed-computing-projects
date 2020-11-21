@@ -43,8 +43,28 @@ func (j *Juice) GenerateFile() map[string]string {
         return filesGen
 }
 
+// Save to files based on key
+func (j *Juice) Save(prefix string) {
+        // Parse keys and values into a single string
+        // Every key is mapped to a string with new value
+        newData := j.GenerateFile()
+        for k, v := range newData {
+                SaveToFile(prefix + "_" + k, v)
+        }
+}
+
+// Save all keys to one file
+func (j *Juice) SaveAllOutput(outputFname string) {
+        newData := j.GenerateFile()
+        out := ""
+        for k, v := range newData {
+                out = out + k + " " + v + "\n"
+        }
+        SaveToFile(outputFname, out)
+}
+
 // Save string to file
-func (j *Juice) SaveToFile(fname string, value string) {
+func SaveToFile(fname string, value string) {
         fileFlags := os.O_CREATE | os.O_WRONLY
         file, err := os.OpenFile(fname, fileFlags, 0777)
         if err != nil {
@@ -57,28 +77,8 @@ func (j *Juice) SaveToFile(fname string, value string) {
         }
 }
 
-// Save to files based on key
-func (j *Juice) Save(prefix string) {
-        // Parse keys and values into a single string
-        // Every key is mapped to a string with new value
-        newData := j.GenerateFile()
-        for k, v := range newData {
-                j.SaveToFile(prefix + "_" + k, v)
-        }
-}
-
-// Save all keys to one file
-func (j *Juice) SaveAllOutput(outputFname string) {
-        newData := j.GenerateFile()
-        out := ""
-        for k, v := range newData {
-                out = out + k + " " + v + "\n"
-        }
-        j.SaveToFile(outputFname, out)
-}
-
 // Read stdin for some fruits to juice
-func (j *Juice) ReadIn() *bytes.Buffer {
+func ReadStdin() *bytes.Buffer {
         stdinReader := bufio.NewReader(os.Stdin)
         fruit := bytes.NewBuffer(make([]byte, 0))
         bytes, _ := ioutil.ReadAll(stdinReader)
@@ -87,19 +87,25 @@ func (j *Juice) ReadIn() *bytes.Buffer {
 }
 
 func main() {
+        // Get filename
+        key := "no_key"
+        pref := "no_prefix"
+        if len(os.Args) > 2 {
+                pref = os.Args[1]
+                key = os.Args[2]
+        }
+
         // Listen to IPC or stdin for juice data
         var juicer IJuice
         juicerObj := Juice{keys: make([]string,0), values: make([]string,0)}
 
         juicer = &juicerObj
-        fruits := juicerObj.ReadIn()
+        fruits := ReadStdin()
         // Split string by new line
-        key := "placeholder"
         vals := strings.Split(fruits.String(), "\n")
         // Run Juice function
         juicer.Juice(key, vals)
-        //pref := "placeholder_pref"
-        //juicerObj.Save(pref)
-        juicerObj.SaveToFile("testout.txt", fruits.String())
+        // Save juice result to file
+        juicerObj.SaveAllOutput(pref + "_" + key)
         return
 }
