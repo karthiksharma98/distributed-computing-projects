@@ -5,10 +5,9 @@ import (
         "fmt"
 )
 
-/*
 const (
         mapleJuiceDirName = ""
-)*/
+)
 
 type JuiceRequest struct {
         ExeName string
@@ -28,24 +27,30 @@ func MockFile() []byte {
 // Pull data and shuffle/sort into a single value
 func ShuffleSort(key string, prefix string) string {
         // Get ips of file
-        //filePath := path.Join([]string{mapleJuiceDirName, prefix + "_" + key}...)
-        // download files of key
-        //Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), filePath)
-        // read and append data by new line
-        file, err := os.Open("file")
-        if err != nil {
-                panic(err)
-        }
-        defer file.Close()
+        filePath := path.Join([]string{mapleJuiceDirName, prefix + "_" + key}...)
 
-        // split input into string list and join
+        ipList := []string{"10.0.0.1", "10.0.0.2"} // TODO: Call getIPsForKey
         sorted := ""
-        s := bufio.NewScanner(file)
-        for s.Scan() {
-                sorted = sorted + s.Text() + "\n"
+        for _, ipAddr := range ipList {
+                // download files of key
+                err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), mapleJuiceDirName, prefix + "_" + key)
+                // read and append data by new line
+                file, err := os.Open(filePath)
+                if err != nil {
+                        panic(err)
+                }
+                defer file.Close()
+
+                // split input into string list and join
+                s := bufio.NewScanner(file)
+                for s.Scan() {
+                        sorted = sorted + s.Text() + "\n"
+                }
+                // Remove file
+                os.Remove(filePath)
         }
         // return location of combined data
-        return vals
+        return sorted
 }
 
 func RpcJuice(req JuiceRequest, reply *JuiceReply) {
