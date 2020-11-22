@@ -7,7 +7,7 @@ for val in fa20-cs425-g13-0{1..9}.cs.illinois.edu; do
    then
        ssh $1@$val -t 'git clone https://gitlab.engr.illinois.edu/ksharma/cs425_mps.git'
    else 
-       ssh $1@$val -t "cd cs425_mps && git fetch && cd mp3/src && rm -rf machine.log.txt && git checkout $2 && git pull && rm -rf machine.log.txt SDFS && bash ../build.sh && ls -l"
+       ssh $1@$val -t "cd cs425_mps && git fetch && cd mp3/src && rm -rf machine.log.txt go.mod && git checkout $2 && git pull && rm -rf machine.log.txt SDFS && bash ../build.sh && ls -l"
    fi
 done
 

@@ -312,6 +312,8 @@ func WriteMapleKeys(output string, prefix string) bool {
 	return true
 }
 
+// Juicers
+
 // locally grab files in the directory
 func GetFileNames(dirName string) []string {
 	var fileNames []string
