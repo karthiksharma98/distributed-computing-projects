@@ -29,3 +29,12 @@ func (wc wordCount) Maple(inputFilePath string) error {
 
 	return err
 }
+
+func main() {
+	if len(os.Args) < 2 {
+		log.Println("Insufficient arguments to maple")
+		return
+	}
+	var wc wordCount
+	wc.Maple(os.Args[1])
+}
