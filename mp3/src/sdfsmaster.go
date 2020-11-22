@@ -257,7 +257,7 @@ func sendUploadCommand(aliveIP net.IP, newIP net.IP, filename string, blockID in
 	var res SdfsResponse
 
 	req.LocalFName = sdfsDirName + "/" + filename
-	req.RemoteFName = filename
+	req.RemoteFName = sdfsDirName + "/" + filename
 	req.IPAddr = newIP
 	req.Type = UploadReq
 	req.BlockID = blockID
