@@ -10,7 +10,6 @@ import (
 	"net"
 	"os"
 	"path"
-	"path/filepath"
 	"time"
 )
 
@@ -75,7 +74,7 @@ func InitFileTransferServer(port string) {
 }
 
 func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.UploadRequest) (*service.UploadReply, error) {
-	filePath := filepath.Join(sdfsDirName, filepath.Base(uploadReq.SdfsFileName))
+	filePath := uploadReq.SdfsFileName
 	fileFlags := os.O_CREATE | os.O_WRONLY
 	if uploadReq.IsMultipleChunks && !uploadReq.IsFirstChunk {
 		fileFlags = fileFlags | os.O_APPEND
@@ -95,7 +94,7 @@ func (s *FileTransferServer) Upload(ctx context.Context, uploadReq *service.Uplo
 }
 
 func (s *FileTransferServer) Download(ctx context.Context, downloadReq *service.DownloadRequest) (*service.DownloadReply, error) {
-	file, err := os.Open(filepath.Join(sdfsDirName, filepath.Base(downloadReq.GetSdfsFileName())))
+	file, err := os.Open(downloadReq.GetSdfsFileName())
 	defer file.Close()
 	if err != nil {
 		return &service.DownloadReply{

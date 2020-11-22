@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/rpc"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -145,7 +146,8 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 						blockEnd = logicalSplitBoundaries[blockIdx] + 1
 					}
 
-					err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, req.RemoteFName+".blk_"+fmt.Sprint(blockIdx), fileContents[blockStart:blockEnd])
+					remoteFilePath := filepath.Join(sdfsDirName, filepath.Base(req.RemoteFName+".blk_"+fmt.Sprint(blockIdx)))
+					err := Upload(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName, remoteFilePath, fileContents[blockStart:blockEnd])
 
 					if err != nil {
 						fmt.Println("error in upload process.", err)
@@ -185,7 +187,8 @@ func (node *SdfsNode) RpcGet(remoteFname string, localFname string) {
 				fmt.Println(err)
 			} else {
 				for _, ipAddr := range res.IPList {
-					err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.RemoteFName+".blk_"+fmt.Sprint(req.BlockID), req.LocalFName+".blk_"+fmt.Sprint(req.BlockID))
+					remoteFilePath := filepath.Join(sdfsDirName, filepath.Base(req.RemoteFName+".blk_"+fmt.Sprint(req.BlockID)))
+					err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), remoteFilePath, req.LocalFName+".blk_"+fmt.Sprint(req.BlockID))
 
 					if err != nil {
 						fmt.Println("error in download process at ", ipAddr, ": ", err)
