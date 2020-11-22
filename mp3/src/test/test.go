@@ -73,7 +73,7 @@ func Juice(mapleQueueReq MapleJuiceQueueRequest) {
         partitions := partitioner(keys, numJuices, false)
 
         // RequestJuiceTask
-        for k, list := range partitions {
+        for id, list := range partitions {
                 // Get ip list, choose node with key id % numNodes
                 var req JuiceRequest
                 req.ExeName = mapleQueueReq.ExeName
@@ -81,6 +81,7 @@ func Juice(mapleQueueReq MapleJuiceQueueRequest) {
                 req.fileName = "placeholder"
                 req.key = list
                 // Send Juice Request to that partition, with key to reduce
+                // Get ip address of id
                 chosenIp := "10.0.0.1"
                 go RequestJuiceTask(chosenIp, req)
                 // Add task to runqueue
@@ -89,8 +90,25 @@ func Juice(mapleQueueReq MapleJuiceQueueRequest) {
         // TODO: Download juice output from corresponding SDFS file (JuiceCollector)
         // TODO: Open juice output files
         // TODO: Join and append together
+        CollectJuices(partitions)
         // TODO: Upload file to SDFS
         return
+}
+
+func CollectJuices(partitions map[int][]string) {
+        allJuices := ""
+        for id, list := range partitions {
+                // TODO: Get ip address of k
+                ipAddr := "10.0.0.1"
+                for _, key := range list {
+                        _ := Download(ipAddr, fmt.Sprint(Configuration.Service.filePort), mapleJuiceDirName, prefix + "_" + key)
+                        // TODO: Open file
+                        // Append to allJuices file
+                        buf = "someKey 100"
+                        allJuices = allJuices + buf + "\n"
+                }
+        }
+        // TODO: Save all juices to local folder of collected juice
 }
 
 func RequestJuiceTask(chosenIp string, req JuiceRequest) {
