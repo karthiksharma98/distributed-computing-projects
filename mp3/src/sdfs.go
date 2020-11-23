@@ -104,7 +104,11 @@ func GetLogicalSplits(fileContents []byte) []int {
 func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 
 	numAlive := process.GetNumAlive()
-	fileContents := GetFileContents(localFname)
+	fileContents, err := GetFileContents(localFname)
+	if err != nil {
+		fmt.Println("File does not exist")
+		return
+	}
 	logicalSplitBoundaries := GetLogicalSplits(fileContents)
 	fmt.Println(logicalSplitBoundaries)
 
@@ -209,7 +213,7 @@ func (node *SdfsNode) RpcGet(remoteFname string, localFname string) {
 
 		defer file.Close()
 		for i := 0; i < numBlocks; i++ {
-			blockContents := GetFileContents(req.LocalFName + ".blk_" + fmt.Sprint(i))
+			blockContents, _ := GetFileContents(req.LocalFName + ".blk_" + fmt.Sprint(i))
 			file.Write(blockContents)
 			os.Remove(req.LocalFName + ".blk_" + fmt.Sprint(i))
 			if i == 0 {
@@ -374,8 +378,8 @@ func (node *SdfsNode) AddToFileMap(req SdfsRequest, reply *SdfsResponse) error {
 }
 
 func (node *SdfsNode) UploadAndModifyMap(req SdfsRequest, reply *SdfsResponse) error {
-	fileContents := GetFileContents(req.LocalFName)
-	err := Upload(req.IPAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName+".blk_"+string(req.BlockID), req.RemoteFName+".blk_"+string(req.BlockID), fileContents)
+	fileContents, err := GetFileContents(req.LocalFName)
+	err = Upload(req.IPAddr.String(), fmt.Sprint(Configuration.Service.filePort), req.LocalFName+".blk_"+string(req.BlockID), req.RemoteFName+".blk_"+string(req.BlockID), fileContents)
 
 	if err != nil {
 		return err

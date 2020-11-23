@@ -230,7 +230,11 @@ func StartCli() {
 
 		case "upload":
 			if len(inputFields) == 4 {
-				fileContents := GetFileContents(inputFields[2])
+				fileContents, err := GetFileContents(inputFields[2])
+				if err != nil {
+					fmt.Println("File does not exist.")
+					continue
+				}
 				Upload(fmt.Sprint(inputFields[1]),
 					fmt.Sprint(Configuration.Service.filePort),
 					inputFields[2],
