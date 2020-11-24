@@ -272,8 +272,13 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 	app := "./" + req.ExeName
 	arg0 := filePath
 
+	fmt.Println(app, arg0)
+
 	cmd := exec.Command(app, arg0)
+
 	output, err := cmd.Output()
+
+	fmt.Println(output[:1000])
 	if err != nil {
 		fmt.Println("Error in executing maple.")
 		response.Completed = false
