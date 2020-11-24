@@ -269,11 +269,10 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 
 	var response MapleJuiceReply
 
-	app := "bash"
-	arg0 := "./" + req.ExeName
-	arg1 := filePath
+	app := "./" + req.ExeName
+	arg0 := filePath
 
-	cmd := exec.Command(app, arg0, arg1)
+	cmd := exec.Command(app, arg0)
 	output, err := cmd.Output()
 	if err != nil {
 		fmt.Println("Error in executing maple.")
