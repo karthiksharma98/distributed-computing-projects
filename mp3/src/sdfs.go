@@ -266,8 +266,10 @@ func (node *SdfsNode) HandlePutRequest(req SdfsRequest, reply *SdfsResponse) err
 		return errors.New("Error: Invalid request type for Put Request")
 	}
 
-	if _, ok := node.Master.sdfsFNameMap[req.RemoteFName]; !ok {
-		node.Master.sdfsFNameMap[req.LocalFName] = req.RemoteFName
+	fileNameWithoutPath := filepath.Base(req.LocalFName)
+
+	if _, ok := node.Master.sdfsFNameMap[fileNameWithoutPath]; !ok {
+		node.Master.sdfsFNameMap[fileNameWithoutPath] = req.RemoteFName
 	}
 
 	if val, ok := node.Master.fileMap[req.RemoteFName][req.BlockID]; ok && len(val) != 0 {
