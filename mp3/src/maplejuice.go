@@ -318,12 +318,12 @@ func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 			fmt.Println("Error opening ", filePath, ". Error: ", err)
 			continue
 		}
-		defer f.Close()
 
 		if _, err := f.WriteString(val + "\n"); err != nil {
 			fmt.Println("Error writing val [", val, "] to ", filePath, ". Error: ", err)
 		}
 		keySet[prefixKey] = true
+		f.Close()
 	}
 	keyList := make([]string, 0, len(keySet))
 	for k := range keySet {
