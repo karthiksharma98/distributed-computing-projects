@@ -181,7 +181,6 @@ func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) {
 	}
 
 	var res MapleJuiceReply
-	fmt.Println("Sending maple req", req)
 	err = mapleClient.Call("SdfsNode.RpcMaple", req, &res)
 	if err != nil || !res.Completed {
 		fmt.Println("Error: ", err, "res.completed = ", res.Completed)
@@ -299,6 +298,7 @@ func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 	keySet := make(map[string]bool)
 	for scanner.Scan() {
 		keyVal := strings.Split(scanner.Text(), ",")
+		fmt.Println(keyVal)
 		if len(keyVal) < 2 {
 			continue
 		}
