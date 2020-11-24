@@ -162,6 +162,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 				// start with calling maple on the first ip
 				ips := blockMap[i]
 				chosenIp := ips[0]
+				fmt.Println("Sending maple req", req)
 				go node.RequestMapleOnBlock(chosenIp, req)
 
 				currTasks[req.fileName] = Task{req, ips}
