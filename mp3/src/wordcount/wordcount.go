@@ -20,7 +20,7 @@ func (wc wordCount) Maple(inputFilePath string) error {
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
-		fmt.Println(scanner.Text() + "1,")
+		fmt.Println(scanner.Text() + ",1")
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
