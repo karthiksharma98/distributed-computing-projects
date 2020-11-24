@@ -183,7 +183,7 @@ func StartCli() {
 					continue
 				}
 				sessionId := sdfs.RpcLock(int32(sdfs.Member.memberID), inputFields[2], SdfsLock)
-				sdfs.RpcPut("./"+inputFields[1], inputFields[2])
+				sdfs.RpcPut(inputFields[1], inputFields[2])
 				sessionId = sdfs.RpcUnlock(sessionId, inputFields[2], SdfsLock)
 
 				fmt.Println("Finished put.")
