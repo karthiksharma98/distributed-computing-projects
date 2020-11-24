@@ -162,7 +162,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 				// start with calling maple on the first ip
 				ips := blockMap[i]
 				chosenIp := ips[0]
-				fmt.Println("Sending maple req", req)
+
 				go node.RequestMapleOnBlock(chosenIp, req)
 
 				currTasks[req.fileName] = Task{req, ips}
@@ -181,6 +181,7 @@ func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) {
 	}
 
 	var res MapleJuiceReply
+	fmt.Println("Sending maple req", req)
 	err = mapleClient.Call("SdfsNode.RpcMaple", req, &res)
 	if err != nil || !res.Completed {
 		fmt.Println("Error: ", err, "res.completed = ", res.Completed)
@@ -275,7 +276,7 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 	app := "./" + req.ExeName
 	arg0 := filePath
 
-	fmt.Println(app, arg0, req.fileName, filePath)
+	fmt.Println(req, app, arg0, req.fileName, filePath)
 
 	cmd := exec.Command(app, arg0)
 
