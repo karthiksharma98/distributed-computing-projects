@@ -298,7 +298,6 @@ func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 	keySet := make(map[string]bool)
 	for scanner.Scan() {
 		keyVal := strings.Split(scanner.Text(), ",")
-		fmt.Println(keyVal)
 		if len(keyVal) < 2 {
 			continue
 		}
