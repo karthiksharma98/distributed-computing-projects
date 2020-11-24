@@ -144,9 +144,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 	fmt.Println("Beginning Map phase.")
 	fmt.Print("> ")
 
-	fmt.Println(mapleQueueReq.FileList)
 	for _, localFName := range mapleQueueReq.FileList {
-		fmt.Println(node.Master.sdfsFNameMap)
 		sdfsFName := node.Master.sdfsFNameMap[localFName]
 		if blockMap, ok := node.Master.fileMap[sdfsFName]; ok {
 			// initiate maple on each block of each file
@@ -275,7 +273,6 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 	app := "./" + req.ExeName
 	arg0 := filePath
 
-	fmt.Println(app, arg0)
 	cmd := exec.Command(app, arg0)
 
 	output, err := cmd.Output()
