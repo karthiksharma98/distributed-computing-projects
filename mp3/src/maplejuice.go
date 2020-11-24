@@ -25,8 +25,8 @@ type MapleJuiceQueueRequest struct {
 type MapleRequest struct {
 	ExeName            string
 	IntermediatePrefix string
-	fileName           string
-	blockNum           int
+	FileName           string
+	BlockNum           int
 }
 
 type MapleJuiceReply struct {
@@ -153,11 +153,11 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 			var req MapleRequest
 			req.ExeName = mapleQueueReq.ExeName
 			req.IntermediatePrefix = mapleQueueReq.IntermediatePrefix
-			req.fileName = sdfsDirName + "/" + sdfsFName
+			req.FileName = sdfsDirName + "/" + sdfsFName
 
 			numBlocks := node.Master.numBlocks[sdfsFName]
 			for i := 0; i < numBlocks; i++ {
-				req.blockNum = i
+				req.BlockNum = i
 
 				// start with calling maple on the first ip
 				ips := blockMap[i]
@@ -165,7 +165,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 
 				go node.RequestMapleOnBlock(chosenIp, req)
 
-				currTasks[req.fileName] = Task{req, ips}
+				currTasks[req.FileName] = Task{req, ips}
 			}
 		}
 
@@ -177,7 +177,7 @@ func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) {
 	mapleClient, err := rpc.DialHTTP("tcp", chosenIp.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
 	if err != nil {
 		fmt.Println("Error in connecting to maple client ", err)
-		node.RescheduleTask(req.fileName)
+		node.RescheduleTask(req.FileName)
 	}
 
 	var res MapleJuiceReply
@@ -185,9 +185,9 @@ func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) {
 	err = mapleClient.Call("SdfsNode.RpcMaple", req, &res)
 	if err != nil || !res.Completed {
 		fmt.Println("Error: ", err, "res.completed = ", res.Completed)
-		node.RescheduleTask(req.fileName)
+		node.RescheduleTask(req.FileName)
 	} else {
-		node.MarkCompleted(req.fileName)
+		node.MarkCompleted(req.FileName)
 		for _, key := range res.KeyList {
 			node.Master.keyLocations[key] = append(node.Master.keyLocations[key], chosenIp)
 		}
@@ -268,16 +268,15 @@ func (node *SdfsNode) RescheduleTask(fileName string) {
 // (worker) receives Request to run a maple_exe on some file block from the master
 func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 	// format: fileName.blk_#
-	blockNum := strconv.Itoa(req.blockNum)
-	filePath := req.fileName + ".blk_" + blockNum
+	blockNum := strconv.Itoa(req.BlockNum)
+	filePath := req.FileName + ".blk_" + blockNum
 
 	var response MapleJuiceReply
 
 	app := "./" + req.ExeName
 	arg0 := filePath
 
-	fmt.Println(req, app, arg0, req.fileName, filePath)
-
+	fmt.Println(app, arg0)
 	cmd := exec.Command(app, arg0)
 
 	output, err := cmd.Output()
