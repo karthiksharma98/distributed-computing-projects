@@ -301,6 +301,7 @@ func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 
 		// TODO: convert key to an appropriate string for a file name
 		keyString := key
+		prefixKey := prefix + "_" + keyString
 
 		// write to MapleJuice/prefix_key
 		// key -> ip
@@ -316,7 +317,7 @@ func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 		if _, err := f.WriteString(val + "\n"); err != nil {
 			fmt.Println("Error writing val [", val, "] to ", filePath, ". Error: ", err)
 		}
-		keySet[keyString] = true
+		keySet[prefixKey] = true
 	}
 	keyList := make([]string, 0, len(keySet))
 	for k := range keySet {
