@@ -313,7 +313,7 @@ func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 		// need method to get all keys
 		filePath := path.Join([]string{mapleJuiceDirName, prefix + "_" + keyString}...)
 		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-		fmt.Println(filePath)
+
 		if err != nil {
 			fmt.Println("Error opening ", filePath, ". Error: ", err)
 			continue
