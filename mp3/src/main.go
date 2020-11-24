@@ -53,7 +53,7 @@ func StartCli() {
 		// wait for input to query operations on node
 		fmt.Print("> ")
 		input, _ := consoleReader.ReadString('\n')
-		input = strings.ToLower(strings.TrimSuffix(input, "\n"))
+		input = strings.TrimSuffix(input, "\n")
 		inputFields := strings.Fields(input) // Split string into os.Args like array
 
 		if len(inputFields) == 0 {
