@@ -6,7 +6,12 @@ import (
 
 func (m *Mapler) Maple(input string) error {
 	// input is a line of text
-	words := strings.Split(input, " ")
+
+	f := func(c rune) bool {
+		return c == ','
+	}
+
+	words := strings.FieldsFunc(input, f)
 	for _, w := range words {
 		m.Emit(w, "1")
 	}
