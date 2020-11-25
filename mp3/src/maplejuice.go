@@ -180,9 +180,17 @@ func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) {
 		fmt.Println("Error: ", err, "res.completed = ", res.Completed)
 		node.RescheduleTask(req.FileName)
 	} else {
+		if _, ok := node.Master.prefixKeyMap[req.IntermediatePrefix]; !ok {
+			node.Master.prefixKeyMap[req.IntermediatePrefix] = make(map[string]bool)
+		}
 		node.MarkCompleted(req.FileName)
 		for _, key := range res.KeyList {
-			node.Master.keyLocations[key] = append(node.Master.keyLocations[key], chosenIp)
+			if checkMember(chosenIp, node.Master.keyLocations[key]) != -1 {
+				node.Master.keyLocations[key] = append(node.Master.keyLocations[key], chosenIp)
+			}
+			if _, ok := node.Master.prefixKeyMap[req.IntermediatePrefix][key]; !ok {
+				node.Master.prefixKeyMap[req.IntermediatePrefix][key] = true
+			}
 		}
 	}
 }
