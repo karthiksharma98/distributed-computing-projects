@@ -36,6 +36,7 @@ func processInputFile(inputFilePath string) error {
 
 	scanner := bufio.NewScanner(file)
 
+	// send lines of text to Maple
 	// todo: modify this to process 10-20 lines at once as given in spec
 	for scanner.Scan() {
 		mapler.Maple(scanner.Text())
