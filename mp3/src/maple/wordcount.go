@@ -5,13 +5,9 @@ import (
 )
 
 func (m *Mapler) Maple(input string) error {
+
 	// input is a line of text
-
-	f := func(c rune) bool {
-		return c == ','
-	}
-
-	words := strings.FieldsFunc(input, f)
+	words := strings.Fields(input)
 	for _, w := range words {
 		m.Emit(w, "1")
 	}
