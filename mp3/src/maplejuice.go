@@ -185,7 +185,7 @@ func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) {
 		}
 		node.MarkCompleted(req.FileName)
 		for _, key := range res.KeyList {
-			if checkMember(chosenIp, node.Master.keyLocations[key]) != -1 {
+			if checkMember(chosenIp, node.Master.keyLocations[key]) == -1 {
 				node.Master.keyLocations[key] = append(node.Master.keyLocations[key], chosenIp)
 			}
 			if _, ok := node.Master.prefixKeyMap[req.IntermediatePrefix][key]; !ok {
