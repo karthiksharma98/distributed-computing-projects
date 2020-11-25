@@ -344,7 +344,10 @@ func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 	scanner := bufio.NewScanner(strings.NewReader(output))
 	keySet := make(map[string]bool)
 	for scanner.Scan() {
-		keyVal := strings.Split(scanner.Text(), ",")
+		commaSplitter := func(c rune) bool {
+			return c == ','
+		}
+		keyVal := strings.FieldsFunc(scanner.Text(), commaSplitter)
 		if len(keyVal) < 2 {
 			continue
 		}
