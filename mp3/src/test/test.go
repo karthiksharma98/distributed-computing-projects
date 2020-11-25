@@ -42,11 +42,12 @@ type JuiceTask struct {
 
 // Pull data and shuffle/sort into a single value
 func ShuffleSort(prefix string, key string) []byte {
-	// Get ips of file
-	ipList := []string{"10.0.0.1", "10.0.0.2"} // TODO: Call GetIPsForKey(prefix, key)
+        prefixKey := prefix + "_" + key
+        // Get ips of file
+        ipList := keyLocations[prefixKey]
 	sorted := make([]byte, 0)
-	juiceTempPath := juiceTempDir + "/" + prefix + "_" + key
-	filePath := mapleJuiceDirName + "/" + prefix + "_" + key
+	juiceTempPath := juiceTempDir + prefixKey
+	filePath := mapleJuiceDirName + prefixKey
 	for _, ipAddr := range ipList {
 		// Download files of key
 		err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), filePath, juiceTempPath)
@@ -79,9 +80,10 @@ func (node *SdfsNode) RpcJuice(req JuiceRequest, reply *MapleJuiceReply) {
 
 // Runs on Master
 func (node *SdfsNode) Juice(juiceQueueReq mapleJuiceQueueRequest) {
-	// run partitioner at juice request
-	keys := []string{"key1", "key2"} // TODO: Call GetAllKeys
+        // Get keys of given prefix
+	keys := node.Master.prefixKeyMap[juiceQueueReq.IntermediatePrefix]
 	numJuices := juiceQueueReq.NumTasks
+	// Run partitioner at juice request
 	partitions := partitioner(keys, numJuices, false)
 	outputFname := juiceQueueReq.FileList[0]
 	job := &JuiceJob{
@@ -91,7 +93,7 @@ func (node *SdfsNode) Juice(juiceQueueReq mapleJuiceQueueRequest) {
 		DoneTasks:    make(map[string]JuiceTask),
 	}
 
-	// RequestJuiceTask
+	// Request a juice task 
 	for id, keyList := range partitions {
 		// Get ip list, choose node with key id % numNodes
 		for _, key := range keyList {
@@ -100,9 +102,9 @@ func (node *SdfsNode) Juice(juiceQueueReq mapleJuiceQueueRequest) {
 			req.IntermediatePrefix = juiceQueueReq.IntermediatePrefix
 			req.fileName = outputFname
 			req.key = key
-			// Send Juice Request to that partition, with key to reduce
 			// Get ip address of id
 			nodeID := node.FindAvailableNode(id)
+			// Send Juice Request to that partition, with key to reduce
 			go node.RequestJuiceTask(node.membershipList[nodeID].IPaddr, req)
 			// Add task to runqueue/pendingqueue
 			job.EnqueueJuice(JuiceTask{[]uint8{nodeID}, req})
@@ -132,7 +134,7 @@ func (job *JuiceJob) EnqueueJuice(task JuiceTask) {
 
 // Dequeue juice task from runqueue, enqueue to runqueue if tasks pending
 func (job *JuiceJob) DequeueJuice(task JuiceTask, success bool) {
-	job.mu.Lock()
+	job.mu.Lock()*
 	defer job.mu.Unlock()
 	// Add to doneTasks and remove from runqueue
 	if _, ok := job.RunningTasks[task.Request.key]; ok {
@@ -164,7 +166,7 @@ func FindAvailableIP(id int) uint8 {
 
 // Collect all juice
 func (node *SdfsNode) CollectJuices(job *JuiceJob, outFname string) {
-	allJuices := ""
+	combinedJuices := ""
 
 	for key, task := range job.DoneTasks {
 		// Download juice output from corresponding file path of key + prefix
@@ -196,6 +198,42 @@ func (node *SdfsNode) CollectJuices(job *JuiceJob, outFname string) {
 		fmt.Println(err)
 	}
 }
+
+
+/** Test purposes 
+func (node *SdfsNode) JuiceCollector() {
+        combinedJucies := ""
+	// Save all juices to local folder of collected juice
+	fileFlags := os.O_CREATE | os.O_WRONLY
+	file, err := os.OpenFile(outFname, fileFlags, 0777)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer file.Close()
+        combinedJuices := node.GetJuiceOutput(ipAddr, key, prefix, combinedJuices)
+}
+
+func (node *SdfsNode) GetJuiceOutput(ipAddr string, key string, prefix string, src string) string {
+        // Download juice output from corresponding file path of key + prefix
+        ipAddr := node.Member.membershipList[task.Nodes[0]].IPaddr
+        juiceFilePath := juiceTempDir + "/" + task.Request.IntermediatePrefix + "_" + key
+        _ := Download(ipAddr, fmt.Sprint(Configuration.Service.filePort), juiceFilePath, juiceFilePath)
+        // Open juice output files
+        file, err := os.Open(juiceFilePath)
+        if err != nil {
+                panic(err)
+        }
+        defer file.Close()
+
+        // Append to allJuices file
+        s := bufio.NewScanner(file)
+        for s.Scan() {
+                src = src + s.Text() + "\n"
+        }
+        return src
+
+}
+**/
 
 func (node *SdfsNode) RequestJuiceTask(job *JuiceJob, chosenIp net.IP, req JuiceRequest) {
 	mapleClient, err := rpc.DialHTTP("tcp", chosenIp.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
