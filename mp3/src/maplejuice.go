@@ -180,9 +180,18 @@ func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) {
 		fmt.Println("Error: ", err, "res.completed = ", res.Completed)
 		node.RescheduleTask(req.FileName)
 	} else {
+		if _, ok := node.Master.prefixKeyMap[req.IntermediatePrefix]; !ok {
+			node.Master.prefixKeyMap[req.IntermediatePrefix] = make(map[string]bool)
+		}
 		node.MarkCompleted(req.FileName)
 		for _, key := range res.KeyList {
-			node.Master.keyLocations[key] = append(node.Master.keyLocations[key], chosenIp)
+			prefixKey := req.IntermediatePrefix + "_" + key
+			if checkMember(chosenIp, node.Master.keyLocations[prefixKey]) == -1 {
+				node.Master.keyLocations[prefixKey] = append(node.Master.keyLocations[prefixKey], chosenIp)
+			}
+			if _, ok := node.Master.prefixKeyMap[req.IntermediatePrefix][key]; !ok {
+				node.Master.prefixKeyMap[req.IntermediatePrefix][key] = true
+			}
 		}
 	}
 }
@@ -304,7 +313,7 @@ func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 		// write to MapleJuice/prefix_key
 		// key -> ip
 		// need method to get all keys
-		filePath := path.Join([]string{mapleJuiceDirName, prefix + "_" + keyString}...)
+		filePath := path.Join([]string{mapleJuiceDirName, prefixKey}...)
 		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
 		if err != nil {
@@ -315,7 +324,7 @@ func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 		if _, err := f.WriteString(val + "\n"); err != nil {
 			fmt.Println("Error writing val [", val, "] to ", filePath, ". Error: ", err)
 		}
-		keySet[prefixKey] = true
+		keySet[key] = true
 		f.Close()
 	}
 	keyList := make([]string, 0, len(keySet))

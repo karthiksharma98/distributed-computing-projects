@@ -298,9 +298,13 @@ func StartCli() {
 					FileList:           dirName,
 					DeleteInput:        del})
 			}
-		case "printKeyLocations":
+		case "inspectMaster":
 			if process != nil && process.memberID == sdfs.MasterId {
-				fmt.Println(sdfs.Master.keyLocations)
+				fmt.Println("filemap", sdfs.Master.fileMap)
+				fmt.Println("keylocations", sdfs.Master.keyLocations)
+				fmt.Println("prefixKeyMap", sdfs.Master.prefixKeyMap)
+				fmt.Println("sdfsFNameMap", sdfs.Master.sdfsFNameMap)
+				fmt.Println("numBlocks", sdfs.Master.numBlocks)
 			}
 
 		case "help":
