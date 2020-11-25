@@ -41,10 +41,6 @@ type Task struct {
 
 type Status int
 
-type Mapler interface {
-	Maple(inputFilePath string) error //takes location of inputFile as input and writes to stdout
-}
-
 const (
 	None Status = iota
 	RequestingMaple
