@@ -72,9 +72,6 @@ func (node *SdfsNode) MemberListen() {
 				if err != nil {
 					fmt.Println(err)
 				}
-
-				// reassign that machine's tasks to someone else
-				node.HandleTaskReassignments(id)
 			}
 			continue
 		}
