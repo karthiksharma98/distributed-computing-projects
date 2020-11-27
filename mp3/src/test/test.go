@@ -81,9 +81,16 @@ func (node *SdfsNode) RpcJuice(req JuiceRequest, reply *MapleJuiceReply) {
 // Runs on Master
 func (node *SdfsNode) Juice(juiceQueueReq mapleJuiceQueueRequest) {
         // Get keys of given prefix
-	keys := node.Master.prefixKeyMap[juiceQueueReq.IntermediatePrefix]
-	numJuices := juiceQueueReq.NumTasks
+	keysMap := node.Master.prefixKeyMap[juiceQueueReq.IntermediatePrefix]
+        // Mapkeys to key list
+        keys := make([]int, len(keys))
+        i := 0
+        for k, _ := range keysMap {
+                keys[i] = k
+                i++
+        }
 	// Run partitioner at juice request
+	numJuices := juiceQueueReq.NumTasks
 	partitions := partitioner(keys, numJuices, false)
 	outputFname := juiceQueueReq.FileList[0]
 	job := &JuiceJob{
