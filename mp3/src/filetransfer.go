@@ -181,15 +181,15 @@ func DialServer(dest string) (*grpc.ClientConn, error) {
 	return conn, connErr
 }
 
-func GetFileContents(localFileName string) []byte {
+func GetFileContents(localFileName string) ([]byte, error) {
 	content, err := ioutil.ReadFile(localFileName)
 	if err != nil {
 		Warn.Println("Unable to read file.")
-		return []byte{}
+		return []byte{}, err
 	}
 
 	// Convert []byte to string
-	return content
+	return content, nil
 }
 
 func GetFileSize(filePath string) int64 {

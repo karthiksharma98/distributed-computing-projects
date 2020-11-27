@@ -2,3 +2,4 @@
 #go build -o client main.go monitor.go net.go util.go logs.go detector.go client.go
 
 go build -o main
+cd maple && go build -o ../wc 

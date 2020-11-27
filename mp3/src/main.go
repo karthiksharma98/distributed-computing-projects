@@ -53,7 +53,7 @@ func StartCli() {
 		// wait for input to query operations on node
 		fmt.Print("> ")
 		input, _ := consoleReader.ReadString('\n')
-		input = strings.ToLower(strings.TrimSuffix(input, "\n"))
+		input = strings.TrimSuffix(input, "\n")
 		inputFields := strings.Fields(input) // Split string into os.Args like array
 
 		if len(inputFields) == 0 {
@@ -230,7 +230,11 @@ func StartCli() {
 
 		case "upload":
 			if len(inputFields) == 4 {
-				fileContents := GetFileContents(inputFields[2])
+				fileContents, err := GetFileContents(inputFields[2])
+				if err != nil {
+					fmt.Println("File does not exist.")
+					continue
+				}
 				Upload(fmt.Sprint(inputFields[1]),
 					fmt.Sprint(Configuration.Service.filePort),
 					inputFields[2],
@@ -293,6 +297,14 @@ func StartCli() {
 					IntermediatePrefix: inputFields[3],
 					FileList:           dirName,
 					DeleteInput:        del})
+			}
+		case "inspectMaster":
+			if process != nil && process.memberID == sdfs.MasterId {
+				fmt.Println("filemap", sdfs.Master.fileMap)
+				fmt.Println("keylocations", sdfs.Master.keyLocations)
+				fmt.Println("prefixKeyMap", sdfs.Master.prefixKeyMap)
+				fmt.Println("sdfsFNameMap", sdfs.Master.sdfsFNameMap)
+				fmt.Println("numBlocks", sdfs.Master.numBlocks)
 			}
 
 		case "help":

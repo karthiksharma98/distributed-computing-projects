@@ -11,6 +11,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type MapleJuiceQueueRequest struct {
@@ -25,12 +26,13 @@ type MapleJuiceQueueRequest struct {
 type MapleRequest struct {
 	ExeName            string
 	IntermediatePrefix string
-	fileName           string
-	blockNum           int
+	FileName           string
+	BlockNum           int
 }
 
 type MapleJuiceReply struct {
 	Completed bool
+	KeyList   []string
 }
 
 type Task struct {
@@ -52,7 +54,8 @@ const (
 var (
 	mapleJuiceCh = make(chan Status, 1)
 	queue        []MapleJuiceQueueRequest
-	currTasks           = make(map[string]Task) // fileName -> [replicaIPs]
+	currTasks    = make(map[string]Task) // fileName -> [replicaIPs]
+	taskLock     sync.Mutex
 	lastStatus   Status = None
 )
 
@@ -62,20 +65,20 @@ func (node *SdfsNode) ListenMapleJuice() {
 		// blocks until there is a change in the status
 		switch status := <-mapleJuiceCh; status {
 		case None:
-			node.RunFirstMaple()
+			go node.RunFirstMaple()
 
 		case RequestingMaple:
 			if lastStatus == None {
-				node.RunFirstMaple()
+				go node.RunFirstMaple()
 			}
 
 		case MapleFinished:
 			lastStatus = MapleFinished
-			node.RunFirstJuice()
+			go node.RunFirstJuice()
 
 		case RequestingJuice:
 			if lastStatus == MapleFinished {
-				node.RunFirstJuice()
+				go node.RunFirstJuice()
 			}
 
 		default:
@@ -139,6 +142,9 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 	fmt.Println("Beginning Map phase.")
 	fmt.Print("> ")
 
+	chanSize := len(mapleQueueReq.FileList)
+	mapleCh := make(chan Task, chanSize)
+
 	for _, localFName := range mapleQueueReq.FileList {
 		sdfsFName := node.Master.sdfsFNameMap[localFName]
 		if blockMap, ok := node.Master.fileMap[sdfsFName]; ok {
@@ -146,40 +152,96 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 			var req MapleRequest
 			req.ExeName = mapleQueueReq.ExeName
 			req.IntermediatePrefix = mapleQueueReq.IntermediatePrefix
-			req.fileName = sdfsDirName + "/" + sdfsFName
+			req.FileName = sdfsDirName + "/" + sdfsFName
 
 			numBlocks := node.Master.numBlocks[sdfsFName]
 			for i := 0; i < numBlocks; i++ {
-				req.blockNum = i
-
-				// start with calling maple on the first ip
+				req.BlockNum = i
 				ips := blockMap[i]
-				chosenIp := ips[0]
-				go node.RequestMapleOnBlock(chosenIp.String(), req)
+				if len(ips) > 0 {
+					mapleCh <- Task{req, ips}
+				}
 
-				currTasks[req.fileName] = Task{req, ips}
 			}
 		}
-
 	}
+
+	node.RunTasks(mapleCh, mapleQueueReq.NumTasks)
+}
+
+// (master) run the tasks in the job queue on NumMaples/NumJuices # of tasks
+func (node *SdfsNode) RunTasks(tasks chan Task, numTasks int) {
+	var wg sync.WaitGroup
+
+	// initialize workers
+	for i := 0; i < numTasks; i++ {
+		go node.RunTaskWorker(i, &wg, tasks)
+		wg.Add(1)
+	}
+
+	// stopping the worker and waiting for them to complete
+	close(tasks)
+	wg.Wait()
+
+	fmt.Println("Completed Maple phase.")
+	fmt.Print("> ")
+	mapleJuiceCh <- MapleFinished
+}
+
+// (master) worker reads from job queue and initializes maple on the current job
+func (node *SdfsNode) RunTaskWorker(i int, wg *sync.WaitGroup, tasks <-chan Task) {
+	for task := range tasks {
+		wg.Add(1)
+
+		// Find chosenIp or whatever
+		// Call RPC.Maple/Juice function here (RequestMapleOnBlock)
+		taskLock.Lock()
+		currTasks[task.Request.FileName] = task
+		taskLock.Unlock()
+		err := node.RequestMapleOnBlock(task.Replicas[0], task.Request)
+
+		for err != nil {
+			// keep trying until success or you run out of options
+			err = node.RescheduleTask(task.Request.FileName)
+		}
+
+		taskLock.Lock()
+		delete(currTasks, task.Request.FileName)
+		taskLock.Unlock()
+		wg.Done()
+	}
+
+	wg.Done()
 }
 
 // (master) makes rpc call to worker machine to run maple on a specified file block
-func (node *SdfsNode) RequestMapleOnBlock(chosenIp string, req MapleRequest) {
-	mapleClient, err := rpc.DialHTTP("tcp", chosenIp+":"+fmt.Sprint(Configuration.Service.masterPort))
+func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) error {
+	mapleClient, err := rpc.DialHTTP("tcp", chosenIp.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
 	if err != nil {
 		fmt.Println("Error in connecting to maple client ", err)
-		node.RescheduleTask(req.fileName)
+		return err
 	}
 
 	var res MapleJuiceReply
 	err = mapleClient.Call("SdfsNode.RpcMaple", req, &res)
 	if err != nil || !res.Completed {
 		fmt.Println("Error: ", err, "res.completed = ", res.Completed)
-		node.RescheduleTask(req.fileName)
 	} else {
-		node.MarkCompleted(req.fileName)
+		if _, ok := node.Master.prefixKeyMap[req.IntermediatePrefix]; !ok {
+			node.Master.prefixKeyMap[req.IntermediatePrefix] = make(map[string]bool)
+		}
+		for _, key := range res.KeyList {
+			prefixKey := req.IntermediatePrefix + "_" + key
+			if checkMember(chosenIp, node.Master.keyLocations[prefixKey]) == -1 {
+				node.Master.keyLocations[prefixKey] = append(node.Master.keyLocations[prefixKey], chosenIp)
+			}
+			if _, ok := node.Master.prefixKeyMap[req.IntermediatePrefix][key]; !ok {
+				node.Master.prefixKeyMap[req.IntermediatePrefix][key] = true
+			}
+		}
 	}
+
+	return err
 }
 
 // (master) prompts worker machines to run juice on their uploaded blocks
@@ -198,66 +260,37 @@ func (node *SdfsNode) Juice(mapleQueueReq MapleJuiceQueueRequest) {
 	mapleJuiceCh <- None
 }
 
-// (master) receive acknowledgement from worker that it finished a file block
-func (node *SdfsNode) MarkCompleted(fileName string) {
-	delete(currTasks, fileName)
-
-	if len(currTasks) == 0 {
-		fmt.Println("Completed Maple phase.")
-		fmt.Print("> ")
-		mapleJuiceCh <- MapleFinished
-	}
-}
-
-// (master) reassigns failed node's ongoing tasks, if any
-// 		and remove from replicas list, otherwise
-func (node *SdfsNode) HandleTaskReassignments(memberId uint8) {
-	failedIp := node.Member.membershipList[memberId].IPaddr
-	for fileName, task := range currTasks {
-		ips := task.Replicas
-		for i := 0; i < len(ips); i += 1 {
-			if ips[i].Equal(failedIp) {
-				if i == 0 {
-					// ongoing task
-					node.RescheduleTask(fileName)
-				} else {
-					// remove from list
-					newIps := append(ips[:i], ips[i+1:]...)
-					currTasks[fileName] = Task{task.Request, newIps}
-				}
-			}
-
-		}
-	}
-}
-
 // (master) reschedule task to another machine that has that file
 // 			initiated when a worker has failed
-func (node *SdfsNode) RescheduleTask(fileName string) {
+func (node *SdfsNode) RescheduleTask(fileName string) error {
 	fmt.Println("Rescheduling task ", fileName)
+	taskLock.Lock()
 	if task, ok := currTasks[fileName]; ok {
 		replicas := task.Replicas
 		if len(replicas) < 2 {
 			// no more to try
 			// TODO: re-replicate file elsewhere, and try again?
 			//		for now, delete + ignore lol
-			delete(currTasks, fileName)
 			Err.Println("Could not successfully finish task on ", fileName)
 		} else {
-			replicas = replicas[1:]
-			currTasks[fileName] = Task{task.Request, replicas}
+			newReplicas := make([]net.IP, len(replicas)-1)
+			copy(newReplicas, replicas[1:])
+			currTasks[fileName] = Task{task.Request, newReplicas}
 
-			node.RequestMapleOnBlock(replicas[0].String(), currTasks[fileName].Request)
+			taskLock.Unlock()
+			return node.RequestMapleOnBlock(newReplicas[0], task.Request)
 		}
 	}
 
+	taskLock.Unlock()
+	return nil
 }
 
 // (worker) receives Request to run a maple_exe on some file block from the master
 func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 	// format: fileName.blk_#
-	blockNum := strconv.Itoa(req.blockNum)
-	filePath := req.fileName + ".blk_" + blockNum
+	blockNum := strconv.Itoa(req.BlockNum)
+	filePath := req.FileName + ".blk_" + blockNum
 
 	var response MapleJuiceReply
 
@@ -266,12 +299,14 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 	arg1 := filePath
 
 	cmd := exec.Command(app, arg0, arg1)
+
 	output, err := cmd.Output()
+
 	if err != nil {
 		fmt.Println("Error in executing maple.")
 		response.Completed = false
 	} else {
-		response.Completed = WriteMapleKeys(string(output), req.IntermediatePrefix)
+		response = WriteMapleKeys(string(output), req.IntermediatePrefix)
 	}
 
 	*reply = response
@@ -279,9 +314,10 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 }
 
 // (worker) Scan output of maple in the format [key,key's value] and store to intermediate files by key
-func WriteMapleKeys(output string, prefix string) bool {
+func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 	// read output one line at a time
 	scanner := bufio.NewScanner(strings.NewReader(output))
+	keySet := make(map[string]bool)
 	for scanner.Scan() {
 		keyVal := strings.Split(scanner.Text(), ",")
 		if len(keyVal) < 2 {
@@ -292,27 +328,31 @@ func WriteMapleKeys(output string, prefix string) bool {
 
 		// TODO: convert key to an appropriate string for a file name
 		keyString := key
+		prefixKey := prefix + "_" + keyString
 
 		// write to MapleJuice/prefix_key
 		// key -> ip
 		// need method to get all keys
-		filePath := path.Join([]string{mapleJuiceDirName, prefix + "_" + keyString}...)
+		filePath := path.Join([]string{mapleJuiceDirName, prefixKey}...)
 		f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+
 		if err != nil {
 			fmt.Println("Error opening ", filePath, ". Error: ", err)
 			continue
 		}
-		defer f.Close()
 
 		if _, err := f.WriteString(val + "\n"); err != nil {
 			fmt.Println("Error writing val [", val, "] to ", filePath, ". Error: ", err)
 		}
+		keySet[key] = true
+		f.Close()
 	}
-
-	return true
+	keyList := make([]string, 0, len(keySet))
+	for k := range keySet {
+		keyList = append(keyList, k)
+	}
+	return MapleJuiceReply{Completed: true, KeyList: keyList}
 }
-
-// Juicers
 
 // locally grab files in the directory
 func GetFileNames(dirName string) []string {

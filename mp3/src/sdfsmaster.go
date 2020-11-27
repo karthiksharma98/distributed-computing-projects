@@ -20,7 +20,13 @@ type SdfsMaster struct {
 	numBlocks    map[string]int
 	lockMap      map[string]*SdfsMutex
 	sessMap      map[int32](chan bool)
+	keyLocations map[string][]net.IP
+	prefixKeyMap map[string]map[string]bool
 }
+
+/* prefixKeyMap[prefix] is another map. This map queries a key and its value is true if key is present.
+This map was used instead of a keylist for a prefix since checking if a key is already present while
+adding new keys becomes very expensive if we linear search the existing keylist each time while adding new keys */
 
 type connectionError struct {
 	ip net.IP
@@ -45,6 +51,8 @@ func NewSdfsMaster() *SdfsMaster {
 		make(map[string]int),
 		make(map[string]*SdfsMutex),
 		make(map[int32](chan bool)),
+		make(map[string][]net.IP),
+		make(map[string]map[string]bool),
 	}
 	return master
 }
@@ -64,9 +72,6 @@ func (node *SdfsNode) MemberListen() {
 				if err != nil {
 					fmt.Println(err)
 				}
-
-				// reassign that machine's tasks to someone else
-				node.HandleTaskReassignments(id)
 			}
 			continue
 		}
