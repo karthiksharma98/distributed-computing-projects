@@ -59,7 +59,7 @@ func InitDirectories() {
 		// clear contents when starting up
 		dir, _ := ioutil.ReadDir(juiceTempDir)
 		for _, d := range dir {
-			os.RemoveAll(path.Join([]string{sdfsDirName, d.Name()}...))
+			os.RemoveAll(path.Join([]string{juiceTempDir, d.Name()}...))
 		}
 	}
 }
