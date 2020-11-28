@@ -35,13 +35,9 @@ func (j *Juice) GenerateFile() map[string]string {
                 // concatenate values[i] + "\n"
                 currStr, ok := filesGen[key]
                 if !ok {
-                        filesGen[key] = ""
+                        fmt.Println("No key found")
                 }
-                if i == len(j.keys) - 1 {
-                        filesGen[key] = currStr + j.values[i]
-                } else {
-                        filesGen[key] = currStr + j.values[i] + "\n"
-                }
+                filesGen[key] = currStr + j.values[i] + "\n"
         }
         return filesGen
 }
@@ -61,13 +57,18 @@ func (j *Juice) SaveAllOutput(outputFname string) {
         newData := j.GenerateFile()
         out := ""
         for k, v := range newData {
-                out = out + k + " " + v + "\n"
+                out = out + k + " " + v
         }
         SaveToFile(outputFname, out)
 }
 
 // Save string to file
 func SaveToFile(fname string, value string) {
+        // truncate end of string
+        /*
+        if len(value) > 2 {
+                value = value[0:len(value)-3]
+        }*/
         fileFlags := os.O_CREATE | os.O_WRONLY
         file, err := os.OpenFile(fname, fileFlags, 0777)
         if err != nil {
