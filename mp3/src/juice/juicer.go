@@ -37,7 +37,11 @@ func (j *Juice) GenerateFile() map[string]string {
                 if !ok {
                         filesGen[key] = ""
                 }
-                filesGen[key] = currStr + j.values[i] + "\n"
+                if i == len(j.keys) - 1 {
+                        filesGen[key] = currStr + j.values[i]
+                } else {
+                        filesGen[key] = currStr + j.values[i] + "\n"
+                }
         }
         return filesGen
 }

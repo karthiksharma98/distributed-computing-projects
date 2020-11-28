@@ -52,9 +52,15 @@ func InitDirectories() {
 	if _, err := os.Stat(mapleJuiceDirName); os.IsNotExist(err) {
 		os.Mkdir(mapleJuiceDirName, 0755)
 	}
-	// create maplejuice directory
+	// create juice temp directory
 	if _, err := os.Stat(juiceTempDir); os.IsNotExist(err) {
 		os.Mkdir(juiceTempDir, 0755)
+	} else {
+		// clear contents when starting up
+		dir, _ := ioutil.ReadDir(juiceTempDir)
+		for _, d := range dir {
+			os.RemoveAll(path.Join([]string{sdfsDirName, d.Name()}...))
+		}
 	}
 }
 
