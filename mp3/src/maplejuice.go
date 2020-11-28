@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net"
 	"net/rpc"
@@ -442,6 +441,8 @@ func (node *SdfsNode) Juice(juiceQueueReq MapleJuiceQueueRequest) {
 	sessionId := node.RpcLock(int32(node.Member.memberID), outputFname, SdfsLock)
 	node.RpcPut(outputFname, outputFname)
 	_ = node.RpcUnlock(sessionId, outputFname, SdfsLock)
+	// Remove output file from master
+	_ = os.Remove(outputFname)
 	// indicate when it's done
 	fmt.Println("Completed Juice phase.")
 	fmt.Print("> ")
@@ -507,8 +508,7 @@ func (node *SdfsNode) RunJuiceWorker(id int, wg *sync.WaitGroup, tasks chan Juic
 
 // (master) collect all juice after all tasks completed
 func (node *SdfsNode) CollectJuices(prefix string, keys []string, outFname string) {
-	fmt.Println("Collecting all juices for")
-	fmt.Print(keys)
+	fmt.Println("Collecting all juices for", keys)
 	fmt.Println("Saving juices to", outFname)
 	// Save all juices to local folder of collected juice
 	fileFlags := os.O_CREATE | os.O_WRONLY
@@ -517,31 +517,21 @@ func (node *SdfsNode) CollectJuices(prefix string, keys []string, outFname strin
 		fmt.Println(err)
 	}
 	defer file.Close()
+	juices := []byte{}
 
-	readers := make([]io.Reader, 0)
-	files := make([]*os.File, 0)
 	for _, key := range keys {
 		juiceFilePath := filepath.Join(juiceTempDir, prefix+"_"+key)
 		fmt.Println("Collecting", juiceFilePath)
 
-		currFile, err := os.Open(juiceFilePath)
+		bytes, err := ioutil.ReadFile(juiceFilePath)
 		if err != nil {
-			file.Close()
+			fmt.Println(err)
 		}
-		readers = append(readers, currFile)
-		files = append(files, currFile)
-		defer currFile.Close()
+		juices = append(juices, bytes...)
 	}
-	// Read and copy to output file
-	r := io.MultiReader(readers...)
-	_, err = io.Copy(file, r)
+	_, err = file.Write(juices)
 	if err != nil {
 		fmt.Println(err)
-	}
-
-	// Close all files
-	for _, file := range files {
-		file.Close()
 	}
 
 	fmt.Println("Finished collecting juice in", outFname)
