@@ -52,6 +52,10 @@ func InitDirectories() {
 	if _, err := os.Stat(mapleJuiceDirName); os.IsNotExist(err) {
 		os.Mkdir(mapleJuiceDirName, 0755)
 	}
+        // create maplejuice directory
+	if _, err := os.Stat(juiceTempDir); os.IsNotExist(err) {
+		os.Mkdir(juiceTempDir, 0755)
+	}
 }
 
 // Server methods
