@@ -441,8 +441,8 @@ func (node *SdfsNode) Juice(juiceQueueReq MapleJuiceQueueRequest) {
 	sessionId := node.RpcLock(int32(node.Member.memberID), outputFname, SdfsLock)
 	node.RpcPut(outputFname, outputFname)
 	_ = node.RpcUnlock(sessionId, outputFname, SdfsLock)
-        // Remove output file from master
-        _ = os.Remove(outputFname)
+	// Remove output file from master
+	_ = os.Remove(outputFname)
 	// indicate when it's done
 	fmt.Println("Completed Juice phase.")
 	fmt.Print("> ")
@@ -517,22 +517,22 @@ func (node *SdfsNode) CollectJuices(prefix string, keys []string, outFname strin
 		fmt.Println(err)
 	}
 	defer file.Close()
-        juices := []byte{}
+	juices := []byte{}
 
 	for _, key := range keys {
 		juiceFilePath := filepath.Join(juiceTempDir, prefix+"_"+key)
 		fmt.Println("Collecting", juiceFilePath)
 
-                bytes, err := ioutil.ReadFile(juiceFilePath)
-                if err != nil {
+		bytes, err := ioutil.ReadFile(juiceFilePath)
+		if err != nil {
 			fmt.Println(err)
 		}
-                juices = append(juices, bytes...)
+		juices = append(juices, bytes...)
 	}
-        _, err = file.Write(juices)
-        if err != nil {
-                fmt.Println(err)
-        }
+	_, err = file.Write(juices)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println("Finished collecting juice in", outFname)
 }
