@@ -527,7 +527,6 @@ func (node *SdfsNode) CollectJuices(prefix string, keys []string, outFname strin
                 if err != nil {
 			fmt.Println(err)
 		}
-                bytes = append(bytes, []byte("\n")...)
                 juices = append(juices, bytes...)
 	}
         _, err = file.Write(juices)

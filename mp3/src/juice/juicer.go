@@ -57,7 +57,7 @@ func (j *Juice) SaveAllOutput(outputFname string) {
         newData := j.GenerateFile()
         out := ""
         for k, v := range newData {
-                out = out + k + " " + v
+                out = out + k + "\t" + v
         }
         SaveToFile(outputFname, out)
 }
