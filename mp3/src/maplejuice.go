@@ -441,6 +441,8 @@ func (node *SdfsNode) Juice(juiceQueueReq MapleJuiceQueueRequest) {
 	sessionId := node.RpcLock(int32(node.Member.memberID), outputFname, SdfsLock)
 	node.RpcPut(outputFname, outputFname)
 	_ = node.RpcUnlock(sessionId, outputFname, SdfsLock)
+        // Remove output file from master
+        _ = os.Remove(outputFname)
 	// indicate when it's done
 	fmt.Println("Completed Juice phase.")
 	fmt.Print("> ")
