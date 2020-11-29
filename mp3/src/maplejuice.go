@@ -200,8 +200,8 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 			}
 		}
 	}
-	duration := time.Since(startTime)
 	node.RunTasks(mapleCh, mapleQueueReq.NumTasks)
+	duration := time.Since(startTime)
 	node.SendMessage(mapleQueueReq.RequestingId, "Finished Maple")
 	node.SendMessage(mapleQueueReq.RequestingId, "Elapsed: "+strconv.FormatFloat(float64(duration)/1000000000, 'f', 3, 64)+" s")
 }
