@@ -13,7 +13,11 @@ func (j *Juice) Juice(key string, values []string) {
 
 	votes := make([]int, numCandidates)
 	for _, v := range values {
-		pairWinner, _ := strconv.Atoi(string(strings.TrimSpace(v)[1]))
+		trimmed := string(strings.TrimSpace(v))
+		if len(trimmed) < 5 {
+			continue
+		}
+		pairWinner, _ := strconv.Atoi(string(trimmed[1]))
 		votes[pairWinner]++
 	}
 
