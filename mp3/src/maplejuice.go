@@ -460,6 +460,15 @@ func (node *SdfsNode) Juice(juiceQueueReq MapleJuiceQueueRequest) {
 	duration := time.Since(startTime)
 	node.SendMessage(juiceQueueReq.RequestingId, "Finished Juice.")
 	node.SendMessage(juiceQueueReq.RequestingId, "Elapsed: "+strconv.FormatFloat(float64(duration)/1000000000, 'f', 3, 64)+" s")
+	// Remove input if needed
+	if juiceQueueReq.DeleteInput {
+		delete(node.Master.prefixKeyMap, juiceQueueReq.IntermediatePrefix)
+		for _, k := range keys {
+			delete(node.Master.keyLocations, juiceQueueReq.IntermediatePrefix+"_"+k)
+		}
+	}
+	node.SendMessage(juiceQueueReq.RequestingId, "Deleted inputs.")
+
 	lastStatus = None
 	mapleJuiceCh <- None
 }
