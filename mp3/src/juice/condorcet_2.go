@@ -26,7 +26,7 @@ func (j *Juice) Juice(key string, values []string) {
 	// if reached here then no condorcet winner
 	maxCount := 0
 	winnerSet := ""
-	for i, v := range votes {
+	for _, v := range votes {
 		if v > maxCount {
 			maxCount = v
 		}
