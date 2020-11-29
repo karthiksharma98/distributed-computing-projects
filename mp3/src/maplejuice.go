@@ -238,6 +238,7 @@ func (node *SdfsNode) RunTaskWorker(i int, wg *sync.WaitGroup, tasks <-chan Task
 		taskLock.Lock()
 		currTasks[task.Request.FileName] = task
 		taskLock.Unlock()
+		fmt.Println("Requesting maple inside RunTaskWorker")
 		err := node.RequestMapleOnBlock(task.Replicas[0], task.Request)
 
 		for err != nil {
