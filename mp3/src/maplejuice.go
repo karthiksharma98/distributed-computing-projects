@@ -177,7 +177,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 	fmt.Println("Beginning Map phase.")
 	fmt.Print("> ")
 
-	chanSize := 10
+	chanSize := 100
 	mapleCh := make(chan Task, chanSize)
 
 	fmt.Println(mapleQueueReq.FileList)
@@ -239,7 +239,6 @@ func (node *SdfsNode) RunTaskWorker(i int, wg *sync.WaitGroup, tasks <-chan Task
 		taskLock.Lock()
 		currTasks[task.Request.FileName] = task
 		taskLock.Unlock()
-		fmt.Println("Requesting maple inside RunTaskWorker")
 		err := node.RequestMapleOnBlock(task.Replicas[0], task.Request)
 
 		for err != nil {
@@ -265,7 +264,6 @@ func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) err
 	}
 
 	var res MapleJuiceReply
-	fmt.Println("Requesting maple on ", chosenIp.String())
 	err = mapleClient.Call("SdfsNode.RpcMaple", req, &res)
 	if err != nil || !res.Completed {
 		fmt.Println("Error: ", err, "res.completed = ", res.Completed)
@@ -335,7 +333,6 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 		fmt.Println("Error in executing maple.")
 		response.Completed = false
 	} else {
-		fmt.Println("Writing maple output")
 		response = WriteMapleKeys(string(output), req.IntermediatePrefix)
 	}
 
