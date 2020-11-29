@@ -2,7 +2,7 @@
 # Run this in /home/netid
 # Download and install hadoop
 cd ~
-wget https://www.apache.org/dyn/closer.cgi/hadoop/common/hadoop-2.9.2/hadoop-2.9.2.tar.gz
+wget https://mirrors.gigenet.com/apache/hadoop/common/hadoop-2.9.2/hadoop-2.9.2.tar.gz
 tar -xzvf hadoop-2.9.2.tar.gz
 
 echo 'export HADOOP_HOME=/home/jit2/hadoop-2.9.2' >> ~/.bashrc
