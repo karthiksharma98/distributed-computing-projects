@@ -9,4 +9,4 @@ cd maple && go build -o ../condorcet_maple_1 mapler.go condorcet_1.go
 cd ../maple && go build -o ../condorcet_maple_2 mapler.go condorcet_2.go
 
 cd ../juice && go build -o ../condorcet_juice_1 juicer.go condorcet_1.go
-cd ../juice && go build -o ../condorcet_juice_1 juicer.go condorcet_2.go
+cd ../juice && go build -o ../condorcet_juice_2 juicer.go condorcet_2.go
