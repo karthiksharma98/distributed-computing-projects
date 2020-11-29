@@ -213,6 +213,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 func (node *SdfsNode) RunTasks(tasks chan Task, numTasks int) {
 	var wg sync.WaitGroup
 
+	fmt.Println("RunTasks entered")
 	// initialize workers
 	for i := 0; i < numTasks; i++ {
 		go node.RunTaskWorker(i, &wg, tasks)
