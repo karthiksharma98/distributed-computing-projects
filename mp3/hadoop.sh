@@ -1,12 +1,13 @@
 # Copy ssh to other machines if namenode 
-#ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-02.cs.illinois.edu
-#ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-03.cs.illinois.edu
-#ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-04.cs.illinois.edu
-#ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-05.cs.illinois.edu
-#ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-06.cs.illinois.edu
-#ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-07.cs.illinois.edu
-#ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-08.cs.illinois.edu
-#ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-09.cs.illinois.edu
+ssh-keygen -t rsa
+ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-02.cs.illinois.edu
+ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-03.cs.illinois.edu
+ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-04.cs.illinois.edu
+ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-05.cs.illinois.edu
+ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-06.cs.illinois.edu
+ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-07.cs.illinois.edu
+ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-08.cs.illinois.edu
+ssh-copy-id -i /home/jit2/.ssh/id_rsa.pub jit2@fa20-cs425-g13-09.cs.illinois.edu
 
 # Run this in /home/netid
 # Download and install hadoop
@@ -30,6 +31,21 @@
 #echo 'export JAVA_HOME=${JAVA_HOME:-"/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.272.b10-1.el7_9.x86_64"}' >> /home/jit2/hadoop-2.9.2/etc/hadoop/hadoop-env.sh
 #echo 'export HADOOP_CONF_DIR=${HADOOP_CONF_DIR:-"/home/jit2/hadoop-2.9.2/etc/hadoop"}' >> /home/jit2/hadoop-2.9.2/etc/hadoop/hadoop-env.sh
 #
+
+#mkdir -p /home/jit2/hadoop_store/hdfs/namenode
+#mkdir -p /home/jit2/hadoop_store/hdfs/datanode
+#
+## Copy hadoop configs
+#rm /home/jit2/hadoop-2.9.2/etc/hadoop/hdfs-site.xml
+#cp ./hdfs-site.xml /home/jit2/hadoop-2.9.2/etc/hadoop/
+#rm /home/jit2/hadoop-2.9.2/etc/hadoop/yarn-site.xml
+#cp ./yarn-site.xml /home/jit2/hadoop-2.9.2/etc/hadoop/
+#rm /home/jit2/hadoop-2.9.2/etc/hadoop/core-site.xml
+#cp ./core-site.xml /home/jit2/hadoop-2.9.2/etc/hadoop/
+#rm /home/jit2/hadoop-2.9.2/etc/hadoop/mapred-site.xml
+#cp ./mapred-site.xml /home/jit2/hadoop-2.9.2/etc/hadoop/
+
+
 ## Set up ips
 #echo '172.22.156.42' >> /home/jit2/hadoop-2.9.2/etc/hadoop/masters
 ## echo '172.22.156.42' >> /home/jit2/hadoop-2.9.2/etc/hadoop/slaves
@@ -45,12 +61,17 @@
 ## Install hadoop on worker nodes
 #su hadoop
 #cd /home/jit2
-#scp -r hadoop jit2@fa20-cs425-g13-02.cs.illinois.edu:/opt/hadoop
-#scp -r hadoop jit2@fa20-cs425-g13-03.cs.illinois.edu:/opt/hadoop
-#scp -r hadoop jit2@fa20-cs425-g13-04.cs.illinois.edu:/opt/hadoop
-#scp -r hadoop jit2@fa20-cs425-g13-05.cs.illinois.edu:/opt/hadoop
-#scp -r hadoop jit2@fa20-cs425-g13-06.cs.illinois.edu:/opt/hadoop
-#scp -r hadoop jit2@fa20-cs425-g13-07.cs.illinois.edu:/opt/hadoop
-#scp -r hadoop jit2@fa20-cs425-g13-08.cs.illinois.edu:/opt/hadoop
-#scp -r hadoop jit2@fa20-cs425-g13-09.cs.illinois.edu:/opt/hadoop
+#scp -r hadoop jit2@fa20-cs425-g13-02.cs.illinois.edu:/home/jit2
+#scp -r hadoop jit2@fa20-cs425-g13-03.cs.illinois.edu:/home/jit2
+#scp -r hadoop jit2@fa20-cs425-g13-04.cs.illinois.edu:/home/jit2
+#scp -r hadoop jit2@fa20-cs425-g13-05.cs.illinois.edu:/home/jit2
+#scp -r hadoop jit2@fa20-cs425-g13-06.cs.illinois.edu:/home/jit2
+#scp -r hadoop jit2@fa20-cs425-g13-07.cs.illinois.edu:/home/jit2
+#scp -r hadoop jit2@fa20-cs425-g13-08.cs.illinois.edu:/home/jit2
+#scp -r hadoop jit2@fa20-cs425-g13-09.cs.illinois.edu:/home/jit2
 #
+
+#hdfs namenode -format
+#start-dfs.sh
+#start-yarn.sh
+
