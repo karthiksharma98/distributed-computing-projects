@@ -177,7 +177,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 	fmt.Println("Beginning Map phase.")
 	fmt.Print("> ")
 
-	chanSize := len(mapleQueueReq.FileList)
+	chanSize := 10
 	mapleCh := make(chan Task, chanSize)
 
 	fmt.Println(mapleQueueReq.FileList)
