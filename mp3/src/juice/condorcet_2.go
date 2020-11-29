@@ -9,7 +9,6 @@ import (
 func (j *Juice) Juice(key string, values []string) {
 
 	numCandidates := 10
-	fmt.Println("vals: ", values)
 
 	votes := make([]int, numCandidates)
 	for _, v := range values {
@@ -24,7 +23,6 @@ func (j *Juice) Juice(key string, values []string) {
 	for i, v := range votes {
 		if v == numCandidates-1 {
 			j.Emit(fmt.Sprint(i), " is the condorcet winner!")
-			fmt.Println(fmt.Sprint(i), " is the condorcet winner!")
 			return
 		}
 	}
@@ -45,6 +43,5 @@ func (j *Juice) Juice(key string, values []string) {
 	}
 
 	j.Emit(winnerSet, " have the highest condorcet counts, no winner.")
-	fmt.Println(winnerSet, " have the highest condorcet counts, no winner.")
 
 }

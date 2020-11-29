@@ -114,7 +114,6 @@ func (node *SdfsNode) RpcPut(localFname string, remoteFname string) {
 		return
 	}
 	logicalSplitBoundaries := GetLogicalSplits(fileContents)
-	fmt.Println(logicalSplitBoundaries)
 
 	for blockIdx := 0; blockIdx < len(logicalSplitBoundaries)+1; blockIdx++ {
 		ipsAttempted := make(map[string]bool)
