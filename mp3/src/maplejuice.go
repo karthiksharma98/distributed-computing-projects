@@ -321,6 +321,7 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 	arg1 := filePath
 
 	cmd := exec.Command(arg0, arg1)
+	fmt.Println("Executing ", arg0, arg1)
 
 	output, err := cmd.Output()
 
@@ -328,7 +329,7 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 		fmt.Println("Error in executing maple.")
 		response.Completed = false
 	} else {
-		fmt.Println("Finished executing maple on ", filePath)
+		fmt.Println("Writing maple output")
 		response = WriteMapleKeys(string(output), req.IntermediatePrefix)
 	}
 
