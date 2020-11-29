@@ -15,6 +15,6 @@ func (j *Juice) Juice(key string, values []string) {
 	if count1 >= count0 {
 		j.Emit("", key)
 	} else {
-		j.Emit("", string(key[0]+key[3]+key[2]+key[2]+key[4]))
+		j.Emit("", string(key[0])+string(key[3])+string(key[2])+string(key[1])+string(key[4]))
 	}
 }

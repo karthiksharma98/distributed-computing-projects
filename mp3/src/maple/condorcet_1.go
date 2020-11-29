@@ -16,7 +16,7 @@ func (m *Mapler) Maple(input string) error {
 			if preferenceList[i] < preferenceList[j] {
 				m.Emit("("+fmt.Sprint(preferenceList[i])+" "+fmt.Sprint(preferenceList[j])+")", "1")
 			} else {
-				m.Emit("("+fmt.Sprint(preferenceList[j])+" "+fmt.Sprint(preferenceList[1])+")", "0")
+				m.Emit("("+fmt.Sprint(preferenceList[j])+" "+fmt.Sprint(preferenceList[i])+")", "0")
 			}
 		}
 	}
