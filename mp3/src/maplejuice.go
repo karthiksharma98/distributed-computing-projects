@@ -18,6 +18,7 @@ import (
 
 // MapleJuice structs
 type MapleJuiceQueueRequest struct {
+	RequestingId       uint8
 	IsMaple            bool
 	FileList           []string
 	ExeName            string
@@ -199,6 +200,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 	}
 
 	node.RunTasks(mapleCh, mapleQueueReq.NumTasks)
+	node.SendMessage(mapleQueueReq.RequestingId, "Finished Maple")
 }
 
 // (master) run the tasks in the job queue on NumMaples/NumJuices # of tasks
@@ -308,6 +310,8 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 	blockNum := strconv.Itoa(req.BlockNum)
 	filePath := req.FileName + ".blk_" + blockNum
 
+	fmt.Println("Executing maple on ", filePath)
+
 	var response MapleJuiceReply
 
 	arg0 := "./" + req.ExeName
@@ -321,8 +325,11 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 		fmt.Println("Error in executing maple.")
 		response.Completed = false
 	} else {
+		fmt.Println("Finished executing maple on ", filePath)
 		response = WriteMapleKeys(string(output), req.IntermediatePrefix)
 	}
+
+	fmt.Print("> ")
 
 	*reply = response
 	return err
@@ -446,6 +453,7 @@ func (node *SdfsNode) Juice(juiceQueueReq MapleJuiceQueueRequest) {
 	// indicate when it's done
 	fmt.Println("Completed Juice phase.")
 	fmt.Print("> ")
+	node.SendMessage(juiceQueueReq.RequestingId, "Finished Juice")
 	lastStatus = None
 	mapleJuiceCh <- None
 }

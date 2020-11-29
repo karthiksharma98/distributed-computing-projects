@@ -266,7 +266,9 @@ func StartCli() {
 					continue
 				}
 
-				err = sdfs.QueueTask(MapleJuiceQueueRequest{IsMaple: true,
+				err = sdfs.QueueTask(MapleJuiceQueueRequest{
+					RequestingId:       process.memberID,
+					IsMaple:            true,
 					FileList:           GetFileNames(inputFields[4]),
 					ExeName:            inputFields[1],
 					NumTasks:           num,
@@ -291,7 +293,9 @@ func StartCli() {
 				var dirName []string
 				dirName = append(dirName, inputFields[4])
 
-				sdfs.QueueTask(MapleJuiceQueueRequest{IsMaple: false,
+				sdfs.QueueTask(MapleJuiceQueueRequest{
+					RequestingId:       process.memberID,
+					IsMaple:            false,
 					ExeName:            inputFields[1],
 					NumTasks:           tasks,
 					IntermediatePrefix: inputFields[3],

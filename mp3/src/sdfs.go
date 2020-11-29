@@ -32,6 +32,10 @@ type SdfsResponse struct {
 	NumBlocks int
 }
 
+type MessageReq struct {
+	Message string
+}
+
 type ReqType int
 
 const (
@@ -438,5 +442,31 @@ func (node *SdfsNode) HandleDeleteRequest(req SdfsRequest, reply *SdfsResponse) 
 			}
 		}
 	}
+	return nil
+}
+
+func (node *SdfsNode) SendMessage(id uint8, msg string) {
+	ip := node.Member.membershipList[id].IPaddr
+
+	client, err := rpc.DialHTTP("tcp", ip.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
+	if err != nil {
+		fmt.Println("Unable to connect: ", ip, err)
+	}
+
+	var req MessageReq
+	req.Message = msg
+
+	var res SdfsResponse
+
+	err = client.Call("SdfsNode.PrintMessage", req, &res)
+	if err != nil {
+		fmt.Println("Unable to call PrintMessage: ", ip, err)
+	}
+}
+
+func (node *SdfsNode) PrintMessage(req MessageReq, reply *SdfsResponse) error {
+	fmt.Println(req.Message)
+	fmt.Print("> ")
+
 	return nil
 }
