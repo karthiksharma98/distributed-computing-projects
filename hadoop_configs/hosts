@@ -1,0 +1,12 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+172.22.156.42 namenode
+172.22.158.42 datanode1
+172.22.94.42 datanode2
+172.22.156.43 datanode3
+172.22.158.43 datanode4
+172.22.94.43 datanode5
+172.22.156.44 datanode6
+172.22.158.44 datanode7
+172.22.94.44 datanode8
