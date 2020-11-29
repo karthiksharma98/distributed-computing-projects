@@ -529,8 +529,12 @@ func (node *SdfsNode) RunJuiceWorker(id int, wg *sync.WaitGroup, tasks chan Juic
 			Info.Println("Getting juice output from worker", id)
 			prefixKey := task.Request.IntermediatePrefix + "_" + task.Request.Key
 			juiceFilePath := filepath.Join(juiceTempDir, prefixKey)
-			_ = Download(task.Nodes[0].String(), fmt.Sprint(Configuration.Service.filePort), juiceFilePath, juiceFilePath)
-			Info.Println("Succesfully retrieved from worker", id)
+			err = Download(task.Nodes[0].String(), fmt.Sprint(Configuration.Service.filePort), juiceFilePath, juiceFilePath)
+			if err != nil {
+				fmt.Println("Error retrieving juice output from worker ", id, " | ", err)
+			} else {
+				fmt.Println("Succesfully retrieved from worker", id)
+			}
 		}
 		wg.Done()
 	}
