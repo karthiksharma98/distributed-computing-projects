@@ -180,8 +180,11 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 	chanSize := len(mapleQueueReq.FileList)
 	mapleCh := make(chan Task, chanSize)
 
+	fmt.Println(mapleQueueReq.FileList)
+
 	for _, localFName := range mapleQueueReq.FileList {
 		sdfsFName := node.Master.sdfsFNameMap[localFName]
+		fmt.Println(sdfsFName)
 		if blockMap, ok := node.Master.fileMap[sdfsFName]; ok {
 			// initiate maple on each block of each file
 			var req MapleRequest
@@ -260,6 +263,7 @@ func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) err
 	}
 
 	var res MapleJuiceReply
+	fmt.Println("Requesting maple on ", chosenIp.String())
 	err = mapleClient.Call("SdfsNode.RpcMaple", req, &res)
 	if err != nil || !res.Completed {
 		fmt.Println("Error: ", err, "res.completed = ", res.Completed)
