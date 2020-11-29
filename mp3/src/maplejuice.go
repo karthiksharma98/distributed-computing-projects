@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // MapleJuice structs
@@ -172,6 +173,7 @@ func (node *SdfsNode) AddToQueue(mapleQueueReq MapleJuiceQueueRequest, reply *Ma
 // (master) prompts worker machines to run maple on their uploaded blocks
 func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 	lastStatus = MapleOngoing
+	startTime := time.Now()
 	fmt.Println("Beginning Map phase.")
 	fmt.Print("> ")
 
@@ -198,9 +200,10 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 			}
 		}
 	}
-
+	duration := time.Since(startTime)
 	node.RunTasks(mapleCh, mapleQueueReq.NumTasks)
 	node.SendMessage(mapleQueueReq.RequestingId, "Finished Maple")
+	node.SendMessage(mapleQueueReq.RequestingId, "Elapsed: "+strconv.FormatFloat(float64(duration)/1000000000, 'f', 3, 64)+" s")
 }
 
 // (master) run the tasks in the job queue on NumMaples/NumJuices # of tasks
@@ -399,7 +402,8 @@ func GetFileNames(dirName string) []string {
 func (node *SdfsNode) Juice(juiceQueueReq MapleJuiceQueueRequest) {
 	// Update status
 	lastStatus = JuiceOngoing
-	fmt.Println("Beginning Juice phase.")
+	startTime := time.Now()
+	node.SendMessage(juiceQueueReq.RequestingId, "Beginning Juice phase.")
 	fmt.Print("> ")
 
 	// Get keys of given prefix
@@ -441,7 +445,7 @@ func (node *SdfsNode) Juice(juiceQueueReq MapleJuiceQueueRequest) {
 	// Wait for all workers/tasks to complete
 	wg.Wait()
 	close(juiceCh)
-	fmt.Println("All juice tasks complete")
+	Info.Println("All juice tasks complete")
 	// Tasks complete, create a new file with all juice outputs
 	node.CollectJuices(juiceQueueReq.IntermediatePrefix, keys, outputFname)
 	// Upload file to SDFS
@@ -451,9 +455,11 @@ func (node *SdfsNode) Juice(juiceQueueReq MapleJuiceQueueRequest) {
 	// Remove output file from master
 	_ = os.Remove(outputFname)
 	// indicate when it's done
-	fmt.Println("Completed Juice phase.")
-	fmt.Print("> ")
-	node.SendMessage(juiceQueueReq.RequestingId, "Finished Juice")
+	Info.Println("Completed Juice phase.")
+	Info.Print("> ")
+	duration := time.Since(startTime)
+	node.SendMessage(juiceQueueReq.RequestingId, "Finished Juice.")
+	node.SendMessage(juiceQueueReq.RequestingId, "Elapsed: "+strconv.FormatFloat(float64(duration)/1000000000, 'f', 3, 64)+" s")
 	lastStatus = None
 	mapleJuiceCh <- None
 }
@@ -463,14 +469,14 @@ func (node *SdfsNode) RequestJuiceTask(chosenIp net.IP, req JuiceRequest) error 
 	mapleClient, err := rpc.DialHTTP("tcp", chosenIp.String()+":"+fmt.Sprint(Configuration.Service.masterPort))
 	// Call RpcMaple at chosen IP
 	if err != nil {
-		fmt.Println(err)
+		Info.Println(err)
 	}
 
 	var res MapleJuiceReply
 	err = mapleClient.Call("SdfsNode.RpcJuice", req, &res)
 	if err != nil || !res.Completed {
 		// Reschedule juicer by sending error
-		fmt.Println("Error: ", err, "res.completed = ", res.Completed)
+		Info.Println("Error: ", err, "res.completed = ", res.Completed)
 		return err
 	}
 	// Complete juice and check if all juices finished
@@ -504,11 +510,11 @@ func (node *SdfsNode) RunJuiceWorker(id int, wg *sync.WaitGroup, tasks chan Juic
 			node.RescheduleJuiceTask(wg, task, tasks)
 		} else {
 			// Download juice output from corresponding file path of key + prefix
-			fmt.Println("Getting juice output from worker", id)
+			Info.Println("Getting juice output from worker", id)
 			prefixKey := task.Request.IntermediatePrefix + "_" + task.Request.Key
 			juiceFilePath := filepath.Join(juiceTempDir, prefixKey)
 			_ = Download(task.Nodes[0].String(), fmt.Sprint(Configuration.Service.filePort), juiceFilePath, juiceFilePath)
-			fmt.Println("Succesfully retrieved from worker", id)
+			Info.Println("Succesfully retrieved from worker", id)
 		}
 		wg.Done()
 	}
@@ -516,33 +522,33 @@ func (node *SdfsNode) RunJuiceWorker(id int, wg *sync.WaitGroup, tasks chan Juic
 
 // (master) collect all juice after all tasks completed
 func (node *SdfsNode) CollectJuices(prefix string, keys []string, outFname string) {
-	fmt.Println("Collecting all juices for", keys)
-	fmt.Println("Saving juices to", outFname)
+	Info.Println("Collecting all juices for", keys)
+	Info.Println("Saving juices to", outFname)
 	// Save all juices to local folder of collected juice
 	fileFlags := os.O_CREATE | os.O_WRONLY
 	file, err := os.OpenFile(outFname, fileFlags, 0777)
 	if err != nil {
-		fmt.Println(err)
+		Info.Println(err)
 	}
 	defer file.Close()
 	juices := []byte{}
 
 	for _, key := range keys {
 		juiceFilePath := filepath.Join(juiceTempDir, prefix+"_"+key)
-		fmt.Println("Collecting", juiceFilePath)
+		Info.Println("Collecting", juiceFilePath)
 
 		bytes, err := ioutil.ReadFile(juiceFilePath)
 		if err != nil {
-			fmt.Println(err)
+			Info.Println(err)
 		}
 		juices = append(juices, bytes...)
 	}
 	_, err = file.Write(juices)
 	if err != nil {
-		fmt.Println(err)
+		Info.Println(err)
 	}
 
-	fmt.Println("Finished collecting juice in", outFname)
+	Info.Println("Finished collecting juice in", outFname)
 }
 
 // (master) Helper function to find IP
@@ -591,7 +597,7 @@ func (node *SdfsNode) RpcGetKeyLocations(key string) ([]net.IP, error) {
 	var res KeyLocationReply
 	err := client.Call("SdfsNode.GetKeyLocations", req, &res)
 	if err != nil {
-		fmt.Println("Failed:", err)
+		Info.Println("Failed:", err)
 		return []net.IP{}, errors.New("get key locations failed")
 	}
 	return res.Nodes, nil
@@ -600,7 +606,7 @@ func (node *SdfsNode) RpcGetKeyLocations(key string) ([]net.IP, error) {
 // (worker) Pull data and shuffle/sort into a single value
 func (node *SdfsNode) ShuffleSort(prefix string, key string) []byte {
 	prefixKey := prefix + "_" + key
-	fmt.Println("Startng shuffle sort on", prefixKey)
+	Info.Println("Startng shuffle sort on", prefixKey)
 	// Get ips of file
 	ipList, err := node.RpcGetKeyLocations(prefixKey)
 	if err != nil {
@@ -610,11 +616,11 @@ func (node *SdfsNode) ShuffleSort(prefix string, key string) []byte {
 	juiceTempPath := filepath.Join(juiceTempDir, prefixKey)
 	filePath := filepath.Join(mapleJuiceDirName, prefixKey)
 	for _, ipAddr := range ipList {
-		fmt.Println("Downloading from ", filePath, " to", juiceTempPath, " from", ipAddr.String())
+		Info.Println("Downloading from ", filePath, " to", juiceTempPath, " from", ipAddr.String())
 		// Download files of key
 		err := Download(ipAddr.String(), fmt.Sprint(Configuration.Service.filePort), filePath, juiceTempPath)
 		if err != nil {
-			fmt.Println(err)
+			Info.Println(err)
 		}
 		// Read and append data by new line
 		content, err := ioutil.ReadFile(juiceTempPath)
@@ -631,7 +637,7 @@ func (node *SdfsNode) ShuffleSort(prefix string, key string) []byte {
 
 // (worker) executes juice call
 func ExecuteJuice(exeName string, prefix string, key string, fruits []byte) error {
-	fmt.Println(exeName + " executed.")
+	Info.Println(exeName + " executed.")
 	juiceCmd := exec.Command(exeName, juiceTempDir, prefix, key)
 	juiceIn, err := juiceCmd.StdinPipe()
 	if err != nil {
@@ -642,6 +648,6 @@ func ExecuteJuice(exeName string, prefix string, key string, fruits []byte) erro
 	juiceIn.Write(fruits)
 	juiceIn.Close()
 	juiceCmd.Wait()
-	fmt.Println(exeName + " finished.")
+	Info.Println(exeName + " finished.")
 	return nil
 }

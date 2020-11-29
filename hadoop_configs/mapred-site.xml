@@ -21,4 +21,12 @@
 		<name>mapreduce.framework.name</name>
 		<value>yarn</value>
 	</property>
+	<property>
+		<name>mapreduce.map.memory.mb</name>
+		<value>3072</value>
+	</property>
+	<property>
+		<name>mapreduce.map.java.opts</name>
+		<value>-Xmx2560M</value>
+	</property>
 </configuration>
