@@ -12,7 +12,7 @@ type IMaple interface {
 	Maple(input string) error
 }
 
-// Mapler is a struct that allows is implementing Maple method by user with receiver of Mapler type
+// Mapler is a struct that allows implementing Maple method by user with receiver of Mapler type
 type Mapler struct {
 }
 

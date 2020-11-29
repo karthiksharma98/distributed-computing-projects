@@ -177,7 +177,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 	fmt.Println("Beginning Map phase.")
 	fmt.Print("> ")
 
-	chanSize := len(mapleQueueReq.FileList)
+	chanSize := 100
 	mapleCh := make(chan Task, chanSize)
 
 	for _, localFName := range mapleQueueReq.FileList {
@@ -210,6 +210,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 func (node *SdfsNode) RunTasks(tasks chan Task, numTasks int) {
 	var wg sync.WaitGroup
 
+	fmt.Println("RunTasks entered")
 	// initialize workers
 	for i := 0; i < numTasks; i++ {
 		go node.RunTaskWorker(i, &wg, tasks)
@@ -321,6 +322,7 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 	arg1 := filePath
 
 	cmd := exec.Command(arg0, arg1)
+	fmt.Println("Executing ", arg0, arg1)
 
 	output, err := cmd.Output()
 
@@ -328,7 +330,6 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 		fmt.Println("Error in executing maple.")
 		response.Completed = false
 	} else {
-		fmt.Println("Finished executing maple on ", filePath)
 		response = WriteMapleKeys(string(output), req.IntermediatePrefix)
 	}
 
@@ -344,7 +345,10 @@ func WriteMapleKeys(output string, prefix string) MapleJuiceReply {
 	scanner := bufio.NewScanner(strings.NewReader(output))
 	keySet := make(map[string]bool)
 	for scanner.Scan() {
-		keyVal := strings.Split(scanner.Text(), ",")
+		commaSplitter := func(c rune) bool {
+			return c == ','
+		}
+		keyVal := strings.FieldsFunc(scanner.Text(), commaSplitter)
 		if len(keyVal) < 2 {
 			continue
 		}
@@ -522,8 +526,12 @@ func (node *SdfsNode) RunJuiceWorker(id int, wg *sync.WaitGroup, tasks chan Juic
 			Info.Println("Getting juice output from worker", id)
 			prefixKey := task.Request.IntermediatePrefix + "_" + task.Request.Key
 			juiceFilePath := filepath.Join(juiceTempDir, prefixKey)
-			_ = Download(task.Nodes[0].String(), fmt.Sprint(Configuration.Service.filePort), juiceFilePath, juiceFilePath)
-			Info.Println("Succesfully retrieved from worker", id)
+			err = Download(task.Nodes[0].String(), fmt.Sprint(Configuration.Service.filePort), juiceFilePath, juiceFilePath)
+			if err != nil {
+				fmt.Println("Error retrieving juice output from worker ", id, " | ", err)
+			} else {
+				fmt.Println("Succesfully retrieved from worker", id)
+			}
 		}
 		wg.Done()
 	}
