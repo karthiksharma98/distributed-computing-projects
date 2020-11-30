@@ -174,8 +174,7 @@ func (node *SdfsNode) AddToQueue(mapleQueueReq MapleJuiceQueueRequest, reply *Ma
 func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 	lastStatus = MapleOngoing
 	startTime := time.Now()
-	fmt.Println("Beginning Map phase.")
-	fmt.Print("> ")
+	Info.Println("Beginning Map phase.")
 
 	chanSize := 100
 	mapleCh := make(chan Task, chanSize)
@@ -210,7 +209,7 @@ func (node *SdfsNode) Maple(mapleQueueReq MapleJuiceQueueRequest) {
 func (node *SdfsNode) RunTasks(tasks chan Task, numTasks int) {
 	var wg sync.WaitGroup
 
-	fmt.Println("RunTasks entered")
+	Info.Println("RunTasks entered")
 	// initialize workers
 	for i := 0; i < numTasks; i++ {
 		go node.RunTaskWorker(i, &wg, tasks)
@@ -221,8 +220,7 @@ func (node *SdfsNode) RunTasks(tasks chan Task, numTasks int) {
 	close(tasks)
 	wg.Wait()
 
-	fmt.Println("Completed Maple phase.")
-	fmt.Print("> ")
+	Info.Println("Completed Maple phase.")
 	mapleJuiceCh <- MapleFinished
 }
 
@@ -285,7 +283,7 @@ func (node *SdfsNode) RequestMapleOnBlock(chosenIp net.IP, req MapleRequest) err
 // (master) reschedule task to another machine that has that file
 // 			initiated when a worker has failed
 func (node *SdfsNode) RescheduleTask(fileName string) error {
-	fmt.Println("Rescheduling task ", fileName)
+	Info.Println("Rescheduling task ", fileName)
 	taskLock.Lock()
 	if task, ok := currTasks[fileName]; ok {
 		replicas := task.Replicas
@@ -314,7 +312,7 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 	blockNum := strconv.Itoa(req.BlockNum)
 	filePath := req.FileName + ".blk_" + blockNum
 
-	fmt.Println("Executing maple on ", filePath)
+	Info.Println("Executing maple on ", filePath)
 
 	var response MapleJuiceReply
 
@@ -322,7 +320,7 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 	arg1 := filePath
 
 	cmd := exec.Command(arg0, arg1)
-	fmt.Println("Executing ", arg0, arg1)
+	Info.Println("Executing ", arg0, arg1)
 
 	output, err := cmd.Output()
 

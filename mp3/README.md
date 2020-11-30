@@ -47,6 +47,10 @@ Configure introducer, port, and intervals in config.json
 CLI
 
 ```
+-- Maple Juice --
+maple <maple_exe> <num_maples> <sdfs_intermediate_filename_prefix> <sdfs_src_directory>                    - maple
+juice <juice_exe> <num_juices> <sdfs_intermediate_filename_prefix> <sdfs_dest_filename> delete_input={0,1} - juice
+
 -- SDFS --
 put <local file path> <remote filename> - upload file
 get <local file path> <remote filename> - download file
