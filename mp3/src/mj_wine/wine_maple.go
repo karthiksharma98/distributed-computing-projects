@@ -15,7 +15,7 @@ func (m *Mapler) Maple(input string) error {
 	if "Chardonnay" == s[9] {
 		for _, word := range strings.Fields(s[2]) {
 			if word == "succulent" {
-				m.Emit(s[8], "1")
+				m.Emit(s[10], "1")
 			}
 		}
 	}

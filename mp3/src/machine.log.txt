@@ -1,119 +1,93 @@
-[INFO] 2020/11/30 10:29:01 Detector: gossip
-[INFO] 2020/11/30 10:29:01 Introducer: 172.22.156.42 on port 8012
-[INFO] 2020/11/30 10:29:01 Gossip interval: 1
-[INFO] 2020/11/30 10:29:01 All-to-All interval: 3
-[INFO] 2020/11/30 10:29:01 Failure timeout: 5
-[INFO] 2020/11/30 10:29:01 Cleanup timeout: 24
-[INFO] 2020/11/30 10:29:05 You are now the introducer.
-2020/11/30 10:29:05 rpc.Register: method "AllToAll" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: reply type of method "CleanupMember" is not a pointer: "time.Time"
-2020/11/30 10:29:05 rpc.Register: method "CollectJuices" has 4 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "Election" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: reply type of method "FailMember" is not a pointer: "time.Time"
-2020/11/30 10:29:05 rpc.Register: method "FindAvailableNode" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "GetLocalFiles" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "GetNumAlive" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "Gossip" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: reply type of method "Grep" is not a pointer: "bool"
-2020/11/30 10:29:05 rpc.Register: reply type of method "HandleGrepRequest" is not a pointer: "[]uint8"
-2020/11/30 10:29:05 rpc.Register: method "HandleGrepResponse" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "HeartbeatHandler" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "Juice" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "Listen" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "ListenMapleJuice" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "ListenSdfs" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "Maple" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "MemberListen" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "PickRandMemberIP" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "PrintMembershipList" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "QueueTask" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "RemoveFromQueue" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: reply type of method "RequestJuiceTask" is not a pointer: "main.JuiceRequest"
-2020/11/30 10:29:05 rpc.Register: reply type of method "RequestMapleOnBlock" is not a pointer: "main.MapleRequest"
-2020/11/30 10:29:05 rpc.Register: method "RescheduleJuiceTask" has 4 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "RescheduleTask" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "RpcDelete" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: reply type of method "RpcGet" is not a pointer: "string"
-2020/11/30 10:29:05 rpc.Register: method "RpcGetKeyLocations" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "RpcListIPs" has 2 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "RpcLock" has 4 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: reply type of method "RpcPut" is not a pointer: "string"
-2020/11/30 10:29:05 rpc.Register: method "RpcUnlock" has 4 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "RunFirstJuice" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "RunFirstMaple" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "RunJuiceWorker" has 4 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "RunJuiceWorkers" has 4 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "RunTaskWorker" has 4 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: reply type of method "RunTasks" is not a pointer: "int"
-2020/11/30 10:29:05 rpc.Register: reply type of method "SendAll" is not a pointer: "[]uint8"
-2020/11/30 10:29:05 rpc.Register: reply type of method "SendGrepRequest" is not a pointer: "string"
-2020/11/30 10:29:05 rpc.Register: reply type of method "SendMessage" is not a pointer: "string"
-2020/11/30 10:29:05 rpc.Register: reply type of method "ShuffleSort" is not a pointer: "string"
-2020/11/30 10:29:05 rpc.Register: method "StopTick" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "Store" has 1 input parameters; needs exactly three
-2020/11/30 10:29:05 rpc.Register: method "Tick" has 1 input parameters; needs exactly three
-[INFO] 2020/11/30 10:29:06 No other member to gossip to!
-[INFO] 2020/11/30 10:29:06 No other member to gossip to!
-[INFO] 2020/11/30 10:29:06 No other member to gossip to!
-[INFO] 2020/11/30 10:29:07 No other member to gossip to!
-[INFO] 2020/11/30 10:29:07 No other member to gossip to!
-[INFO] 2020/11/30 10:29:07 No other member to gossip to!
-[INFO] 2020/11/30 10:29:08 No other member to gossip to!
-[INFO] 2020/11/30 10:29:08 No other member to gossip to!
-[INFO] 2020/11/30 10:29:08 No other member to gossip to!
-[INFO] 2020/11/30 10:29:09 No other member to gossip to!
-[INFO] 2020/11/30 10:29:09 No other member to gossip to!
-[INFO] 2020/11/30 10:29:09 No other member to gossip to!
-[INFO] 2020/11/30 10:29:10 No other member to gossip to!
-[INFO] 2020/11/30 10:29:10 No other member to gossip to!
-[INFO] 2020/11/30 10:29:10 No other member to gossip to!
-[INFO] 2020/11/30 10:29:11 No other member to gossip to!
-[INFO] 2020/11/30 10:29:11 No other member to gossip to!
-[INFO] 2020/11/30 10:29:11 No other member to gossip to!
-[INFO] 2020/11/30 10:29:12 No other member to gossip to!
-[INFO] 2020/11/30 10:29:12 No other member to gossip to!
-[INFO] 2020/11/30 10:29:12 No other member to gossip to!
-[INFO] 2020/11/30 10:29:13 No other member to gossip to!
-[INFO] 2020/11/30 10:29:13 No other member to gossip to!
-[INFO] 2020/11/30 10:29:13 No other member to gossip to!
-[INFO] 2020/11/30 10:29:14 No other member to gossip to!
-[INFO] 2020/11/30 10:29:14 No other member to gossip to!
-[INFO] 2020/11/30 10:29:14 No other member to gossip to!
-[INFO] 2020/11/30 10:29:15 No other member to gossip to!
-[INFO] 2020/11/30 10:29:15 No other member to gossip to!
-[INFO] 2020/11/30 10:29:15 No other member to gossip to!
-[INFO] 2020/11/30 10:29:16 172.22.158.42:60912 requests to join.
-[INFO] 2020/11/30 10:29:20 172.22.156.43:37751 requests to join.
-[INFO] 2020/11/30 10:29:24 172.22.94.42:59569 requests to join.
-[INFO] 2020/11/30 10:29:27 172.22.158.43:34526 requests to join.
-[INFO] 2020/11/30 10:29:48 AcquireLock: Created new lock
-[INFO] 2020/11/30 10:29:48 AcquireLock: Lock check wait ready
-[INFO] 2020/11/30 10:29:48 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:29:48 Uploading winedat.csv to 172.22.156.43
-[INFO] 2020/11/30 10:29:48 Connected to  172.22.156.42:8011  to upload.
-[INFO] 2020/11/30 10:29:48 Uploading winedat.csv to 172.22.156.42
-[INFO] 2020/11/30 10:29:48 Receiving upload for file SDFS/winedat.csv.blk_0
-[INFO] 2020/11/30 10:29:49 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:29:49 Uploading winedat.csv to 172.22.158.43
-[INFO] 2020/11/30 10:29:49 Connected to  172.22.94.42:8011  to upload.
-[INFO] 2020/11/30 10:29:49 Uploading winedat.csv to 172.22.94.42
-[INFO] 2020/11/30 10:29:49 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:29:49 Uploading winedat.csv to 172.22.158.43
-[INFO] 2020/11/30 10:29:49 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:29:49 Uploading winedat.csv to 172.22.156.43
-[INFO] 2020/11/30 10:29:49 Connected to  172.22.94.42:8011  to upload.
-[INFO] 2020/11/30 10:29:49 Uploading winedat.csv to 172.22.94.42
-[INFO] 2020/11/30 10:29:50 Connected to  172.22.158.42:8011  to upload.
-[INFO] 2020/11/30 10:29:50 Uploading winedat.csv to 172.22.158.42
-[INFO] 2020/11/30 10:29:50 Releasing lock
-[INFO] 2020/11/30 10:29:50 Lock released
-[INFO] 2020/11/30 10:29:50 Lock released session confirm 1
-[INFO] 2020/11/30 10:30:55 Beginning Map phase.
-[INFO] 2020/11/30 10:30:55 RunTasks entered
-[INFO] 2020/11/30 10:30:55 Rescheduling task  SDFS/winedat.csv
-[INFO] 2020/11/30 10:30:55 Rescheduling task  SDFS/winedat.csv
-[INFO] 2020/11/30 10:30:55 Rescheduling task  SDFS/winedat.csv
-[INFO] 2020/11/30 10:30:55 Rescheduling task  SDFS/winedat.csv
-[ERROR] 2020/11/30 10:30:55 maplejuice.go:294: Could not successfully finish task on  SDFS/winedat.csv
-[INFO] 2020/11/30 10:30:55 Rescheduling task  SDFS/winedat.csv
-[INFO] 2020/11/30 10:30:55 Completed Maple phase.
+[INFO] 2020/11/30 10:36:43 Detector: gossip
+[INFO] 2020/11/30 10:36:43 Introducer: 172.22.156.42 on port 8012
+[INFO] 2020/11/30 10:36:43 Gossip interval: 1
+[INFO] 2020/11/30 10:36:43 All-to-All interval: 3
+[INFO] 2020/11/30 10:36:43 Failure timeout: 5
+[INFO] 2020/11/30 10:36:43 Cleanup timeout: 24
+[INFO] 2020/11/30 10:36:47 You are now the introducer.
+2020/11/30 10:36:47 rpc.Register: method "AllToAll" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: reply type of method "CleanupMember" is not a pointer: "time.Time"
+2020/11/30 10:36:47 rpc.Register: method "CollectJuices" has 4 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "Election" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: reply type of method "FailMember" is not a pointer: "time.Time"
+2020/11/30 10:36:47 rpc.Register: method "FindAvailableNode" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "GetLocalFiles" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "GetNumAlive" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "Gossip" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: reply type of method "Grep" is not a pointer: "bool"
+2020/11/30 10:36:47 rpc.Register: reply type of method "HandleGrepRequest" is not a pointer: "[]uint8"
+2020/11/30 10:36:47 rpc.Register: method "HandleGrepResponse" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "HeartbeatHandler" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "Juice" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "Listen" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "ListenMapleJuice" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "ListenSdfs" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "Maple" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "MemberListen" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "PickRandMemberIP" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "PrintMembershipList" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "QueueTask" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "RemoveFromQueue" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: reply type of method "RequestJuiceTask" is not a pointer: "main.JuiceRequest"
+2020/11/30 10:36:47 rpc.Register: reply type of method "RequestMapleOnBlock" is not a pointer: "main.MapleRequest"
+2020/11/30 10:36:47 rpc.Register: method "RescheduleJuiceTask" has 4 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "RescheduleTask" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "RpcDelete" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: reply type of method "RpcGet" is not a pointer: "string"
+2020/11/30 10:36:47 rpc.Register: method "RpcGetKeyLocations" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "RpcListIPs" has 2 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "RpcLock" has 4 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: reply type of method "RpcPut" is not a pointer: "string"
+2020/11/30 10:36:47 rpc.Register: method "RpcUnlock" has 4 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "RunFirstJuice" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "RunFirstMaple" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "RunJuiceWorker" has 4 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "RunJuiceWorkers" has 4 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "RunTaskWorker" has 4 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: reply type of method "RunTasks" is not a pointer: "int"
+2020/11/30 10:36:47 rpc.Register: reply type of method "SendAll" is not a pointer: "[]uint8"
+2020/11/30 10:36:47 rpc.Register: reply type of method "SendGrepRequest" is not a pointer: "string"
+2020/11/30 10:36:47 rpc.Register: reply type of method "SendMessage" is not a pointer: "string"
+2020/11/30 10:36:47 rpc.Register: reply type of method "ShuffleSort" is not a pointer: "string"
+2020/11/30 10:36:47 rpc.Register: method "StopTick" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "Store" has 1 input parameters; needs exactly three
+2020/11/30 10:36:47 rpc.Register: method "Tick" has 1 input parameters; needs exactly three
+[INFO] 2020/11/30 10:36:48 No other member to gossip to!
+[INFO] 2020/11/30 10:36:48 No other member to gossip to!
+[INFO] 2020/11/30 10:36:48 No other member to gossip to!
+[INFO] 2020/11/30 10:36:49 No other member to gossip to!
+[INFO] 2020/11/30 10:36:49 No other member to gossip to!
+[INFO] 2020/11/30 10:36:49 No other member to gossip to!
+[INFO] 2020/11/30 10:36:50 No other member to gossip to!
+[INFO] 2020/11/30 10:36:50 No other member to gossip to!
+[INFO] 2020/11/30 10:36:50 No other member to gossip to!
+[INFO] 2020/11/30 10:36:50 172.22.158.42:56663 requests to join.
+[INFO] 2020/11/30 10:36:59 172.22.156.43:40094 requests to join.
+[INFO] 2020/11/30 10:37:01 172.22.94.42:57149 requests to join.
+[INFO] 2020/11/30 10:37:05 172.22.158.43:59744 requests to join.
+[INFO] 2020/11/30 10:37:27 AcquireLock: Created new lock
+[INFO] 2020/11/30 10:37:27 AcquireLock: Lock check wait ready
+[INFO] 2020/11/30 10:37:28 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 10:37:28 Uploading winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 10:37:28 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 10:37:28 Uploading winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 10:37:28 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 10:37:28 Uploading winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 10:37:28 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 10:37:28 Uploading winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 10:37:28 Receiving upload for file SDFS/winedat.csv.blk_0
+[INFO] 2020/11/30 10:37:29 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 10:37:29 Uploading winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 10:37:29 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 10:37:29 Uploading winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 10:37:29 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 10:37:29 Uploading winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 10:37:29 Receiving upload for file SDFS/winedat.csv.blk_1
+[INFO] 2020/11/30 10:37:29 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 10:37:29 Uploading winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 10:37:29 Releasing lock
+[INFO] 2020/11/30 10:37:29 Lock released
+[INFO] 2020/11/30 10:37:29 Lock released session confirm 1
+[INFO] 2020/11/30 10:38:24 Beginning Map phase.
+[INFO] 2020/11/30 10:38:24 RunTasks entered
+[INFO] 2020/11/30 10:38:24 Completed Maple phase.
