@@ -461,3 +461,9 @@
 [INFO] 2020/11/30 11:26:22 Lock released session confirm 2
 [INFO] 2020/11/30 11:26:22 Completed Juice phase.
 [INFO] 2020/11/30 11:26:22 > 
+[INFO] 2020/11/30 11:34:09 Detector: gossip
+[INFO] 2020/11/30 11:34:09 Introducer: 172.22.156.42 on port 8012
+[INFO] 2020/11/30 11:34:09 Gossip interval: 1
+[INFO] 2020/11/30 11:34:09 All-to-All interval: 3
+[INFO] 2020/11/30 11:34:09 Failure timeout: 5
+[INFO] 2020/11/30 11:34:09 Cleanup timeout: 24
