@@ -1,252 +1,463 @@
-[INFO] 2020/11/30 10:49:42 Detector: gossip
-[INFO] 2020/11/30 10:49:42 Introducer: 172.22.156.42 on port 8012
-[INFO] 2020/11/30 10:49:42 Gossip interval: 1
-[INFO] 2020/11/30 10:49:42 All-to-All interval: 3
-[INFO] 2020/11/30 10:49:42 Failure timeout: 5
-[INFO] 2020/11/30 10:49:42 Cleanup timeout: 24
-[INFO] 2020/11/30 10:49:45 You are now the introducer.
-2020/11/30 10:49:45 rpc.Register: method "AllToAll" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: reply type of method "CleanupMember" is not a pointer: "time.Time"
-2020/11/30 10:49:45 rpc.Register: method "CollectJuices" has 4 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "Election" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: reply type of method "FailMember" is not a pointer: "time.Time"
-2020/11/30 10:49:45 rpc.Register: method "FindAvailableNode" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "GetLocalFiles" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "GetNumAlive" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "Gossip" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: reply type of method "Grep" is not a pointer: "bool"
-2020/11/30 10:49:45 rpc.Register: reply type of method "HandleGrepRequest" is not a pointer: "[]uint8"
-2020/11/30 10:49:45 rpc.Register: method "HandleGrepResponse" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "HeartbeatHandler" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "Juice" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "Listen" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "ListenMapleJuice" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "ListenSdfs" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "Maple" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "MemberListen" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "PickRandMemberIP" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "PrintMembershipList" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "QueueTask" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "RemoveFromQueue" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: reply type of method "RequestJuiceTask" is not a pointer: "main.JuiceRequest"
-2020/11/30 10:49:45 rpc.Register: reply type of method "RequestMapleOnBlock" is not a pointer: "main.MapleRequest"
-2020/11/30 10:49:45 rpc.Register: method "RescheduleJuiceTask" has 4 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "RescheduleTask" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "RpcDelete" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: reply type of method "RpcGet" is not a pointer: "string"
-2020/11/30 10:49:45 rpc.Register: method "RpcGetKeyLocations" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "RpcListIPs" has 2 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "RpcLock" has 4 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: reply type of method "RpcPut" is not a pointer: "string"
-2020/11/30 10:49:45 rpc.Register: method "RpcUnlock" has 4 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "RunFirstJuice" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "RunFirstMaple" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "RunJuiceWorker" has 4 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "RunJuiceWorkers" has 4 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "RunTaskWorker" has 4 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: reply type of method "RunTasks" is not a pointer: "int"
-2020/11/30 10:49:45 rpc.Register: reply type of method "SendAll" is not a pointer: "[]uint8"
-2020/11/30 10:49:45 rpc.Register: reply type of method "SendGrepRequest" is not a pointer: "string"
-2020/11/30 10:49:45 rpc.Register: reply type of method "SendMessage" is not a pointer: "string"
-2020/11/30 10:49:45 rpc.Register: reply type of method "ShuffleSort" is not a pointer: "string"
-2020/11/30 10:49:45 rpc.Register: method "StopTick" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "Store" has 1 input parameters; needs exactly three
-2020/11/30 10:49:45 rpc.Register: method "Tick" has 1 input parameters; needs exactly three
-[INFO] 2020/11/30 10:49:46 No other member to gossip to!
-[INFO] 2020/11/30 10:49:46 No other member to gossip to!
-[INFO] 2020/11/30 10:49:46 No other member to gossip to!
-[INFO] 2020/11/30 10:49:47 No other member to gossip to!
-[INFO] 2020/11/30 10:49:47 No other member to gossip to!
-[INFO] 2020/11/30 10:49:47 No other member to gossip to!
-[INFO] 2020/11/30 10:49:48 172.22.158.42:34357 requests to join.
-[INFO] 2020/11/30 10:49:52 172.22.156.43:46893 requests to join.
-[INFO] 2020/11/30 10:49:55 172.22.94.42:57819 requests to join.
-[INFO] 2020/11/30 10:49:58 172.22.158.43:37225 requests to join.
-[INFO] 2020/11/30 10:50:17 AcquireLock: Created new lock
-[INFO] 2020/11/30 10:50:17 AcquireLock: Lock check wait ready
-[INFO] 2020/11/30 10:50:17 Connected to  172.22.156.42:8011  to upload.
-[INFO] 2020/11/30 10:50:17 Uploading winedat.csv to 172.22.156.42
-[INFO] 2020/11/30 10:50:17 Receiving upload for file SDFS/winedat.csv.blk_0
-[INFO] 2020/11/30 10:50:17 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:50:17 Uploading winedat.csv to 172.22.158.43
-[INFO] 2020/11/30 10:50:17 Connected to  172.22.94.42:8011  to upload.
-[INFO] 2020/11/30 10:50:17 Uploading winedat.csv to 172.22.94.42
-[INFO] 2020/11/30 10:50:18 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:50:18 Uploading winedat.csv to 172.22.156.43
-[INFO] 2020/11/30 10:50:18 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:50:18 Uploading winedat.csv to 172.22.158.43
-[INFO] 2020/11/30 10:50:18 Connected to  172.22.94.42:8011  to upload.
-[INFO] 2020/11/30 10:50:18 Uploading winedat.csv to 172.22.94.42
-[INFO] 2020/11/30 10:50:18 Connected to  172.22.158.42:8011  to upload.
-[INFO] 2020/11/30 10:50:18 Uploading winedat.csv to 172.22.158.42
-[INFO] 2020/11/30 10:50:18 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:50:18 Uploading winedat.csv to 172.22.156.43
-[INFO] 2020/11/30 10:50:18 Releasing lock
-[INFO] 2020/11/30 10:50:18 Lock released
-[INFO] 2020/11/30 10:50:18 Lock released session confirm 1
-[INFO] 2020/11/30 10:51:09 Beginning Map phase.
-[INFO] 2020/11/30 10:51:09 RunTasks entered
-[INFO] 2020/11/30 10:51:09 Executing maple on  SDFS/winedat.csv.blk_0
-[INFO] 2020/11/30 10:51:09 Executing  ./mapler SDFS/winedat.csv.blk_0
-[INFO] 2020/11/30 10:51:10 Completed Maple phase.
-[INFO] 2020/11/30 10:51:46 Startng shuffle sort on wine_Alma Rosa
-[INFO] 2020/11/30 10:51:46 Downloading from  MapleJuice/wine_Alma Rosa  to juiceTemp/wine_Alma Rosa  from 172.22.158.43
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ MapleJuice/wine_Alma Rosa ]
-[INFO] 2020/11/30 10:51:46 Downloading from  MapleJuice/wine_Alma Rosa  to juiceTemp/wine_Alma Rosa  from 172.22.156.42
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ MapleJuice/wine_Alma Rosa ]
-[INFO] 2020/11/30 10:51:46 ./juicer executed.
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 ./juicer finished.
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 4
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Alma Rosa ]
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 1
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Vine Cliff ]
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 4
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.158.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Lynmar ]
-[INFO] 2020/11/30 10:51:46 Startng shuffle sort on wine_Goldwater
-[INFO] 2020/11/30 10:51:46 Downloading from  MapleJuice/wine_Goldwater  to juiceTemp/wine_Goldwater  from 172.22.158.43
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ MapleJuice/wine_Goldwater ]
-[INFO] 2020/11/30 10:51:46 ./juicer executed.
-[INFO] 2020/11/30 10:51:46 ./juicer finished.
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 4
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Goldwater ]
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 0
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 2
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 4
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 3
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Domaine Vrignaud ]
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Truett Hurst ]
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Airfield Estates ]
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Chinook ]
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 0
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.158.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Saviah ]
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 0
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.158.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Jamieson Ranch ]
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 0
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Glen Carlou ]
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 0
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 3
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Vasse Felix ]
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.94.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Startng shuffle sort on wine_Migration
-[INFO] 2020/11/30 10:51:46 Downloading from  MapleJuice/wine_Migration  to juiceTemp/wine_Migration  from 172.22.156.42
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Artevino ]
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ MapleJuice/wine_Migration ]
-[INFO] 2020/11/30 10:51:46 ./juicer executed.
-[INFO] 2020/11/30 10:51:46 ./juicer finished.
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 0
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Migration ]
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 0
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.94.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_The Calling ]
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 0
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.94.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Wakefield Estate ]
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 1
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Beauregard ]
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 2
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 0
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Planeta ]
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 1
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.158.42:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Black Kite ]
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Bouchard Père & Fils ]
-[INFO] 2020/11/30 10:51:46 Download sent
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 4
-[INFO] 2020/11/30 10:51:46 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:51:46 Successfully downloaded file: [ juiceTemp/wine_Bergström ]
-[INFO] 2020/11/30 10:51:46 Getting juice output from worker 3
-[INFO] 2020/11/30 10:51:47 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:51:47 Getting juice output from worker 0
-[INFO] 2020/11/30 10:51:47 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:51:47 Successfully downloaded file: [ juiceTemp/wine_Pellegrini ]
-[INFO] 2020/11/30 10:51:47 Successfully downloaded file: [ juiceTemp/wine_Talley ]
-[INFO] 2020/11/30 10:51:47 Getting juice output from worker 1
-[INFO] 2020/11/30 10:51:47 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:51:47 Successfully downloaded file: [ juiceTemp/wine_Thomas Fogarty ]
-[INFO] 2020/11/30 10:51:47 All juice tasks complete
-[INFO] 2020/11/30 10:51:47 Collecting all juices for [Beauregard Goldwater Jamieson Ranch The Calling Wakefield Estate Glen Carlou Chinook Saviah Alma Rosa Vasse Felix Planeta Migration Vine Cliff Bouchard Père & Fils Truett Hurst Artevino Black Kite Talley Airfield Estates Thomas Fogarty Pellegrini Lynmar Bergström Domaine Vrignaud]
-[INFO] 2020/11/30 10:51:47 Saving juices to juiceout
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Beauregard
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Goldwater
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Jamieson Ranch
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_The Calling
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Wakefield Estate
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Glen Carlou
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Chinook
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Saviah
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Alma Rosa
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Vasse Felix
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Planeta
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Migration
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Vine Cliff
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Bouchard Père & Fils
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Truett Hurst
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Artevino
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Black Kite
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Talley
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Airfield Estates
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Thomas Fogarty
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Pellegrini
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Lynmar
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Bergström
-[INFO] 2020/11/30 10:51:47 Collecting juiceTemp/wine_Domaine Vrignaud
-[INFO] 2020/11/30 10:51:47 Finished collecting juice in juiceout
-[INFO] 2020/11/30 10:51:47 AcquireLock: Created new lock
-[INFO] 2020/11/30 10:51:47 AcquireLock: Lock check wait ready
-[INFO] 2020/11/30 10:51:47 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:51:47 Uploading juiceout to 172.22.158.43
-[INFO] 2020/11/30 10:51:47 Connected to  172.22.158.42:8011  to upload.
-[INFO] 2020/11/30 10:51:47 Uploading juiceout to 172.22.158.42
-[INFO] 2020/11/30 10:51:47 Connected to  172.22.156.43:8011  to upload.
-[INFO] 2020/11/30 10:51:47 Uploading juiceout to 172.22.156.43
-[INFO] 2020/11/30 10:51:47 Connected to  172.22.94.42:8011  to upload.
-[INFO] 2020/11/30 10:51:47 Uploading juiceout to 172.22.94.42
-[INFO] 2020/11/30 10:51:47 Releasing lock
-[INFO] 2020/11/30 10:51:47 Lock released
-[INFO] 2020/11/30 10:51:47 Lock released session confirm 2
-[INFO] 2020/11/30 10:51:47 Completed Juice phase.
-[INFO] 2020/11/30 10:51:47 > 
-[INFO] 2020/11/30 10:53:29 AcquireLock: Lock check wait ready
-[INFO] 2020/11/30 10:53:29 Connected to  172.22.158.43:8011  to upload.
-[INFO] 2020/11/30 10:53:29 Successfully downloaded file: [ SDFS/juiceout.blk_0 ]
-[INFO] 2020/11/30 10:53:29 Releasing lock
-[INFO] 2020/11/30 10:53:29 Lock released
-[INFO] 2020/11/30 10:53:29 Lock released session confirm 3
+[INFO] 2020/11/30 11:19:48 Detector: gossip
+[INFO] 2020/11/30 11:19:48 Introducer: 172.22.156.42 on port 8012
+[INFO] 2020/11/30 11:19:48 Gossip interval: 1
+[INFO] 2020/11/30 11:19:48 All-to-All interval: 3
+[INFO] 2020/11/30 11:19:48 Failure timeout: 5
+[INFO] 2020/11/30 11:19:48 Cleanup timeout: 24
+[INFO] 2020/11/30 11:19:50 You are now the introducer.
+2020/11/30 11:19:50 rpc.Register: method "AllToAll" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: reply type of method "CleanupMember" is not a pointer: "time.Time"
+2020/11/30 11:19:50 rpc.Register: method "CollectJuices" has 4 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "Election" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: reply type of method "FailMember" is not a pointer: "time.Time"
+2020/11/30 11:19:50 rpc.Register: method "FindAvailableNode" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "GetLocalFiles" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "GetNumAlive" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "Gossip" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: reply type of method "Grep" is not a pointer: "bool"
+2020/11/30 11:19:50 rpc.Register: reply type of method "HandleGrepRequest" is not a pointer: "[]uint8"
+2020/11/30 11:19:50 rpc.Register: method "HandleGrepResponse" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "HeartbeatHandler" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "Juice" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "Listen" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "ListenMapleJuice" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "ListenSdfs" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "Maple" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "MemberListen" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "PickRandMemberIP" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "PrintMembershipList" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "QueueTask" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "RemoveFromQueue" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: reply type of method "RequestJuiceTask" is not a pointer: "main.JuiceRequest"
+2020/11/30 11:19:50 rpc.Register: reply type of method "RequestMapleOnBlock" is not a pointer: "main.MapleRequest"
+2020/11/30 11:19:50 rpc.Register: method "RescheduleJuiceTask" has 4 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "RescheduleTask" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "RpcDelete" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: reply type of method "RpcGet" is not a pointer: "string"
+2020/11/30 11:19:50 rpc.Register: method "RpcGetKeyLocations" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "RpcListIPs" has 2 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "RpcLock" has 4 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: reply type of method "RpcPut" is not a pointer: "string"
+2020/11/30 11:19:50 rpc.Register: method "RpcUnlock" has 4 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "RunFirstJuice" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "RunFirstMaple" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "RunJuiceWorker" has 4 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "RunJuiceWorkers" has 4 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "RunTaskWorker" has 4 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: reply type of method "RunTasks" is not a pointer: "int"
+2020/11/30 11:19:50 rpc.Register: reply type of method "SendAll" is not a pointer: "[]uint8"
+2020/11/30 11:19:50 rpc.Register: reply type of method "SendGrepRequest" is not a pointer: "string"
+2020/11/30 11:19:50 rpc.Register: reply type of method "SendMessage" is not a pointer: "string"
+2020/11/30 11:19:50 rpc.Register: reply type of method "ShuffleSort" is not a pointer: "string"
+2020/11/30 11:19:50 rpc.Register: method "StopTick" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "Store" has 1 input parameters; needs exactly three
+2020/11/30 11:19:50 rpc.Register: method "Tick" has 1 input parameters; needs exactly three
+[INFO] 2020/11/30 11:19:51 No other member to gossip to!
+[INFO] 2020/11/30 11:19:51 No other member to gossip to!
+[INFO] 2020/11/30 11:19:51 No other member to gossip to!
+[INFO] 2020/11/30 11:19:52 No other member to gossip to!
+[INFO] 2020/11/30 11:19:52 No other member to gossip to!
+[INFO] 2020/11/30 11:19:52 No other member to gossip to!
+[INFO] 2020/11/30 11:19:53 No other member to gossip to!
+[INFO] 2020/11/30 11:19:53 No other member to gossip to!
+[INFO] 2020/11/30 11:19:53 No other member to gossip to!
+[INFO] 2020/11/30 11:19:54 No other member to gossip to!
+[INFO] 2020/11/30 11:19:54 No other member to gossip to!
+[INFO] 2020/11/30 11:19:54 No other member to gossip to!
+[INFO] 2020/11/30 11:19:55 No other member to gossip to!
+[INFO] 2020/11/30 11:19:55 No other member to gossip to!
+[INFO] 2020/11/30 11:19:55 No other member to gossip to!
+[INFO] 2020/11/30 11:19:56 No other member to gossip to!
+[INFO] 2020/11/30 11:19:56 No other member to gossip to!
+[INFO] 2020/11/30 11:19:56 No other member to gossip to!
+[INFO] 2020/11/30 11:19:57 No other member to gossip to!
+[INFO] 2020/11/30 11:19:57 No other member to gossip to!
+[INFO] 2020/11/30 11:19:57 No other member to gossip to!
+[INFO] 2020/11/30 11:19:58 No other member to gossip to!
+[INFO] 2020/11/30 11:19:58 No other member to gossip to!
+[INFO] 2020/11/30 11:19:58 No other member to gossip to!
+[INFO] 2020/11/30 11:19:59 No other member to gossip to!
+[INFO] 2020/11/30 11:19:59 No other member to gossip to!
+[INFO] 2020/11/30 11:19:59 No other member to gossip to!
+[INFO] 2020/11/30 11:19:59 172.22.158.42:43270 requests to join.
+[INFO] 2020/11/30 11:20:03 172.22.156.43:33941 requests to join.
+[INFO] 2020/11/30 11:20:06 172.22.94.42:59882 requests to join.
+[INFO] 2020/11/30 11:20:12 172.22.158.43:53442 requests to join.
+[INFO] 2020/11/30 11:24:53 AcquireLock: Created new lock
+[INFO] 2020/11/30 11:24:53 AcquireLock: Lock check wait ready
+[INFO] 2020/11/30 11:24:54 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:24:54 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:24:55 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:24:55 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:24:55 Receiving upload for file SDFS/winedat.csv.blk_0
+[INFO] 2020/11/30 11:24:55 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:24:55 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:24:55 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:24:55 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:24:56 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:24:56 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:24:56 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:24:56 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:24:57 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:24:57 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:24:57 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:24:57 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:24:57 Receiving upload for file SDFS/winedat.csv.blk_1
+[INFO] 2020/11/30 11:24:58 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:24:58 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:24:58 Receiving upload for file SDFS/winedat.csv.blk_2
+[INFO] 2020/11/30 11:24:58 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:24:58 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:24:59 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:24:59 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:24:59 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:24:59 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:24:59 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:24:59 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:00 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:00 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:00 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:25:00 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:25:00 Receiving upload for file SDFS/winedat.csv.blk_3
+[INFO] 2020/11/30 11:25:01 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:01 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:01 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:01 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:01 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:25:01 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:25:01 Receiving upload for file SDFS/winedat.csv.blk_4
+[INFO] 2020/11/30 11:25:02 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:02 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:02 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:02 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:02 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:02 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:03 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:25:03 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:25:03 Receiving upload for file SDFS/winedat.csv.blk_5
+[INFO] 2020/11/30 11:25:03 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:03 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:04 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:04 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:05 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:05 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:06 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:06 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:07 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:07 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:07 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:07 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:08 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:08 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:08 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:25:08 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:25:08 Receiving upload for file SDFS/winedat.csv.blk_7
+[INFO] 2020/11/30 11:25:09 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:09 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:09 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:09 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:10 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:10 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:10 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:10 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:11 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:25:11 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:25:11 Receiving upload for file SDFS/winedat.csv.blk_8
+[INFO] 2020/11/30 11:25:11 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:11 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:11 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:11 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:11 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:11 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:12 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:12 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:12 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:12 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:13 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:13 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:13 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:13 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:13 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:13 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:14 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:14 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:14 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:14 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:15 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:15 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:15 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:15 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:15 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:25:15 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:25:15 Receiving upload for file SDFS/winedat.csv.blk_11
+[INFO] 2020/11/30 11:25:15 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:15 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:16 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:16 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:16 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:25:16 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:25:16 Receiving upload for file SDFS/winedat.csv.blk_12
+[INFO] 2020/11/30 11:25:16 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:16 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:17 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:25:17 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:25:17 Receiving upload for file SDFS/winedat.csv.blk_13
+[INFO] 2020/11/30 11:25:17 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:17 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:17 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:17 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:18 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:18 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:18 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:18 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:19 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:19 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:19 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:19 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:19 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:19 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:20 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:25:20 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:25:20 Receiving upload for file SDFS/winedat.csv.blk_15
+[INFO] 2020/11/30 11:25:20 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:20 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:20 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:20 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:21 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:21 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:21 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:21 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:21 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:21 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:22 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:22 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:22 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:25:22 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.94.42
+[INFO] 2020/11/30 11:25:23 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:23 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:23 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:23 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:24 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:25:24 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:25:24 Receiving upload for file SDFS/winedat.csv.blk_17
+[INFO] 2020/11/30 11:25:24 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:25:24 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/30 11:25:24 Receiving upload for file SDFS/winedat.csv.blk_18
+[INFO] 2020/11/30 11:25:24 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:25:24 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/30 11:25:24 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:25:24 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/30 11:25:24 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:25:24 Uploading /home/jit2/data/wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/30 11:25:24 Releasing lock
+[INFO] 2020/11/30 11:25:24 Lock released
+[INFO] 2020/11/30 11:25:24 Lock released session confirm 1
+[INFO] 2020/11/30 11:25:39 Beginning Map phase.
+[INFO] 2020/11/30 11:25:39 RunTasks entered
+[INFO] 2020/11/30 11:25:39 Executing maple on  SDFS/winedat.csv.blk_2
+[INFO] 2020/11/30 11:25:39 Executing  ./mapler SDFS/winedat.csv.blk_2
+[INFO] 2020/11/30 11:25:41 Executing maple on  SDFS/winedat.csv.blk_13
+[INFO] 2020/11/30 11:25:41 Executing  ./mapler SDFS/winedat.csv.blk_13
+[INFO] 2020/11/30 11:25:41 Executing maple on  SDFS/winedat.csv.blk_15
+[INFO] 2020/11/30 11:25:41 Executing  ./mapler SDFS/winedat.csv.blk_15
+[INFO] 2020/11/30 11:25:41 Executing maple on  SDFS/winedat.csv.blk_18
+[INFO] 2020/11/30 11:25:41 Executing  ./mapler SDFS/winedat.csv.blk_18
+[INFO] 2020/11/30 11:25:42 Completed Maple phase.
+[INFO] 2020/11/30 11:26:22 Startng shuffle sort on wine_Alma Rosa
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Alma Rosa  to juiceTemp/wine_Alma Rosa  from 172.22.156.43
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Alma Rosa ]
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Alma Rosa  to juiceTemp/wine_Alma Rosa  from 172.22.94.42
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Alma Rosa ]
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Alma Rosa  to juiceTemp/wine_Alma Rosa  from 172.22.156.42
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 0
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Alma Rosa ]
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Alma Rosa  to juiceTemp/wine_Alma Rosa  from 172.22.158.43
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Vine Cliff ]
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Alma Rosa ]
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Alma Rosa  to juiceTemp/wine_Alma Rosa  from 172.22.158.42
+[INFO] 2020/11/30 11:26:22 Startng shuffle sort on wine_Domaine Vrignaud
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Domaine Vrignaud  to juiceTemp/wine_Domaine Vrignaud  from 172.22.156.43
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Domaine Vrignaud ]
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Domaine Vrignaud  to juiceTemp/wine_Domaine Vrignaud  from 172.22.94.42
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Domaine Vrignaud ]
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Domaine Vrignaud  to juiceTemp/wine_Domaine Vrignaud  from 172.22.158.42
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Alma Rosa ]
+[INFO] 2020/11/30 11:26:22 ./juicer executed.
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 2
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 1
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 4
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Domaine Vrignaud ]
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Domaine Vrignaud  to juiceTemp/wine_Domaine Vrignaud  from 172.22.158.43
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Truett Hurst ]
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Lynmar ]
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Airfield Estates ]
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Domaine Vrignaud ]
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Domaine Vrignaud  to juiceTemp/wine_Domaine Vrignaud  from 172.22.156.42
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Domaine Vrignaud ]
+[INFO] 2020/11/30 11:26:22 ./juicer executed.
+[INFO] 2020/11/30 11:26:22 ./juicer finished.
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 3
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Alma Rosa ]
+[INFO] 2020/11/30 11:26:22 Startng shuffle sort on wine_Bouchard Père & Fils
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Bouchard Père & Fils  to juiceTemp/wine_Bouchard Père & Fils  from 172.22.156.43
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 ./juicer finished.
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 0
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Bouchard Père & Fils ]
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Bouchard Père & Fils  to juiceTemp/wine_Bouchard Père & Fils  from 172.22.94.42
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Domaine Vrignaud ]
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Bouchard Père & Fils ]
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Bouchard Père & Fils  to juiceTemp/wine_Bouchard Père & Fils  from 172.22.156.42
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Bouchard Père & Fils ]
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Bouchard Père & Fils  to juiceTemp/wine_Bouchard Père & Fils  from 172.22.158.43
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 2
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 4
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Beauregard ]
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Bouchard Père & Fils ]
+[INFO] 2020/11/30 11:26:22 Downloading from  MapleJuice/wine_Bouchard Père & Fils  to juiceTemp/wine_Bouchard Père & Fils  from 172.22.158.42
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ MapleJuice/wine_Bouchard Père & Fils ]
+[INFO] 2020/11/30 11:26:22 ./juicer executed.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Goldwater ]
+[INFO] 2020/11/30 11:26:22 ./juicer finished.
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 3
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 1
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Bouchard Père & Fils ]
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Chinook ]
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 2
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 4
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Artevino ]
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Bergström ]
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 0
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 1
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Planeta ]
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Saviah ]
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 1
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_The Calling ]
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 3
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Talley ]
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 1
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 0
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Migration ]
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 4
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 2
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Wakefield Estate ]
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Black Kite ]
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Thomas Fogarty ]
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 3
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Jamieson Ranch ]
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Download sent
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 1
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 0
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Getting juice output from worker 2
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Vasse Felix ]
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Pellegrini ]
+[INFO] 2020/11/30 11:26:22 Successfully downloaded file: [ juiceTemp/wine_Glen Carlou ]
+[INFO] 2020/11/30 11:26:22 All juice tasks complete
+[INFO] 2020/11/30 11:26:22 Collecting all juices for [Airfield Estates Vine Cliff Alma Rosa Chinook Talley Domaine Vrignaud Migration Truett Hurst Beauregard Jamieson Ranch Vasse Felix Goldwater Bouchard Père & Fils Planeta Saviah Glen Carlou Artevino Bergström Black Kite Thomas Fogarty Lynmar The Calling Wakefield Estate Pellegrini]
+[INFO] 2020/11/30 11:26:22 Saving juices to wine_output
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Airfield Estates
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Vine Cliff
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Alma Rosa
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Chinook
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Talley
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Domaine Vrignaud
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Migration
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Truett Hurst
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Beauregard
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Jamieson Ranch
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Vasse Felix
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Goldwater
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Bouchard Père & Fils
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Planeta
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Saviah
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Glen Carlou
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Artevino
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Bergström
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Black Kite
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Thomas Fogarty
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Lynmar
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_The Calling
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Wakefield Estate
+[INFO] 2020/11/30 11:26:22 Collecting juiceTemp/wine_Pellegrini
+[INFO] 2020/11/30 11:26:22 Finished collecting juice in wine_output
+[INFO] 2020/11/30 11:26:22 AcquireLock: Created new lock
+[INFO] 2020/11/30 11:26:22 AcquireLock: Lock check wait ready
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Uploading wine_output to 172.22.94.42
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Uploading wine_output to 172.22.158.43
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Uploading wine_output to 172.22.158.42
+[INFO] 2020/11/30 11:26:22 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/30 11:26:22 Uploading wine_output to 172.22.156.43
+[INFO] 2020/11/30 11:26:22 Releasing lock
+[INFO] 2020/11/30 11:26:22 Lock released
+[INFO] 2020/11/30 11:26:22 Lock released session confirm 2
+[INFO] 2020/11/30 11:26:22 Completed Juice phase.
+[INFO] 2020/11/30 11:26:22 > 
