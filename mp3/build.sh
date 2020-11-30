@@ -10,3 +10,7 @@ cd ../maple && go build -o ../condorcet_maple_2 mapler.go condorcet_2.go
 
 cd ../juice && go build -o ../condorcet_juice_1 juicer.go condorcet_1.go
 cd ../juice && go build -o ../condorcet_juice_2 juicer.go condorcet_2.go
+
+cd ../mj_wine && go build -o ../mapler mapler.go wine_maple.go
+cd ../mj_wine && go build -o ../juicer juicer.go wine_juice.go
+

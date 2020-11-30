@@ -1,0 +1,327 @@
+[INFO] 2020/11/29 23:05:32 Detector: gossip
+[INFO] 2020/11/29 23:05:32 Introducer: 172.22.156.42 on port 8012
+[INFO] 2020/11/29 23:05:32 Gossip interval: 1
+[INFO] 2020/11/29 23:05:32 All-to-All interval: 3
+[INFO] 2020/11/29 23:05:32 Failure timeout: 5
+[INFO] 2020/11/29 23:05:32 Cleanup timeout: 24
+[INFO] 2020/11/29 23:05:35 You are now the introducer.
+2020/11/29 23:05:35 rpc.Register: method "AllToAll" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: reply type of method "CleanupMember" is not a pointer: "time.Time"
+2020/11/29 23:05:35 rpc.Register: method "CollectJuices" has 4 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "Election" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: reply type of method "FailMember" is not a pointer: "time.Time"
+2020/11/29 23:05:35 rpc.Register: method "FindAvailableNode" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "GetLocalFiles" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "GetNumAlive" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "Gossip" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: reply type of method "Grep" is not a pointer: "bool"
+2020/11/29 23:05:35 rpc.Register: reply type of method "HandleGrepRequest" is not a pointer: "[]uint8"
+2020/11/29 23:05:35 rpc.Register: method "HandleGrepResponse" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "HeartbeatHandler" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "Juice" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "Listen" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "ListenMapleJuice" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "ListenSdfs" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "Maple" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "MemberListen" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "PickRandMemberIP" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "PrintMembershipList" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "QueueTask" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "RemoveFromQueue" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: reply type of method "RequestJuiceTask" is not a pointer: "main.JuiceRequest"
+2020/11/29 23:05:35 rpc.Register: reply type of method "RequestMapleOnBlock" is not a pointer: "main.MapleRequest"
+2020/11/29 23:05:35 rpc.Register: method "RescheduleJuiceTask" has 4 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "RescheduleTask" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "RpcDelete" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: reply type of method "RpcGet" is not a pointer: "string"
+2020/11/29 23:05:35 rpc.Register: method "RpcGetKeyLocations" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "RpcListIPs" has 2 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "RpcLock" has 4 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: reply type of method "RpcPut" is not a pointer: "string"
+2020/11/29 23:05:35 rpc.Register: method "RpcUnlock" has 4 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "RunFirstJuice" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "RunFirstMaple" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "RunJuiceWorker" has 4 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "RunJuiceWorkers" has 4 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "RunTaskWorker" has 4 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: reply type of method "RunTasks" is not a pointer: "int"
+2020/11/29 23:05:35 rpc.Register: reply type of method "SendAll" is not a pointer: "[]uint8"
+2020/11/29 23:05:35 rpc.Register: reply type of method "SendGrepRequest" is not a pointer: "string"
+2020/11/29 23:05:35 rpc.Register: reply type of method "SendMessage" is not a pointer: "string"
+2020/11/29 23:05:35 rpc.Register: reply type of method "ShuffleSort" is not a pointer: "string"
+2020/11/29 23:05:35 rpc.Register: method "StopTick" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "Store" has 1 input parameters; needs exactly three
+2020/11/29 23:05:35 rpc.Register: method "Tick" has 1 input parameters; needs exactly three
+[INFO] 2020/11/29 23:05:36 No other member to gossip to!
+[INFO] 2020/11/29 23:05:36 No other member to gossip to!
+[INFO] 2020/11/29 23:05:36 No other member to gossip to!
+[INFO] 2020/11/29 23:05:37 No other member to gossip to!
+[INFO] 2020/11/29 23:05:37 No other member to gossip to!
+[INFO] 2020/11/29 23:05:37 No other member to gossip to!
+[INFO] 2020/11/29 23:05:38 No other member to gossip to!
+[INFO] 2020/11/29 23:05:38 No other member to gossip to!
+[INFO] 2020/11/29 23:05:38 No other member to gossip to!
+[INFO] 2020/11/29 23:05:38 172.22.158.42:45732 requests to join.
+[INFO] 2020/11/29 23:05:41 172.22.156.43:37254 requests to join.
+[INFO] 2020/11/29 23:05:46 172.22.94.42:46806 requests to join.
+[INFO] 2020/11/29 23:05:50 172.22.158.43:38635 requests to join.
+[INFO] 2020/11/29 23:07:25 AcquireLock: Created new lock
+[INFO] 2020/11/29 23:07:25 AcquireLock: Lock check wait ready
+[INFO] 2020/11/29 23:07:25 Releasing lock
+[INFO] 2020/11/29 23:07:25 Lock released
+[INFO] 2020/11/29 23:07:25 Lock released session confirm 1
+[INFO] 2020/11/29 23:07:34 AcquireLock: Lock check wait ready
+[INFO] 2020/11/29 23:07:34 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:07:34 Uploading winedat.csv to 172.22.156.42
+[INFO] 2020/11/29 23:07:34 Receiving upload for file SDFS/winedat.csv.blk_0
+[INFO] 2020/11/29 23:07:34 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/29 23:07:34 Uploading winedat.csv to 172.22.158.42
+[INFO] 2020/11/29 23:07:39 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/29 23:07:39 Uploading winedat.csv to 172.22.158.43
+[INFO] 2020/11/29 23:07:44 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/29 23:07:44 Uploading winedat.csv to 172.22.156.43
+[INFO] 2020/11/29 23:07:48 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/29 23:07:48 Uploading winedat.csv to 172.22.156.43
+[INFO] 2020/11/29 23:07:50 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/29 23:07:50 Uploading winedat.csv to 172.22.94.42
+[INFO] 2020/11/29 23:07:53 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:07:53 Uploading winedat.csv to 172.22.156.42
+[INFO] 2020/11/29 23:07:53 Receiving upload for file SDFS/winedat.csv.blk_1
+[INFO] 2020/11/29 23:07:53 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/29 23:07:53 Uploading winedat.csv to 172.22.158.43
+[INFO] 2020/11/29 23:07:55 Releasing lock
+[INFO] 2020/11/29 23:07:55 Lock released
+[INFO] 2020/11/29 23:07:55 Lock released session confirm 2
+[INFO] 2020/11/29 23:09:46 Startng shuffle sort on wine_California Other
+[INFO] 2020/11/29 23:09:46 Downloading from  MapleJuice/wine_California Other  to juiceTemp/wine_California Other  from 172.22.156.42
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Download sent
+[INFO] 2020/11/29 23:09:46 Download sent
+[INFO] 2020/11/29 23:09:46 Download sent
+[INFO] 2020/11/29 23:09:46 Download sent
+[INFO] 2020/11/29 23:09:46 Successfully downloaded file: [ MapleJuice/wine_California Other ]
+[INFO] 2020/11/29 23:09:46 ./juicer executed.
+[INFO] 2020/11/29 23:09:46 Getting juice output from worker 2
+[INFO] 2020/11/29 23:09:46 Getting juice output from worker 0
+[INFO] 2020/11/29 23:09:46 Getting juice output from worker 3
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Successfully downloaded file: [ juiceTemp/wine_Columbia Valley ]
+[INFO] 2020/11/29 23:09:46 Successfully downloaded file: [ juiceTemp/wine_Napa-Sonoma ]
+[INFO] 2020/11/29 23:09:46 Successfully downloaded file: [ juiceTemp/wine_Central Coast ]
+[INFO] 2020/11/29 23:09:46 Startng shuffle sort on wine_Willamette Valley
+[INFO] 2020/11/29 23:09:46 Downloading from  MapleJuice/wine_Willamette Valley  to juiceTemp/wine_Willamette Valley  from 172.22.156.42
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Download sent
+[INFO] 2020/11/29 23:09:46 Successfully downloaded file: [ MapleJuice/wine_Willamette Valley ]
+[INFO] 2020/11/29 23:09:46 ./juicer executed.
+[INFO] 2020/11/29 23:09:46 Getting juice output from worker 1
+[INFO] 2020/11/29 23:09:46 ./juicer finished.
+[INFO] 2020/11/29 23:09:46 Getting juice output from worker 4
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Download sent
+[INFO] 2020/11/29 23:09:46 Successfully downloaded file: [ juiceTemp/wine_California Other ]
+[INFO] 2020/11/29 23:09:46 Successfully downloaded file: [ juiceTemp/wine_Sonoma ]
+[INFO] 2020/11/29 23:09:46 ./juicer finished.
+[INFO] 2020/11/29 23:09:46 Getting juice output from worker 3
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Download sent
+[INFO] 2020/11/29 23:09:46 Successfully downloaded file: [ juiceTemp/wine_Willamette Valley ]
+[INFO] 2020/11/29 23:09:46 All juice tasks complete
+[INFO] 2020/11/29 23:09:46 Collecting all juices for [California Other Central Coast Sonoma Columbia Valley Napa-Sonoma Willamette Valley]
+[INFO] 2020/11/29 23:09:46 Saving juices to juiceout
+[INFO] 2020/11/29 23:09:46 Collecting juiceTemp/wine_California Other
+[INFO] 2020/11/29 23:09:46 Collecting juiceTemp/wine_Central Coast
+[INFO] 2020/11/29 23:09:46 Collecting juiceTemp/wine_Sonoma
+[INFO] 2020/11/29 23:09:46 Collecting juiceTemp/wine_Columbia Valley
+[INFO] 2020/11/29 23:09:46 Collecting juiceTemp/wine_Napa-Sonoma
+[INFO] 2020/11/29 23:09:46 Collecting juiceTemp/wine_Willamette Valley
+[INFO] 2020/11/29 23:09:46 Finished collecting juice in juiceout
+[INFO] 2020/11/29 23:09:46 AcquireLock: Created new lock
+[INFO] 2020/11/29 23:09:46 AcquireLock: Lock check wait ready
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Uploading juiceout to 172.22.156.43
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.94.42:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Uploading juiceout to 172.22.94.42
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Uploading juiceout to 172.22.156.42
+[INFO] 2020/11/29 23:09:46 Receiving upload for file SDFS/juiceout.blk_0
+[INFO] 2020/11/29 23:09:46 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/29 23:09:46 Uploading juiceout to 172.22.158.43
+[INFO] 2020/11/29 23:09:46 Releasing lock
+[INFO] 2020/11/29 23:09:46 Lock released
+[INFO] 2020/11/29 23:09:46 Lock released session confirm 3
+[INFO] 2020/11/29 23:09:46 Completed Juice phase.
+[INFO] 2020/11/29 23:09:46 > 
+[INFO] 2020/11/29 23:10:13 AcquireLock: Lock check wait ready
+[INFO] 2020/11/29 23:10:13 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/29 23:10:13 Successfully downloaded file: [ SDFS/juiceout.blk_0 ]
+[INFO] 2020/11/29 23:10:13 Releasing lock
+[INFO] 2020/11/29 23:10:13 Lock released
+[INFO] 2020/11/29 23:10:13 Lock released session confirm 4
+[INFO] 2020/11/29 23:28:09 Detector: gossip
+[INFO] 2020/11/29 23:28:09 Introducer: 172.22.156.42 on port 8012
+[INFO] 2020/11/29 23:28:09 Gossip interval: 1
+[INFO] 2020/11/29 23:28:09 All-to-All interval: 3
+[INFO] 2020/11/29 23:28:09 Failure timeout: 5
+[INFO] 2020/11/29 23:28:09 Cleanup timeout: 24
+[INFO] 2020/11/29 23:28:12 You are now the introducer.
+2020/11/29 23:28:12 rpc.Register: method "AllToAll" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: reply type of method "CleanupMember" is not a pointer: "time.Time"
+2020/11/29 23:28:12 rpc.Register: method "CollectJuices" has 4 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "Election" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: reply type of method "FailMember" is not a pointer: "time.Time"
+2020/11/29 23:28:12 rpc.Register: method "FindAvailableNode" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "GetLocalFiles" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "GetNumAlive" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "Gossip" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: reply type of method "Grep" is not a pointer: "bool"
+2020/11/29 23:28:12 rpc.Register: reply type of method "HandleGrepRequest" is not a pointer: "[]uint8"
+2020/11/29 23:28:12 rpc.Register: method "HandleGrepResponse" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "HeartbeatHandler" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "Juice" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "Listen" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "ListenMapleJuice" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "ListenSdfs" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "Maple" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "MemberListen" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "PickRandMemberIP" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "PrintMembershipList" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "QueueTask" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "RemoveFromQueue" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: reply type of method "RequestJuiceTask" is not a pointer: "main.JuiceRequest"
+2020/11/29 23:28:12 rpc.Register: reply type of method "RequestMapleOnBlock" is not a pointer: "main.MapleRequest"
+2020/11/29 23:28:12 rpc.Register: method "RescheduleJuiceTask" has 4 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "RescheduleTask" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "RpcDelete" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: reply type of method "RpcGet" is not a pointer: "string"
+2020/11/29 23:28:12 rpc.Register: method "RpcGetKeyLocations" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "RpcListIPs" has 2 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "RpcLock" has 4 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: reply type of method "RpcPut" is not a pointer: "string"
+2020/11/29 23:28:12 rpc.Register: method "RpcUnlock" has 4 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "RunFirstJuice" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "RunFirstMaple" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "RunJuiceWorker" has 4 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "RunJuiceWorkers" has 4 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "RunTaskWorker" has 4 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: reply type of method "RunTasks" is not a pointer: "int"
+2020/11/29 23:28:12 rpc.Register: reply type of method "SendAll" is not a pointer: "[]uint8"
+2020/11/29 23:28:12 rpc.Register: reply type of method "SendGrepRequest" is not a pointer: "string"
+2020/11/29 23:28:12 rpc.Register: reply type of method "SendMessage" is not a pointer: "string"
+2020/11/29 23:28:12 rpc.Register: reply type of method "ShuffleSort" is not a pointer: "string"
+2020/11/29 23:28:12 rpc.Register: method "StopTick" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "Store" has 1 input parameters; needs exactly three
+2020/11/29 23:28:12 rpc.Register: method "Tick" has 1 input parameters; needs exactly three
+[INFO] 2020/11/29 23:28:13 No other member to gossip to!
+[INFO] 2020/11/29 23:28:13 No other member to gossip to!
+[INFO] 2020/11/29 23:28:13 No other member to gossip to!
+[INFO] 2020/11/29 23:28:14 No other member to gossip to!
+[INFO] 2020/11/29 23:28:14 No other member to gossip to!
+[INFO] 2020/11/29 23:28:14 No other member to gossip to!
+[INFO] 2020/11/29 23:28:14 172.22.158.42:32958 requests to join.
+[INFO] 2020/11/29 23:28:19 172.22.94.42:44929 requests to join.
+[INFO] 2020/11/29 23:28:24 Marked member failed:  2 
+Fail time:  2020-11-29 23:28:24.963314455 -0600 CST m=+15.004755823 
+Old time:  2020-11-29 23:28:19.963146922 -0600 CST m=+10.004588291
+[INFO] 2020/11/29 23:28:26 172.22.158.43:38685 requests to join.
+[INFO] 2020/11/29 23:28:28 172.22.156.43:50564 requests to join.
+[INFO] 2020/11/29 23:28:40 172.22.94.43:47343 requests to join.
+[INFO] 2020/11/29 23:28:48 Cleaned up member:  2
+[INFO] 2020/11/29 23:30:19 AcquireLock: Created new lock
+[INFO] 2020/11/29 23:30:19 AcquireLock: Lock check wait ready
+[INFO] 2020/11/29 23:30:20 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/29 23:30:20 Uploading ./wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/29 23:30:20 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:30:20 Uploading ./wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/29 23:30:20 Receiving upload for file SDFS/winedat.csv.blk_0
+[INFO] 2020/11/29 23:30:20 Connected to  172.22.94.43:8011  to upload.
+[INFO] 2020/11/29 23:30:20 Uploading ./wine_data/winedat.csv to 172.22.94.43
+[INFO] 2020/11/29 23:30:21 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/29 23:30:21 Uploading ./wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/29 23:30:21 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:30:21 Uploading ./wine_data/winedat.csv to 172.22.156.42
+[INFO] 2020/11/29 23:30:21 Receiving upload for file SDFS/winedat.csv.blk_1
+[INFO] 2020/11/29 23:30:21 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/29 23:30:21 Uploading ./wine_data/winedat.csv to 172.22.156.43
+[INFO] 2020/11/29 23:30:21 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/29 23:30:21 Uploading ./wine_data/winedat.csv to 172.22.158.42
+[INFO] 2020/11/29 23:30:21 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/29 23:30:21 Uploading ./wine_data/winedat.csv to 172.22.158.43
+[INFO] 2020/11/29 23:30:22 Releasing lock
+[INFO] 2020/11/29 23:30:22 Lock released
+[INFO] 2020/11/29 23:30:22 Lock released session confirm 1
+[INFO] 2020/11/29 23:31:44 Startng shuffle sort on wine_Napa-Sonoma
+[INFO] 2020/11/29 23:31:44 Startng shuffle sort on wine_Sonoma
+[INFO] 2020/11/29 23:31:44 Startng shuffle sort on wine_California Other
+[INFO] 2020/11/29 23:31:44 Downloading from  MapleJuice/wine_Sonoma  to juiceTemp/wine_Sonoma  from 172.22.156.42
+[INFO] 2020/11/29 23:31:44 Downloading from  MapleJuice/wine_California Other  to juiceTemp/wine_California Other  from 172.22.156.43
+[INFO] 2020/11/29 23:31:44 Downloading from  MapleJuice/wine_Napa-Sonoma  to juiceTemp/wine_Napa-Sonoma  from 172.22.156.42
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Download sent
+[INFO] 2020/11/29 23:31:44 Download sent
+[INFO] 2020/11/29 23:31:44 Successfully downloaded file: [ MapleJuice/wine_California Other ]
+[INFO] 2020/11/29 23:31:44 ./juicer executed.
+[INFO] 2020/11/29 23:31:44 Getting juice output from worker 4
+[INFO] 2020/11/29 23:31:44 Successfully downloaded file: [ MapleJuice/wine_Napa-Sonoma ]
+[INFO] 2020/11/29 23:31:44 ./juicer executed.
+[INFO] 2020/11/29 23:31:44 Successfully downloaded file: [ MapleJuice/wine_Sonoma ]
+[INFO] 2020/11/29 23:31:44 Downloading from  MapleJuice/wine_Sonoma  to juiceTemp/wine_Sonoma  from 172.22.156.43
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Download sent
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.156.43:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Download sent
+[INFO] 2020/11/29 23:31:44 Successfully downloaded file: [ MapleJuice/wine_Sonoma ]
+[INFO] 2020/11/29 23:31:44 ./juicer executed.
+[INFO] 2020/11/29 23:31:44 ./juicer finished.
+[INFO] 2020/11/29 23:31:44 ./juicer finished.
+[INFO] 2020/11/29 23:31:44 ./juicer finished.
+[INFO] 2020/11/29 23:31:44 Getting juice output from worker 0
+[INFO] 2020/11/29 23:31:44 Getting juice output from worker 3
+[INFO] 2020/11/29 23:31:44 Getting juice output from worker 1
+[INFO] 2020/11/29 23:31:44 Successfully downloaded file: [ juiceTemp/wine_Willamette Valley ]
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Download sent
+[INFO] 2020/11/29 23:31:44 Getting juice output from worker 6
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Successfully downloaded file: [ juiceTemp/wine_California Other ]
+[INFO] 2020/11/29 23:31:44 Download sent
+[INFO] 2020/11/29 23:31:44 Download sent
+[INFO] 2020/11/29 23:31:44 Successfully downloaded file: [ juiceTemp/wine_Napa-Sonoma ]
+[INFO] 2020/11/29 23:31:44 Successfully downloaded file: [ juiceTemp/wine_Sonoma ]
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Successfully downloaded file: [ juiceTemp/wine_Central Coast ]
+[INFO] 2020/11/29 23:31:44 Getting juice output from worker 2
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Successfully downloaded file: [ juiceTemp/wine_Columbia Valley ]
+[INFO] 2020/11/29 23:31:44 All juice tasks complete
+[INFO] 2020/11/29 23:31:44 Collecting all juices for [Central Coast Sonoma Columbia Valley Napa-Sonoma Willamette Valley California Other]
+[INFO] 2020/11/29 23:31:44 Saving juices to juiceout
+[INFO] 2020/11/29 23:31:44 Collecting juiceTemp/wine_Central Coast
+[INFO] 2020/11/29 23:31:44 Collecting juiceTemp/wine_Sonoma
+[INFO] 2020/11/29 23:31:44 Collecting juiceTemp/wine_Columbia Valley
+[INFO] 2020/11/29 23:31:44 Collecting juiceTemp/wine_Napa-Sonoma
+[INFO] 2020/11/29 23:31:44 Collecting juiceTemp/wine_Willamette Valley
+[INFO] 2020/11/29 23:31:44 Collecting juiceTemp/wine_California Other
+[INFO] 2020/11/29 23:31:44 Finished collecting juice in juiceout
+[INFO] 2020/11/29 23:31:44 AcquireLock: Created new lock
+[INFO] 2020/11/29 23:31:44 AcquireLock: Lock check wait ready
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.94.43:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Uploading juiceout to 172.22.94.43
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.158.42:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Uploading juiceout to 172.22.158.42
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.156.42:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Uploading juiceout to 172.22.156.42
+[INFO] 2020/11/29 23:31:44 Receiving upload for file SDFS/juiceout.blk_0
+[INFO] 2020/11/29 23:31:44 Connected to  172.22.158.43:8011  to upload.
+[INFO] 2020/11/29 23:31:44 Uploading juiceout to 172.22.158.43
+[INFO] 2020/11/29 23:31:44 Releasing lock
+[INFO] 2020/11/29 23:31:44 Lock released
+[INFO] 2020/11/29 23:31:44 Lock released session confirm 2
+[INFO] 2020/11/29 23:31:44 Completed Juice phase.
+[INFO] 2020/11/29 23:31:44 > 
