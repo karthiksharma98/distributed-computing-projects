@@ -10,7 +10,7 @@
     "settings": {
         "gossip_interval": 1,
         "all_interval": 3,
-        "fail_timeout": 5,
+        "fail_timeout": 9,
         "cleanup_timeout": 24,
         "num_processes_to_gossip": 3,
         "replication_factor": 4,
