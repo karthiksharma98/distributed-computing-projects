@@ -232,13 +232,13 @@ func (node *SdfsNode) RunTaskWorker(i int, wg *sync.WaitGroup, tasks <-chan Task
 		// Find chosenIp or whatever
 		// Call RPC.Maple/Juice function here (RequestMapleOnBlock)
 		taskLock.Lock()
-		currTasks[task.Request.FileName] = task
+		currTasks[task.Request.FileName+".blk_"+fmt.Sprint(task.Request.BlockNum)] = task
 		taskLock.Unlock()
 		err := node.RequestMapleOnBlock(task.Replicas[0], task.Request)
 
 		for err != nil {
 			// keep trying until success or you run out of options
-			err = node.RescheduleTask(task.Request.FileName)
+			err = node.RescheduleTask(task.Request.FileName + ".blk_" + fmt.Sprint(task.Request.BlockNum))
 		}
 
 		taskLock.Lock()
