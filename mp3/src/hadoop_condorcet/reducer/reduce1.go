@@ -1,9 +1,5 @@
 package main
 
-import (
-	"strconv"
-)
-
 func Reduce(key string, values []string) {
 	count0 := 0
 	count1 := 0

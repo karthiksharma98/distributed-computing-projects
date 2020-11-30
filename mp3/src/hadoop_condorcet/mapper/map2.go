@@ -1,5 +1,10 @@
 package main
 
+import (
+	"strings"
+)
+
 func Map(key string, value string) {
-	Emit("1", value)
+	v := strings.TrimSpace(value)
+	Emit("1", v)
 }

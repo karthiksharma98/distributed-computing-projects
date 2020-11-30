@@ -14,9 +14,13 @@ var (
 func CollectReduce() {
 	// MapReduce feeds data line by line
 	s := bufio.NewScanner(os.Stdin)
+	f := func(c rune) bool {
+		return c == '\t'
+	}
+
 	for s.Scan() {
 		// Split strings by tab
-		line := strings.Fields(s.Text())
+		line := strings.FieldsFunc(s.Text(), f)
 		if len(line) == 2 {
 			if val, ok := keyValues[line[0]]; ok {
 				keyValues[line[0]] = append(val, line[1])
