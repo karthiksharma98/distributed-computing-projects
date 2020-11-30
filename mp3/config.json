@@ -4,8 +4,8 @@
         "introducer_ip": "172.22.156.42",
         "port": 9060,
         "initial_master_ip": "172.22.156.42",
-        "master_port": 9041,
-        "file_port": 9042
+        "master_port": 8010,
+        "file_port": 8011
     },
     "settings": {
         "gossip_interval": 1,
