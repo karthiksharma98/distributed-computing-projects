@@ -7,7 +7,10 @@ import (
 
 func (m *Mapler) Maple(input string) error {
 	r := csv.NewReader(strings.NewReader(input))
-	s, _ := r.Read()
+	s, err := r.Read()
+	if err != nil {
+		return nil
+	}
 	
 	if "Chardonnay" == s[9] {
 		for _, word := range strings.Fields(s[2]) {
