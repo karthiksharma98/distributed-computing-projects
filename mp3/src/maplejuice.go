@@ -321,6 +321,7 @@ func (node *SdfsNode) RpcMaple(req MapleRequest, reply *MapleJuiceReply) error {
 
 	cmd := exec.Command(arg0, arg1)
 	Info.Println("Executing ", arg0, arg1)
+	fmt.Println("Executing ", arg0, arg1)
 
 	output, err := cmd.Output()
 
