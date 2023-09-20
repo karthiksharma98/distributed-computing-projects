@@ -169,7 +169,8 @@ func (mem *Member) HeartbeatHandler(membershipListBytes []byte) {
 
 	err := d.Decode(&rcvdMemList)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 
 	for id, rcvdEntry := range rcvdMemList {
